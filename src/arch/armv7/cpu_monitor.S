@@ -62,6 +62,7 @@
 	mrc     p15, 0, r0, c1, c1, 0	@ Read SCR
 	orr	r0, r0, #SCR_NS_BIT	@ Enable NS bit
 	orr	r0, r0, #SCR_FIQ_BIT	@ Enable the route of FIQ in Monitor 
+	bic	r0, r0, #SCR_IRQ_BIT
 	mcr     p15, 0, r0, c1, c1, 0	@ Write SCR
 	pop 	{r0}
 .endm
@@ -78,6 +79,7 @@
 	mrc     p15, 0, r0, c1, c1, 0	@ Read SCR
 	bic	r0, r0, #SCR_NS_BIT	@ Disable the NS bit
 	bic	r0, r0, #SCR_FIQ_BIT	@ Disable the route of FIQs in Monitor
+	orr	r0, r0, #SCR_IRQ_BIT
 	mcr     p15, 0, r0, c1, c1, 0	@ Write SCR
 	pop 	{r0}			
 .endm

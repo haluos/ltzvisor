@@ -48,6 +48,8 @@
 #ifndef __ARMV7_CPU_DEFINES_H__
 #define __ARMV7_CPU_DEFINES_H__
 
+#define USE_AMP		1
+
 /** CPU Operation Modes */
 #define  USER_MODE		0x10
 #define  FIQ_MODE		0x11

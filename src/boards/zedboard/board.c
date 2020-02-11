@@ -11,28 +11,28 @@
  *
  * LTZVisor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2
- * as published by the Free Software Foundation, with a special   
+ * as published by the Free Software Foundation, with a special
  * exception described below.
- * 
- * Linking this code statically or dynamically with other modules 
- * is making a combined work based on this code. Thus, the terms 
- * and conditions of the GNU General Public License V2 cover the 
+ *
+ * Linking this code statically or dynamically with other modules
+ * is making a combined work based on this code. Thus, the terms
+ * and conditions of the GNU General Public License V2 cover the
  * whole combination.
  *
- * As a special exception, the copyright holders of LTZVisor give  
- * you permission to link LTZVisor with independent modules to  
- * produce a statically linked executable, regardless of the license 
- * terms of these independent modules, and to copy and distribute  
- * the resulting executable under terms of your choice, provided that 
- * you also meet, for each linked independent module, the terms and 
- * conditions of the license of that module. An independent module  
+ * As a special exception, the copyright holders of LTZVisor give
+ * you permission to link LTZVisor with independent modules to
+ * produce a statically linked executable, regardless of the license
+ * terms of these independent modules, and to copy and distribute
+ * the resulting executable under terms of your choice, provided that
+ * you also meet, for each linked independent module, the terms and
+ * conditions of the license of that module. An independent module
  * is a module which is not derived from or based on LTZVisor.
  *
  * LTZVisor is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -41,21 +41,27 @@
  * [board.c]
  *
  * This file contains board-specific initializations.
- * 
+ *
  * (#) $id: board.c 15-10-2015 s_pinto & j_pereira $
  * (#) $id: board.c 20-09-2017 s_pinto (modified)$
 */
 
 #include <board.h>
 
+#define DIV0		8
+#define DIV1		5
+
 /**
  * TrustZone-specific initializations
  *
- * @param  	
+ * @param
  *
- * @retval 	
+ * @retval
  */
 uint32_t board_init(void){
+	volatile uint32_t tmp;
+	uint32_t gem_val;
+	tmp = SLCR_GEM0_CLK_CTRL_ADDR;
 
 	/** Unlocking SLCR register */
 	write32( (void *)SLCR_UNLOCK, SLCR_UNLOCK_KEY);
@@ -76,12 +82,20 @@ uint32_t board_init(void){
 	/* QSPI slave security (NS) */
 	write32( (void *)SECURITY4_QSPI, 0x1);
 	/* APB slave security (NS) */
-	write32( (void *) SECURITY6_APBSL, 0x00007fff);
+	// write32( (void *) SECURITY6_APBSL, 0x00007fff);
+	write32( (void *) SECURITY6_APBSL, 0x00007dff);
 	/* DMA slave security (S) */
 	write32( (void *)TZ_DMA_NS, 0x0);
 	write32( (void *)TZ_DMA_IRQ_NS, 0x0);
 	/* Ethernet security */
 	write32( (void *)TZ_GEM, 0x3);
+	gem_val = 0x00500801;
+	// gem_val = tmp;
+	// gem_val &= 0xfc0fc0ff;
+	// gem_val |= DIV1 << 20;
+	// gem_val |= DIV0 << 8;
+	write32( (void *)SLCR_GEM0_CLK_CTRL_ADDR, gem_val);
+	write32( (void *)SLCR_GEM0_RCLK_CTRL_ADDR, 0x00000001);
 	/* FPGA AFI AXI ports TrustZone */
 	write32( (void *)SECURITY_APB, 0x3F);
 	/* Handling more devices ... */
@@ -96,9 +110,9 @@ uint32_t board_init(void){
 /**
  * Handling syscalls (SMCs)
  *
- * @param  	
+ * @param
  *
- * @retval 	
+ * @retval
  */
 uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
@@ -118,4 +132,3 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 
 		return arg0;
 }
-

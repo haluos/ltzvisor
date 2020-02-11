@@ -1,4 +1,5 @@
 cpu-objs-y =  cpu_entry.o
+# cpu-objs-y += translation_table.o
 cpu-objs-y += cpu_handlers.o
 cpu-objs-y += cpu_monitor.o
 cpu-objs-y += cpu_stack.o

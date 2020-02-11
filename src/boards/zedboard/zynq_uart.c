@@ -172,17 +172,25 @@ uint32_t uart_set_baud_rate(uint8_t uart_id, uint32_t baud_rate){
  *
  * @retval	Received character	
  */
+
+static inline void wait2()
+{
+    int32_t count = 100000;
+    asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
+    : "=r"(count): [count]"0"(count) : "cc");
+}
+
 uint32_t uart_getc(uint8_t uart_id){
 
 	Uart_Zynq * ptr_uart = Ptr_Uart[uart_id];
 	uint32_t data = 0;
 
 	/* Wait until RxFIFO is filled up to the trigger level */
-	while(!ptr_uart->ch_status & UART_CH_STATUS_RTRIG);
+	while(!(char)(ptr_uart->ch_status & UART_CH_STATUS_RTRIG));
 
-	data = ptr_uart->tx_rx_fifo;
 
-	return data;
+    data = ptr_uart->tx_rx_fifo;
+    return data;
 }
 
 /**

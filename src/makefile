@@ -187,10 +187,11 @@ objcopy=	$(CROSS_COMPILE)objcopy
 nm=			$(CROSS_COMPILE)nm
 size=		$(CROSS_COMPILE)size
 
-cflags= -O0 -Wall -fno-common -msoft-float -mno-thumb-interwork -marm -nostdlib -fno-short-enums
+cflags= -O0 -Wall -fno-common -msoft-float -mno-thumb-interwork -marm -nostdlib -fno-short-enums -mfloat-abi=softfp
 ifeq ($(DEBUG), y)
 	cflags += -g
 endif
+
 ifeq ($(CONFIG_NEON_SUPPORT), y)
 	cflags+= -mfloat-abi=softfp -mfpu=neon
 endif

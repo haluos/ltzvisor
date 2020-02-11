@@ -48,6 +48,7 @@
 
 #include <gic.h>
 #include <zynq_ttc.h>
+#include <zynq_spi.h>
 
 /** Interrupt Distributor instance */
 Interrupt_Distributor * int_dist = (Interrupt_Distributor *)(MPID_BASE);
@@ -65,7 +66,7 @@ tHandler* fiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ttc_interrupt_clear,
 	ttc_interrupt_clear, ttc_interrupt_clear, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, SPI_1_irq_handler, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL
 };
 
@@ -134,7 +135,8 @@ uint32_t interrupt_distributor_init(void){
 	}
 
 	/** Enable the interrupt controller (group0 and group1) */
-	int_dist->ICDDCR = 0x00000003;
+	int_dist->ICDDCR = 0x00000001;
+	int_dist->ICDDCR |= 0x00000002;
 
 	return TRUE;
 }
@@ -187,7 +189,8 @@ uint32_t interrupt_interface_init(void){
 	}
 
 	/** Enable the CPU Interface */
-	cpu_inter->ICCICR = 0x00000009;	
+	cpu_inter->ICCICR = 0x00000009;
+	cpu_inter->ICCICR |= 0x00000002;
 
 	return TRUE;
 }
@@ -306,7 +309,6 @@ void interrupt_security_configall(void){
 	for(num_regs=1; num_regs < GIC_NUM_REGISTERS; num_regs++){
 		int_dist->ICDISRx[num_regs] = 0xFFFFFFFF;
 	}
-
 }
 
 /**
