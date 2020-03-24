@@ -47,7 +47,6 @@
 */
 
 #include"zynq_ttc.h"
-#include "../zc702/inc/zynq_ttc.h"
 
 /** */
 Zynq_Ttc * const Ptr_Ttc[NUM_TTC] = {(Zynq_Ttc *)TTC0_BASE, (Zynq_Ttc *)TTC1_BASE};
@@ -240,9 +239,6 @@ uint32_t ttc_request(uint32_t ttc_num, uint32_t timer_num, uint32_t useconds){
 	return TRUE;
 }
 
-
-
-
 /**
  * TTC interrupt clear
  *
@@ -298,13 +294,3 @@ uint32_t ttc_interrupt_clear(uint32_t interrupt){
 
 
 
-uint32_t read_ttc(uint32_t ttc_num, uint32_t timer_num){
-
-    /*
-     * returns 1 ms counts
-     */
-    Zynq_Ttc * ptr_ttc = NULL;
-    ptr_ttc = Ptr_Ttc[ttc_num];
-    uint32_t ttc_cnt = ptr_ttc->cnt_value[timer_num];
-    return (uint32_t) ttc_cnt;
-}

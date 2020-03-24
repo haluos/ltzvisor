@@ -6,16 +6,16 @@ ENTRY(_reset_handler)
 
 MEMORY
 {
-	OCM (rwx): ORIGIN = 0x00000000, LENGTH = 0x00030000 				
+	OCM (rwx): ORIGIN = 0x00000000, LENGTH = 0x00030000
 	DDR_NS  (rwx)  : ORIGIN = 0x00100000, LENGTH = 0x1BEFFFFF
-	DDR_S  (rwx)  : ORIGIN = 0x1C000000, LENGTH = 0x03F00010 	
+	DDR_S  (rwx)  : ORIGIN = 0x1C000000, LENGTH = 0x03F00000
 }
 
 
 SECTIONS
 {
 	_code_begin = .;
-	
+
 	.startup :{
 		__startup_start = .;
 			*(.startup)
@@ -40,13 +40,13 @@ SECTIONS
 
 	_SW_BSS_START = .;
 	.bss : {
-		*(.bss) 
+		*(.bss)
 		*(COMMON)
 	} > DDR_S
 	. = ALIGN(0x1000);
 	_bss_size = _SW_BSS_END - _SW_BSS_START;
-	_SW_BSS_END = .; 
-	
+	_SW_BSS_END = .;
+
 	.heap (NOLOAD) : {
 		. = ALIGN(16);
 		_heap = .;
@@ -55,7 +55,6 @@ SECTIONS
 		. += 0x2000;
 		PROVIDE(_heap_end = .);
 		HeapLimit = .;
-	}  > DDR_S 
+	}  > DDR_S
 	_SW_CODE_END = .;
  }
-

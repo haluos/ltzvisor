@@ -48,7 +48,6 @@
 
 #include <gic.h>
 #include <zynq_ttc.h>
-#include <zynq_spi.h>
 
 /** Interrupt Distributor instance */
 Interrupt_Distributor * int_dist = (Interrupt_Distributor *)(MPID_BASE);
@@ -59,16 +58,102 @@ Cpu_Interface * const cpu_inter = (Cpu_Interface *)(MPIC_BASE);
 /** Array of FIQ handlers */
 /* TODO - This is board specific */
 tHandler* fiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, ttc_interrupt_clear, ttc_interrupt_clear, ttc_interrupt_clear, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ttc_interrupt_clear,
-	ttc_interrupt_clear, ttc_interrupt_clear, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, SPI_1_irq_handler, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	(tHandler*) ttc_interrupt_clear, 
+	(tHandler*) ttc_interrupt_clear, 
+	(tHandler*) ttc_interrupt_clear, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	(tHandler*) ttc_interrupt_clear,
+	(tHandler*) ttc_interrupt_clear, 
+	(tHandler*) ttc_interrupt_clear, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL,
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL, 
+	NULL
 };
 
 /* TODO - This is exception handling */
@@ -134,8 +219,7 @@ uint32_t interrupt_distributor_init(void){
 	}
 
 	/** Enable the interrupt controller (group0 and group1) */
-	int_dist->ICDDCR = 0x00000001;
-	int_dist->ICDDCR |= 0x00000002;
+	int_dist->ICDDCR = 0x00000003;
 
 	return TRUE;
 }
@@ -188,8 +272,7 @@ uint32_t interrupt_interface_init(void){
 	}
 
 	/** Enable the CPU Interface */
-	cpu_inter->ICCICR = 0x00000009;
-	cpu_inter->ICCICR |= 0x00000002;
+	cpu_inter->ICCICR = 0x00000009;	
 
 	return TRUE;
 }
@@ -308,6 +391,7 @@ void interrupt_security_configall(void){
 	for(num_regs=1; num_regs < GIC_NUM_REGISTERS; num_regs++){
 		int_dist->ICDISRx[num_regs] = 0xFFFFFFFF;
 	}
+
 }
 
 /**

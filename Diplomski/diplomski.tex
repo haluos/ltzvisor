@@ -1,0 +1,105 @@
+\documentclass[times, utf8, diplomski]{fer}
+\usepackage{booktabs}
+
+\begin{document}
+
+% TODO: Navedite broj rada.
+\thesisnumber{000}
+
+% TODO: Navedite naslov rada.
+\title{Proširenje LTZVisor monitora virtualnih strojeva za višejezgrene procesore}
+
+% TODO: Navedite vaše ime i prezime.
+\author{Magdalena Halusek}
+
+\maketitle
+
+% Ispis stranice s napomenom o umetanju izvornika rada. Uklonite naredbu \izvornik ako želite izbaciti tu stranicu.
+\izvornik
+
+% Dodavanje zahvale ili prazne stranice. Ako ne želite dodati zahvalu, naredbu ostavite radi prazne stranice.
+\zahvala{}
+
+\tableofcontents
+
+\chapter{Uvod}
+Neke od važnih odrednica ugradbenih računala su pouzdanost, predvidljivost i rad u stvarnom vremenu.
+Povećanjem popularnosti IoT (engl. \textit{Internet of Things}) uređaja u industriji, počinje se isticati
+još jedna dodatna karakteristika, a radi se o sigurnosti uređaja. Kako bi se uređaji u industriji osigurali,
+ARM već dugi niz godina daje podršku Cortex-A procesorima \textit{TrustZone} sigurnosnim ekstenzijama.
+Izlaskom M profila nove ARMv8 arhitekture, pojavila se i posebno razvijena \textit{TrustZone-M} sigurnosna
+podrška Cortex-M procesora. Iako je \textit{TrustZone-M} sigurnosna ekstenzija razvijena ispočetka konkretno
+za mikrokontrolere, krajnja funkcionalnost je slična onoj koju pruža \textit{TrustZone} ekstenzija Cortex-A
+procesora.\\
+U ovom radu će biti opisana \textit{TrustZone} sigurnosna ekstenzija ZedBoard platforme koja implementira
+Cortex-A9 procesor s dvije jezgre. Kao primjer maksimalnog iskorištenja \textit{TrustZone} sigurnosne
+ekstenzije, bit će prikazan LTZVisor monitor virtualnih strojeva (engl. \textit{hypervisor} ili engl.
+\textit{Virtual Machine Monitor}). LTZVisor omogućava virtualizaciju u ugradbenim računalima, odnosno konkurentno
+izvođenje dva operacijska sustava na jednoj jezgri procesora. Pojavom IoT uređaja u industriji, pojavila
+se i sve veća potreba za virtualizacijom zbog potrebe za karakteristikama operacijskih sustava za rad u stvarnom
+vremenu i operacijskih sustava opće namjene. Konkretno, karakteristike operacijskog sustava za rad u
+stvarnom vremenu koje su potrebne su odziv u stvarnom vremenu, determinizam i pouzdanost. Operacijski
+sustav opće namjene je često tražen zbog dobre mrežne podrške koju nudi. U nastavku će biti opisano kako
+\textit{TrustZone} doprinosi izolaciji između navedenih operacijskih sustava. Pošto je LTZVisor monitor
+virtualnih strojeva namijenjen jednoj jezgri procesora, u ovom radu će se opisati postupak prilagođenja
+LTZVisora za obje jezgre ZedBoarda kako bi se maksimalno iskoristile mogućnosti platforme.
+
+\chapter{Pokretanje i konfiguracija sustava Zynq-7000 platforme}
+
+\chapter{Višejezgrene konfiguracije Zynq-7000 platforme}
+Kao što je već napomenuto, ZedBoard implementira Cortex-A9 procesor s dvije jezgre te je za navedenu
+platformu moguće razviti aplikacije s različitim konfiguracijama obzirom na broj jezgri koje su potrebne
+u sustavu. Moguće je implementirati:
+\begin{itemize}
+  \item{Aplikacija namijenjena jednoj jezgri procesora (CPU0),}
+  \item{Dvije aplikacije, svaka namijenjena jednoj jezgri i}
+  \item{Aplikacija namijenjena objema jezgrama u sustavu.}
+\end{itemize}
+Važno je napomenuti da je jedna jezgra sustava (CPU0) primarna, a druga (CPU1) sekundarna. Prilikom
+pokretanja sustava, na platformi je aktivna samo primarna jezgra, dok se sekundarna jezgra nalazi u
+WFE (engl. \textit{Wait For Event}) stanju. Nakon što se sustav pokrenuo, primarna jezgra je zadužena
+za buđenje sekundarne jezgre. Sekundarnu jezgru je moguće probuditi generiranjem događaja sustava
+(engl. \textit{system event}), nakon čega sekundarna jezgra automatski skače na adresu koja je upisana
+na lokaciji 0xFFFFFFF0. Jedan od načina na koji se može probuditi sekundarna jezgra je da aplikacija
+koja se izvršava na CPU0 upiše adresu na kojoj se nalazi aplikacija za CPU1 na memorijsku lokaciju
+0xFFFFFFF0 te izvrši SEV (engl. \textit{send event}) instrukciju koja rezultira buđenjem CPU1.
+Komunikaciju između dvije jezgre je moguće ostvariti pomoću prekida između procesora
+(\textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka.
+
+\section{Asimetrično višejezgreno procesiranje}
+Asimetrično višejezgreno procesiranje ili AMP (engl. \textit{Asymmetric Multiprocessing}) se odnosi na
+konfiguraciju u kojoj svaki procesor (jezgra) izvršava svoju aplikaciju, odnosno gdje svaki procesor ima
+svoju sliku operacijskog sustava. Dakle, kako bi bilo moguće razviti obje aplikacije, potrebno je koristiti
+odvojene skripte za memorijsko povezivanje (\textit{linker} skripte) i skripte za pokretanje sustava. Oba
+operacijska sustava dijele isti fizički memorijski prostor, odnosno ne postoji nikakva izolacija između dva
+operacijska sustava. Karakteristike AMP konfiguracije su sljedeće:
+\begin{itemize}
+  \item{Većina uređaja mora biti posvećena određenom procesoru}
+  \item{Upravitelj prekidima je dijeljen između procesora}
+  \item{Samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima}
+\end{itemize}
+
+
+\section{Simetrično višejezgreno procesiranje}
+
+\chapter{Zaključak}
+Zaključak.
+
+\bibliography{literatura}
+\bibliographystyle{fer}
+
+\begin{sazetak}
+Sažetak na hrvatskom jeziku.
+
+\kljucnerijeci{Ključne riječi, odvojene zarezima.}
+\end{sazetak}
+
+% TODO: Navedite naslov na engleskom jeziku.
+\engtitle{Title}
+\begin{abstract}
+Abstract.
+
+\keywords{Keywords.}
+\end{abstract}
+
+\end{document}

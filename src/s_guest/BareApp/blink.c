@@ -43,113 +43,46 @@
  *
  * (#) $id: blink.c 27-09-2017 s_pinto$
 */
-#include <zynq_spi.h>
-#include <hw_zynq.h>
-#include <printk.h>
-#include <zynq_uart.h>
-#include "types.h"
-#include <board.h>
 
-// extern uint32_t GPOS0_start;
-extern struct nsguest_conf_entry nsguest_config;
+#include<hw_zynq.h>
+#include<printk.h>
 
-// #define sensor_data (*(volatile int32_t *)(GPOS0_start + 0x61A80))
-// volatile int32_t sensor_data __attribute__((section (".shared_location")));
-
-void test(void);
+void led_blink( void * pvParameters );
 
 int main() {
-    // int32_t last_read = sensor_data;
-    volatile int32_t *sensor_data = (volatile uint32_t *)(0x100000+0x61A80);
-    int32_t read;
-    int i = 0;
 
-    printk("Secure guest running, address %x\n", sensor_data );
-    /** Initialize hardware */
-    hw_init();
+	/** Initialize hardware */
+	hw_init();
 
-    /** Generate tick every 1s */
+	printk(" * Secure bare metal VM: running ... \n\t");
 
-    static uint32_t toggle;
-    /** 4GPIO (LED) in FPGA fabric */
-    static uint32_t *ptr = (uint32_t *) 0x41200000;
+	/** Generate tick every 1s */
+	tick_set(1000000);
 
-    tick_set(1000000); // ps is 11
+	/* Calling Blinking Task (LED blink at 1s) */
+	led_blink((void*)0);
 
-    // reset controller
-    SPI_1_Reset();
-
-    // enable clock for controller
-    SPI_1_ClockEnable();
-
-    // connect controller with MIO pins
-    SPI_1_SignalRoute();
-
-    // configure the SPI controller (clocks, registers etc..)
-    SPI_1_Config();
-
-    // enable the controller
-    SPI_1_Enable();
-    uint8_t a = 0xbc;
-    uint8_t msb;
-    uint32_t temp = 0;
-    uint8_t lsb = 0;
-
-    while(1){
-      i++;
-      SPI1_SendData(a);
-      SPI1_ReadData(&lsb);
-      // printk("lsb : %x\n", lsb);
-
-      //
-      // SPI1_SendData(a);
-      // SPI1_ReadData(&msb);
-      // printk("msb : %x\n", msb);
-
-
-
-      // temp = ((uint32_t)msb << 8) | (uint32_t)lsb;
-      // int f = (temp*100/1023)*3.3;
-      // printk("primio : %d\n", f);
-      // if(last_read != *sensor_data)
-      // {
-      // read = i++;
-      // memcpy(&read, sensor_data, sizeof(read));
-      if(temp || !temp)
-      {
-        memcpy(sensor_data, &lsb, sizeof(lsb));
-        __asm("dsb");
-        printk("value %d\n", *sensor_data);
-      }
-        // *sensor_data = i++;
-      // }
-      // test();
-      YIELD();
-    }
+	/* This point will never be reached */
+	for( ;; );
 
 }
 
+/**
+ * Blink LED "Task"
+ *
+ * @param
+ *
+ * @retval
+ */
+void led_blink( void * parameters ){
 
-void test(void) {
+	// static uint32_t toggle;
+	/** 4GPIO (LED) in FPGA fabric */
+	// static uint32_t *ptr = (uint32_t *) 0x41200000;
 
-  uint8_t a = 0xbc;
-  uint8_t recv;
-  int i;
-
-  // uart_flag = 1;
-  // uart_putc(0,a);
-  // printk("%c",a );
-
-  // while(!  SPI1_ReadData(&recv));
-  // recv = (uint8_t)uart_getc(0);
-
-  // printk("%s\n", recv );
-
-  SPI1_SendData(a);
-  SPI1_ReadData(&recv);
-
-  // printk("primio : %c\n", recv);
-
-  YIELD();
-
+	for( ;; ){
+		// toggle ^=0xF;
+		// *ptr = toggle;
+		YIELD()
+	}
 }

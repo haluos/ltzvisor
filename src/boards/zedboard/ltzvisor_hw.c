@@ -9,14 +9,14 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
+ * published by the Free Software Foundation; either version 2 of 
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -25,20 +25,17 @@
  * [ltzvisor_hw.c]
  *
  * This file contains the LTZVisor hardware-specific initialization.
- *
+ * 
  * (#) $id: ltzvisor_hw.c 10-06-2015 s_pinto & j_pereira $
  * (#) $id: ltzvisor_hw.c 17-09-2017 s_pinto (modified)$
 */
 
 #include <ltzvisor_hw.h>
-#include <zynq_spi.h>
-#define SCUTIMER_INTERRUPT		(29)
-#define GEM0_INTERRUPT				54
 
 /**
  * LTZVisor hardware initialization
  *
- * @param
+ * @param  
  *
  * @retval Return TRUE if success or False if not
  */
@@ -85,12 +82,7 @@ uint32_t ltzvisor_hw_init(void){
 	/* Config Interrupts Security */
 	interrupt_security_configall();
 	interrupt_security_config(UART_1_INTERRUPT,Int_NS);
-	interrupt_security_config(TTC1_TTCx_2_INTERRUPT,Int_NS);
-	// interrupt_security_config(TTC1_TTCx_1_INTERRUPT,Int_NS);
-	interrupt_security_config(SPI_1_INTERRUPT, Int_S);
-	interrupt_security_config(SCUTIMER_INTERRUPT,Int_NS);
-	interrupt_security_config(GEM0_INTERRUPT,Int_NS);
-	interrupt_security_config(TTC0_TTCx_2_INTERRUPT,Int_S);
+	interrupt_security_config(TTC1_TTCx_2_INTERRUPT,Int_S);
 	printk("      * GIC security - OK  \n\t");
 
 	/** Initialize Platform-specific */
@@ -104,3 +96,4 @@ uint32_t ltzvisor_hw_init(void){
 
 	return ret;
 }
+

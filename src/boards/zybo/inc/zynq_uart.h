@@ -210,7 +210,6 @@
 /** For printk */
 #define serial_puts(str_buffer) uart_puts(1,(const int8_t *)str_buffer)
 
-
 /** Zynq UART register structure */
 typedef struct{
 	/* UART Control register */

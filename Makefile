@@ -3,7 +3,7 @@ HYPERVISOR_MAJOR_VERSION = 0
 HYPERVISOR_MINOR_VERSION = 2
 HYPERVISOR_REVISION_VERSION = 1
 
-BINFILE = src/ns_guest/zynq/ns_guest.elf
+BINFILE = bin/LTZVisor.elf
 
 SYSTEM_MEMORY = 0x800000
 
@@ -11,7 +11,7 @@ ARCH = arm
 
 QEMU_MEM = $(shell echo $$(( ($(SYSTEM_MEMORY)-1)/1048576+1 )) )
 QEMU = qemu-system-$(ARCH)
-QFLAGS = -M xilinx-zynq-a9 -m $(QEMU_MEM)M -nographic
+QFLAGS = -M xilinx-zynq-a9 -nographic
 QMSG = "Starting qemu ... (press Ctrl+a then x to stop)"
 
 DEBUG_GDB = arm-none-eabi-gdb

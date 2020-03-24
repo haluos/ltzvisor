@@ -1,7 +1,7 @@
 *~
 bin/*
-.tags
-.tags1
-**/ns_guest/build/
-src/ns_guest/zynq/ns_guest.bin
-src/ns_guest/zynq/ns_guest.elf
+Diplomski/*
+!Diplomski/literatura.bib
+!Diplomski/diplomski.tex
+!Diplomski/fer.bst
+!Diplomski/fer.cls

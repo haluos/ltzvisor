@@ -54,14 +54,12 @@ extern uint32_t GPOS0_start, GPOS0_end;
 /** Config structure according to NS Guest */
 struct nsguest_conf_entry nsguest_config[] ={
 	{
-//		.gce_name = "Linux 3.3 (vanilla)",
- 		.gce_name = "baremetal_hello",
+		.gce_name = "Linux 3.3 (vanilla)",
 		.gce_id = 0,
 		/* No ram disk needed */
 		.gce_trd_init = 0,
 		/* Binary image size */
 		.gce_bin_start = (uint32_t) &GPOS0_start,
-		.gce_shared_mem = (uint32_t)((uint32_t)(&GPOS0_start) + 0x61A80),
 		.gce_bin_end = (uint32_t) &GPOS0_end,
 		/* Load address */
 		.gce_bin_load = 0x00100000,

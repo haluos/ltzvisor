@@ -65,7 +65,7 @@
 #define TTC_CLK_CNTRL_EXT_EDGE 	(1 << 6) 
 #define TTC_CLK_CNTRL_SRC     	(1 << 5) 
 #define TTC_CLK_CNTRL_PS_EN  	(1 << 0)  
-#define TTC_CLK_CNTRL_PS_VAL   	(10 << 1)
+#define TTC_CLK_CNTRL_PS_VAL   	(4) 
 
 /** TTC Counter Control Register Flags */
 #define TTC_CNT_CNTRL_POL_WAVE	(1 << 6)        
@@ -189,7 +189,5 @@ uint32_t ttc_request(uint32_t ttc_num, uint32_t timer_num, uint32_t useconds);
  * @retval	True for success and FALSE in case ERROR 	
  */
 uint32_t ttc_interrupt_clear(uint32_t interrupt);
-
-uint32_t read_ttc(uint32_t ttc_num, uint32_t timer_num);
 
 #endif /* __ZYNQ_TTC_H */

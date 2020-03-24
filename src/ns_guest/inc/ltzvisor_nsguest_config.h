@@ -63,7 +63,6 @@ struct nsguest_conf_entry {
 	uint32_t gce_trd_load;
 	/* Binary info */
 	uint32_t gce_bin_start;
-	uint32_t gce_shared_mem;
 	uint32_t gce_bin_end;
 	uint32_t gce_bin_load;
 };
