@@ -1,7 +1,13 @@
-\documentclass[times, utf8, diplomski]{fer}
+\documentclass[times, utf8, diplomski, numeric]{fer}
 \usepackage{booktabs}
+\usepackage{tabu, multirow}
+\usepackage{tabularx}
+\usepackage{float}
 
 \begin{document}
+
+\renewcommand{\labelitemi}{$\bullet$}
+\renewcommand{\labelitemii}{$-$}
 
 % TODO: Navedite broj rada.
 \thesisnumber{000}
@@ -32,7 +38,8 @@ podrška Cortex-M procesora. Iako je \textit{TrustZone-M} sigurnosna ekstenzija 
 za mikrokontrolere, krajnja funkcionalnost je slična onoj koju pruža \textit{TrustZone} ekstenzija Cortex-A
 procesora.\\
 U ovom radu će biti opisana \textit{TrustZone} sigurnosna ekstenzija ZedBoard platforme koja implementira
-Cortex-A9 procesor s dvije jezgre. Kao primjer maksimalnog iskorištenja \textit{TrustZone} sigurnosne
+Cortex-A9 procesor s dvije jezgre te sustav za procesiranje (engl. \textit{Processing System}, PS) i programabilnu
+logiku (PL). Kao primjer maksimalnog iskorištenja \textit{TrustZone} sigurnosne
 ekstenzije, bit će prikazan LTZVisor monitor virtualnih strojeva (engl. \textit{hypervisor} ili engl.
 \textit{Virtual Machine Monitor}). LTZVisor omogućava virtualizaciju u ugradbenim računalima, odnosno konkurentno
 izvođenje dva operacijska sustava na jednoj jezgri procesora. Pojavom IoT uređaja u industriji, pojavila
@@ -44,7 +51,147 @@ sustav opće namjene je često tražen zbog dobre mrežne podrške koju nudi. U 
 virtualnih strojeva namijenjen jednoj jezgri procesora, u ovom radu će se opisati postupak prilagođenja
 LTZVisora za obje jezgre ZedBoarda kako bi se maksimalno iskoristile mogućnosti platforme.
 
-\chapter{Pokretanje i konfiguracija sustava Zynq-7000 platforme}
+\chapter{Arhitektura Cortex-A9 procesora}
+APU (engl. \textit{Application Processing Unit}) Zynq-7000 platforme može sadržavati jednu ili dvije jezgre, odnosno jedan
+ili dva Cortex-A9 procesora \cite{zynq_trm}. ZedBoard sadrži dva Cortex-A9 procesora s koprocesorskom podrškom u višejezgrenoj
+konfiguraciji i \textit{little-endian} arhitekturi. Dva CPU-a dijele \textit{cache} memoriju druge razine,
+odnosno L2 \textit{cache} memoriju, od 512~kB.
+Oba procesora su visokih performansi i niske potrošnje. Za razliku od L2 \textit{cache} memorije, L1 \textit{cache}
+memorija nije dijeljena između procesora te svaki procesor implementira odvojenu podatkovnu i instrukcijsku
+L1 \textit{cache} memoriju od 32~kB. Platforma ima potpunu podršku sustava virtualne memorije ARMv7 arhitekture kojoj
+pripadaju procesori ZedBoard platforme. Procesori podržavaju 32-bitne ARM i Thumb instrukcijske setove te 16-bitne
+Thumb instrukcije i 8-bitne Java bajt kodove. Prisutna je i SCU (engl. \textit{Snoop Control Unit}) koja je nužna za održavanje
+koherencije između L1 \textit{cache} memorije između dva procesora. Komunikacija između PL-a i APU je ostvarena
+pomoću ACP (engl. \textit{Accelerator Coherency Port}). Ispitivanje i kontrola procesora se odvija pomoću DAP-a
+(engl. \textit{Debug Access Port}). Procesori podržavaju različite načine radova, uključujući \textit{supervisor},
+sustavski (engl. \textit{system}) i korisnički (engl. \textit{user}) način rada što omogućava različite razine
+zaštite na aplikacijskoj razini. \textit{TrustZone} ekstenzija procesora omogućava razvoj sigurnog okruženja za
+izvođenje aplikacija i čuvanje njihovog sadržaja. Kako bi se minimizirao utjecaj strojnih ciklusa koji su potrebni
+za izvođenje instrukcija grananja, Cortex-A9 implementira statičko i dinamičko predviđanje grananja (engl.
+\textit{branch prediction}). Statičko predviđanje je određeno za vrijeme prevođenja koda, a dinamičko koristi
+ishod izvođenja prošle instrukcije kako bi se odredilo hoće li se predviđeno grananje izvesti ili ne. Neka od
+grananja koja se mogu predvidjeti su uvjetna i bezuvjetna grananja te se navedeno dinamičko grananje može isključi.
+\section{Pokretanje i konfiguracija sustava Zynq-7000 platforme}
+Nakon postavljanja izvornih vrijednosti koje se odvija nakon dovođenja napajanja platformi (engl. \textit{power
+on reset}), hardver ispituje izvode koji sadrže informaciju o tome na koji način će se pokrenuti sustav na
+platformi. Moguće pokretanje sustava je s SD kartice, preko JTAG (engl. \textit{Joint Test Action Group}) modula
+ili QSPI (engl. \textit{Quad Serial Peripheral Interface}) memorije. Nakon inicijalnog
+čitanja izvoda, vrijednost se sprema u odgovarajući registar iz kojeg se čita način pokretanja sustava sve do
+nestanka napajanja platforme. Određivanjem načina pokretanja sustava započinje sam proces pokretanja, odnosno
+počinje se izvoditi BootROM kod kojeg nije moguće mijenjati. Sveukupno pokretanje sustava se odvija u tri razine
+koje su opisane tablicom~\ref{boot_stages}.
+
+\begin{table}[H]
+  \centering
+  \caption{Razine pokretanja sustava Zynq-7000 platforme}
+  \label{boot_stages}
+  \begin{tabular}{|| p{2cm} | p{12cm} ||}
+    \hline
+    \textbf{Razina} & \textbf{Opis razine} \\
+    \hline\hline
+    Razina 0 & Odvija se odmah nakon postavljanja inicijalnih vrijednosti nakon dovedenog napajanja platformi.
+    Radi se o BootROM kodu koji se izvodi na primarnom procesoru CPU0. BootROM kod izvodi traženje valjanog
+    BootROM zaglavlja koji se nalazi u \textit{flash} memoriji uređaja s kojeg se pokreće sustav. Iz navedenog
+    zaglavlja se određuje daljnji tok pokretanja sustava i prijelaz u Razinu 1. Nakon pokretanja hardvera, oba
+    procesora izvode isti BootROM kod koji se nalazi na adresi 0x00000000 koji služi za određivanje vlastitog
+    CPU identiteta. Daljnje izvođenje BootROM koda se izvodi na primarnom CPU0 procesoru, dok sekundarni CPU1
+    počinje izvoditi WFE (engl. \textit{Wait For Event}) instrukciju.\\
+    \hline
+    Razina 1 & Odnosi se na prvostupanjski pokretač sustava ili FSBL (engl. \textit{First Stage Bootloader}) koji
+    je zadužen za inicijaliziranje PS konfiguracije~\cite{zynq_swdg}. Uz inicijaliziranje, zadužen je i za konfiguriranje PL-a
+    platforme s \textit{bitstream} datotekom, ako postoji. Sljedeći korak ove razine je učitavanje SSBL-a (engl.
+    \textit{Second Stage Bootloader}) ili korisničke aplikacije, nakon čega slijedi i predavanje kontrole SSBL-u
+    ili aplikaciji.\\
+    \hline
+    Razina 2 & Izvođenje korisničke aplikacije ili u-Boot programa koji je sličan Linuxovoj ljusci te može
+    poslužiti za učitavanje i pokretanje korisničke aplikacije.\\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsection{Sigurno pokretanje sustava}
+\section{Prekidni sustav Zynq-7000 platforme}
+Svaki CPU platforme ima set privatnih periferijskih prekida, PPI (engl. \textit{private peripheral interrupts}),
+za koje svaki procesor ima mogućnost privatnog pristupa registrima, gdje svaki registar ima svoju kopiju registara.
+U takvu vrtu prekida spada globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
+\textit{Fast Interrupt Request}) i IRQ (engl. \textit{Interrupt Request}) koji dolaze s programabilne logike.
+Kao i PPI, procesori također imaju mogućnost generiranja softverski generiranih prekida, SGI (engl. \textit{Software
+Generated Interrupt}), s vlastitim kopijama registara vezanih uz SGI. U sustavu postoje i periferijski prekidi
+koji su dijeljeni između procesora~-~SPI (engl. \textit{Shared Peripheral Interrupt}) koji, ovisno o konfiguraciji
+mogu biti dostupni jednom ili oba procesora. Glavni upravitelj prekidima u sustavu je GIC (engl. \textit{Generic
+Interrupt Controller}) koji prekide prosljeđuje odabranom CPU-u. Svi prekidi imaju svoj konfigurabilni prioritet
+i listu CPU-a koji mogu obraditi prekid.
+
+\subsection{GIC (engl. \textit{Generic Interrupt Controller})}
+GIC je resurs platforme koji služi za konfiguriranje i upravljanje prekidima u sustavu s jednim ili više procesora
+\cite{gic}.
+Uključuje registre za upravljanje izvorima prekida, ponašanje prekida i povezivanje prekida s jednim ili više
+procesora. Uz implementaciju sigurnosnih ekstenzija GIC-a, uvodi se funkcionalnost grupiranja prekida koja omogućuje:
+\begin{itemize}
+  \item{konfiguriranje svakog prekida kao Grupa~0 ili Grupa~1}
+  \item{signaliziranje prekida Grupe~0 ciljanom procesoru pomoću IRQ ili FIQ}
+  \item{signaliziranje prekida Grupe~1 ciljanom procesoru samo pomoću IRQ}
+  \item{jedinstvenu obradu prioriteta prekida Grupe~0 i Grupe~1}
+  \item{izborno zaključavanje konfiguriranja nekih prekida Grupe~0}
+\end{itemize}
+Kod višeprocesorskih sustava, GIC implementira dva modela obrade prekida u slučaju da je prekid namijenjen više
+ili svim procesora u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi prekid, ali se GIC pobrine da samo
+jedan procesor u sustavu obradi prekid. Ostali procesori u sustavu prime nepredvidljivi (enlg. \textit{spurious}) prekid.
+Drugi model je N-N, gdje jedan procesor obrađuje prekid, a ostalima je prikazano stanje čekanja na obradu prekida.
+Kod takvog modela se koriste određeni protokoli kako bi prekid bio obrađen jednom. U sklopu GIC-a postoji više kopija
+prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za svaki procesor u sustavu jedan prekidni broj.
+GIC se može podijeliti na dvije logičke cjeline:
+\begin{itemize}
+  \item{jedan blok distributera}
+  \item{jedan ili više blokova CPU sučelja}
+\end{itemize}
+Obrada prekida se odvija sljedećim redosljedom:
+\begin{enumerate}
+  \item{GIC određuje prekide koji su omogućeni}
+  \item{GIC određuje ciljani procesor ili procesore za sve prekide koji čekaju na obradu}
+  \item{Distributer prosljeđuje prekid najvišeg prioriteta odgovarajućem CPU sučelju}
+  \item{CPU sučelje odlučuje je li potrebno generirati zahtjev za obradu prekida procesora i ako treba, generirati ga}
+  \item{Procesor priznaje prekid, na što GIC vraća ID prekida}
+  \item{Nakon obrade, procesor signalizira kraj prekida GIC-u}
+\end{enumerate}
+
+\subsubsection{Distributer}
+Distributer je dio GIC-a koji prikuplja sve izvore prekida te određuje prioritet svakog prekida. Za svako CPU sučelje u
+sustavu prosljeđuje prekid najvišeg prioriteta. Distributer pruža sljedeće mogućnosti:
+\begin{itemize}
+  \item{globalno dozvoljavanje prosljeđivanja prekida CPU sučeljima}
+  \item{omogućavanje i onemogućavanje svakog prekida}
+  \item{postavljanje prioriteta svakog prekida}
+  \item{postavljanje liste ciljanih procesora za svaki prekid}
+  \item{postavljanje osjetljivosti svakog prekida:}
+  \begin{enumerate}
+    \item{osjetljivost na razinu}
+    \item{osjetljivost na brid}
+  \end{enumerate}
+  \item{konfiguriranje prekida kao Grupa~0 ili Grupa~1}
+  \item{prosljeđivanje SGI-a jednom ili više procesora}
+\end{itemize}
+Vidljivost stanja svakog prekida (neaktivan, aktivan, čeka na obradu) je omogućena čitanjem odgovarajućih registara.
+Distributer sadrži i registre za postavljanje i brisanje stanja za čekanje na obradu perifernih prekida. Prekidi koji
+su duplicirani za svaki procesor se odnose na prekide s prekidnim brojevima od 0 do 31, od kojih su od 0 do 15 SGI, a
+od 16 do 31 PPI. Takvi prekidi se identificiraju pomoću prekidnog broja i procesora kojem su namijenjeni. Dupliciranje
+prekida znači da distributer može istovremeno upravljati s više izvora prekida bez konflikta resursa.
+
+\subsubsection{CPU sučelje}
+CPU sučelje predstavlja sučelje za procesor koji je povezan s GIC-om. Njegova funkcija je prosljeđivanje prekida najvišeg
+prioriteta procesoru, uz obzir na maskirane prekide i postavke istiskivanja prekida. CPU sučelje sadrži registar koji
+služi za signaliziranje prihvaćanja prekida. Prihvaćanje prekida se izvodi čitanjem iz IAR-a (engl. \textit{Interrupt
+Acknowledge Register}). Mogućnosti CPU sučelja su sljedeće:
+\begin{itemize}
+  \item{omogućavanje signaliziranja prekida procesoru}
+  \item{potvrde prekida}
+  \item{označavanje kraja obrade prekida}
+  \item{postavljanje maskiranja prekidnog prioriteta}
+  \item{definiranje postupka istiskivanja za procesor}
+  \item{određivanje najvišeg prioriteta prekida koji čeka na obradu}
+\end{itemize}
+\subsection{SGI (engl. \textit{Software Generated Interrupt})}
+
 
 \chapter{Višejezgrene konfiguracije Zynq-7000 platforme}
 Kao što je već napomenuto, ZedBoard implementira Cortex-A9 procesor s dvije jezgre te je za navedenu
@@ -64,7 +211,14 @@ na lokaciji 0xFFFFFFF0. Jedan od načina na koji se može probuditi sekundarna j
 koja se izvršava na CPU0 upiše adresu na kojoj se nalazi aplikacija za CPU1 na memorijsku lokaciju
 0xFFFFFFF0 te izvrši SEV (engl. \textit{send event}) instrukciju koja rezultira buđenjem CPU1.
 Komunikaciju između dvije jezgre je moguće ostvariti pomoću prekida između procesora
-(\textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka.
+(\textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka. Prekidi između procesora
+na ovoj platformi se implementira pomoću softverski generiranih prekida (SGI). Za bolje razumijevanje
+višejezgrenih konfiguracija, u nastavku su dani jednostavni primjeri razvoja aplikacije za dvije različite
+konfiguracije. Obje aplikacije su razvijene pomoću lanca alata arm-none-eabi i Xilinx SDK 2019 (engl.
+\textit{Software Development Kit}) uz zadanu konfiguraciju hardvera (bez potrebe za generiranjem
+novog dizajna hardvera). Za potrebe generiranja datoteke za pokretanje sustava korišten je već gotov FSBL projekt
+kojeg nudi XSDK koji ima mogućnost učitavanja više izvornih datoteka odjednom. Datoteka za pokretanje sustava je
+generirana pomoću alata Bootgen kojeg nudi XSDK.
 
 \section{Asimetrično višejezgreno procesiranje}
 Asimetrično višejezgreno procesiranje ili AMP (engl. \textit{Asymmetric Multiprocessing}) se odnosi na
@@ -78,9 +232,74 @@ operacijska sustava. Karakteristike AMP konfiguracije su sljedeće:
   \item{Upravitelj prekidima je dijeljen između procesora}
   \item{Samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima}
 \end{itemize}
+FSBL je zadužen za učitavanje obje aplikacije u memoriju. Opisana konfiguracija je prikazana slikom \ref{amp}.
 
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=400pt]{AMP.png}%
+	\caption{AMP konfiguracija}
+	\label{amp}%
+\end{figure}
+
+\subsection{Razvoj AMP aplikacije}
+Kod razvoja AMP aplikacije u XSDK, nužno je stvoriti dva projekta, jedan za procesor CPU0 i drugi za CPU1.
+Prilikom stvaranja projekta potrebno je odabrati za koji procesor je aplikacija namijenjena. Kod konfiguriranja
+projekta za CPU1, prevoditelju projekta je potrebno dodati poseban indikator: USE\_AMP=1 kako bi aplikacija mogla
+funkcionirati na ispravan način. Postavljanjem USE\_AMP zastavice, otklanja se mogućnost rekonfiguriranja L2 \textit{cache}
+memorije i distributera GIC upravitelja što se smatra nepoželjnim rukovanjem navedenih resursa koji su zajednički procesorima
+u sustavu. Primjer nepoželjnog ponašanja zbog ne postavljanja navedene zastavice je dvostruka inicijalizacija distributera
+GIC-a što bi moglo rezultirati gubitkom postavki prekida koji su konfigurirani primarnim procesorom. Takvo ponašanje bi
+prekršilo jedno svojstvo AMP aplikacija koje se odnosi na to da je samo jedan procesor zadužen za inicijalizaciju upravitelja
+prekidima, u ovom slučaju GIC distributera. CPU sučelje GIC-a se normalno inicijalizira na oba procesora, bez ograničenja.
+Obzirom da su za razvoj AMP aplikacije potrebna dva projekta, potrebne su i dvije skripte za memorijsko povezivanje što
+znači da svaki procesor mora imati svoje upravljačke programe za uređaje (\textit{device drivers}) koje treba koristiti.
+Ako se za primjer uzme funkcija print, koja se koristi za ispis preko serije korištenjem UART-a (engl. \textit{Universal
+Asynchronous Receiver Transmitter}), implementirana procesorom CPU0, jasno je da CPU1 neće moći pozvati tu istu funkciju
+jer funkcija nije vidljiva u memorijskom prostoru CPU1 aplikacije. Da bi CPU1 mogao koristiti istu print funkciju,
+CPU1 treba implementirati funkcionalnost te funkcije kako bi skripta za memorijsko povezivanje mogla locirati navedenu
+funkciju. Iz ovog se vidi da nije praktično koristiti isti uređaj na oba procesora te se zbog toga većina uređaja dodjeljuje
+određenom procesoru. Iako se UART može dijeliti između procesora, neke periferije, kao što su to brojila, se ne mogu.
+Za razliku od CPU0, CPU1 mora eksplicitno omogućiti prekide u kontrolnom registru procesora CPSR. Prekidi za CPU0 su
+automatski omogućeni FSBL-om. Podrazumijeva se da CPU0 aplikacija mora sadržavati dio koda koji služi za buđenje CPU1
+čime započinje pokretanje sustava na CPU1. Isto tako, podrazumijeva se i da se adresa od koje kreće CPU1 aplikacija
+ispravno podesi u skripti za memorijsko povezivanje CPU1 aplikacije. Nakon što su željene aplikacije razvijene, moguće
+je kreirati datoteku za pokretanje sustava BOOT.bin.
 
 \section{Simetrično višejezgreno procesiranje}
+Simetrično višejezgreno procesiranje ili SMP (engl. \textit{Symmetric Multiprocessing}) se odnosi na
+konfiguraciju u kojoj su oba procesora ZedBoard platforme zadužena za jedan operacijski sustav, odnosno
+za jednu aplikaciju. Kod razvoja SMP aplikacije potrebna je samo jedna skripta za memorijsko povezivanje, ali
+dvije skripte za pokretanje sustava. U slučaju razvoja aplikacije operacijskog sustava, u sustavu postoji
+samo jedan raspoređivač zadataka koji je zadužen za raspoređivanje procesa, odnosno zadataka, na obje jezgre.
+Prilikom razvoja SMP aplikacije moguće je:
+\begin{itemize}
+  \item{Odrediti procesor koji će izvoditi određeni proces,}
+  \item{Obraditi prekid s bilo kojim slobodnim procesorom,}
+  \item{Odrediti jedan procesor koji će biti zadužen za inicijalizaciju i pokretanje drugih procesora.}
+\end{itemize}
+Opisana konfiguracija prikazana je slikom \ref{smp}.
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=400pt]{SMP.png}%
+	\caption{SMP konfiguracija}
+	\label{smp}%
+\end{figure}
+
+\subsection{Razvoj SMP aplikacije}
+
+\chapter{\textit{TrustZone} sigurnosna ekstenzija Cortex-A platforma}
+\section{Utjecaj sigurnosnih ekstenzija na GIC}
+\section{Konfiguriranje \textit{TrustZone} ekstenzije za AMP}
+\section{Konfiguriranje \textit{TrustZone} ekstenzije za SMP}
+
+\chapter{Iskorištenje \textit{TrustZone} ekstenzije za ostvarenje LTZVisor monitora virtualnih strojeva}
+\section{Kontekst Sigurnog i Nesigurnog gosta}
+\section{Memorijski podsustav LTZVisora}
+\section{Prekidni podsustav LTZVisora}
+
+\chapter{Postupak prilagođenja LTZVisora za AMP}
+
+\chapter{Postupak prilagođenja LTZVisora za SMP}
 
 \chapter{Zaključak}
 Zaključak.
