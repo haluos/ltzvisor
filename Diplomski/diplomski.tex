@@ -71,7 +71,8 @@ za izvođenje instrukcija grananja, Cortex-A9 implementira statičko i dinamičk
 \textit{branch prediction}). Statičko predviđanje je određeno za vrijeme prevođenja koda, a dinamičko koristi
 ishod izvođenja prošle instrukcije kako bi se odredilo hoće li se predviđeno grananje izvesti ili ne. Neka od
 grananja koja se mogu predvidjeti su uvjetna i bezuvjetna grananja te se navedeno dinamičko grananje može isključi.
-\section{Pokretanje i konfiguracija sustava Zynq-7000 platforme}
+
+\section{Pokretanje i konfiguracija sustava}
 Nakon postavljanja izvornih vrijednosti koje se odvija nakon dovođenja napajanja platformi (engl. \textit{power
 on reset}), hardver ispituje izvode koji sadrže informaciju o tome na koji način će se pokrenuti sustav na
 platformi. Moguće pokretanje sustava je s SD kartice, preko JTAG (engl. \textit{Joint Test Action Group}) modula
@@ -110,7 +111,7 @@ koje su opisane tablicom~\ref{boot_stages}.
 \end{table}
 
 \subsection{Sigurno pokretanje sustava}
-\section{Prekidni sustav Zynq-7000 platforme}
+\section{Prekidni sustav}
 Svaki CPU platforme ima set privatnih periferijskih prekida, PPI (engl. \textit{private peripheral interrupts}),
 za koje svaki procesor ima mogućnost privatnog pristupa registrima, gdje svaki registar ima svoju kopiju registara.
 U takvu vrtu prekida spada globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
@@ -190,7 +191,8 @@ Acknowledge Register}). Mogućnosti CPU sučelja su sljedeće:
   \item{definiranje postupka istiskivanja za procesor}
   \item{određivanje najvišeg prioriteta prekida koji čeka na obradu}
 \end{itemize}
-\subsection{SGI (engl. \textit{Software Generated Interrupt})}
+
+\section{MMU (engl. \textit{Memory Management Unit})}
 
 
 \chapter{Višejezgrene konfiguracije Zynq-7000 platforme}
@@ -236,7 +238,7 @@ FSBL je zadužen za učitavanje obje aplikacije u memoriju. Opisana konfiguracij
 
 \begin{figure}[H]
   \centering
-	\includegraphics[width=400pt]{AMP.png}%
+	\includegraphics[width=300pt]{AMP.png}%
 	\caption{AMP konfiguracija}
 	\label{amp}%
 \end{figure}
@@ -263,7 +265,15 @@ Za razliku od CPU0, CPU1 mora eksplicitno omogućiti prekide u kontrolnom regist
 automatski omogućeni FSBL-om. Podrazumijeva se da CPU0 aplikacija mora sadržavati dio koda koji služi za buđenje CPU1
 čime započinje pokretanje sustava na CPU1. Isto tako, podrazumijeva se i da se adresa od koje kreće CPU1 aplikacija
 ispravno podesi u skripti za memorijsko povezivanje CPU1 aplikacije. Nakon što su željene aplikacije razvijene, moguće
-je kreirati datoteku za pokretanje sustava BOOT.bin.
+je kreirati datoteku za pokretanje sustava BOOT.bin. Programski tok od pokretanja sustava (Razine~1) prikazana je slikom
+\ref{amp_app}.
+
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=300pt]{AMP_app.png}%
+	\caption{AMP aplikacija}
+	\label{amp_app}%
+\end{figure}
 
 \section{Simetrično višejezgreno procesiranje}
 Simetrično višejezgreno procesiranje ili SMP (engl. \textit{Symmetric Multiprocessing}) se odnosi na
@@ -280,17 +290,57 @@ Prilikom razvoja SMP aplikacije moguće je:
 Opisana konfiguracija prikazana je slikom \ref{smp}.
 \begin{figure}[H]
   \centering
-	\includegraphics[width=400pt]{SMP.png}%
+	\includegraphics[width=300pt]{SMP.png}%
 	\caption{SMP konfiguracija}
 	\label{smp}%
 \end{figure}
 
 \subsection{Razvoj SMP aplikacije}
+Prilikom razvoja SMP aplikacije u XSDK, potrebno je stvoriti jedan projekt koji je namijenjen primarnom procesoru, CPU0.
+Pošto se sustav CPU0 procesora pokreće prvi, CPU0 je zadužen za inicijalizaciju i pokretanje sustava na CPU1. Iz navedenog
+se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je boot.S skripta
+koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva posebni projekt za CPU1, potrebno je modificirati
+skriptu za pokretanje sustava na CPU1 na način da se izbaci dio s inicijalizacijom L2 \textit{cache} memorije (kod AMP
+aplikacije, to je ostvareno pomoću indikator USE\_AMP). Također, potrebno je promijeniti aplikaciju na koju se skače nakon
+inicijalizacije procesora (postaviti skok na željenu CPU1 aplikaciju). Poznato je da svaki procesor ima svoju tablicu
+prekidnih vektora te je iz tog razloga potrebno dodati asemblerski kod koji će sadržavati potrebnu tablicu prekidnih vektora.
+Tablica prekidnih vektora mora biti sadržana u memoriji koja ima odmak 0x00 od početne adrese na kojoj se nalazi
+aplikacija CPU1 procesora. Da bi se ostvario potrebni odmak, poduzeti su sljedeći koraci:
+\begin{enumerate}
+  \item{U skriptu za memorijsko povezivanje, dodana je adresa na kojoj će se nalaziti CPU1 aplikacija}
+  \item{U skriptu za memorijsko povezivanje, dodana je nova sekcija koje će sadržavati sav CPU1 kod (ili minimalno asemblerski
+  kod tablice prekidnih vektora CPU1)}
+  \item{U asemblerski kod tablice prekidnih vektora CPU1, dodana je direktiva .org 0 koja osigurava da se kod smjesti na
+  početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije)}
+\end{enumerate}
+Nakon navedenih promjena, projekt je spreman za implementaciju aplikacije. Pošto se radi o SMP konfiguraciji, razvija se
+samo jedna aplikacija koja sadrži dva zadatka koji se konkurentno izvode (jedan na CPU0, a drugi na CPU1). Također, sve
+funkcije dostupne jednom procesoru su dostupne i drugom procesoru jer dijele jedan memorijski prostor (jedna skripta za
+memorijsko povezivanje). Jedna ključna stavka kod razvoja SMP aplikacije je da ako oba procesora u aplikaciji pristupaju
+istom resursu, za ispravno funkcioniranje je potrebno implementirati sinkronizacijski mehanizam. Sinkronizacijski mehanizam
+osigurava da jednom resursu ne pristupaju oba procesora u istom trenutku. Primjer jednostavnog sinkronizacijskog mehanizma
+iskorištenog u razvoju SMP aplikacije je korištenje jedne memorijske lokacije koja služi za indikaciju je li resurs slobodan.
+Kao i kod AMP aplikacije, mora se pobrinuti za to da GIC distributer bude inicijaliziran samo jednom. Isto tako je potrebno
+omogućiti prekide u CPSR registru CPU1 procesora u slučaju da će se prekidi obrađivati procesorom CPU1. Nakon što CPU0
+probudi CPU1, CPU1 počinje izvoditi dio koda koji je smješten na početku sekcije koja je rezervirana za CPU1 kod.
+Podrazumijeva se da se na odgovarajuću memorijsku lokaciju, koja sadrži informaciju o adresi na koju skače CPU1 nakon buđenja,
+upiše adresa koja je jednaka početnoj adresi CPU1 sekcije. Tok programa od pokretanja sustava (Razine~1) prikazan je slikom
+\ref{smp_app}.
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=300pt]{SMP_app.png}%
+	\caption{SMP aplikacija}
+	\label{smp_app}%
+\end{figure}
 
 \chapter{\textit{TrustZone} sigurnosna ekstenzija Cortex-A platforma}
-\section{Utjecaj sigurnosnih ekstenzija na GIC}
-\section{Konfiguriranje \textit{TrustZone} ekstenzije za AMP}
-\section{Konfiguriranje \textit{TrustZone} ekstenzije za SMP}
+\section{Potreba za sigurnosti u mobilnom sektoru}
+\section{Softverska virtualizacija}
+\section{\textit{TrustZone} arhitektura}
+\subsection{Utjecaj sigurnosnih ekstenzija na prekidni sustav}
+\section{Višejezgrene konfiguracije \textit{TrustZone} ekstenzije}
+\subsection{Konfiguriranje \textit{TrustZone} ekstenzije za AMP}
+\subsection{Konfiguriranje \textit{TrustZone} ekstenzije za SMP}
 
 \chapter{Iskorištenje \textit{TrustZone} ekstenzije za ostvarenje LTZVisor monitora virtualnih strojeva}
 \section{Kontekst Sigurnog i Nesigurnog gosta}
