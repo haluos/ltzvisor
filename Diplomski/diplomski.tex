@@ -13,7 +13,7 @@
 \thesisnumber{000}
 
 % TODO: Navedite naslov rada.
-\title{Proširenje LTZVisor monitora virtualnih strojeva za višejezgrene procesore}
+\title{Proširenje LTZVisor monitora virtualnih strojeva \\za višejezgrene procesore}
 
 % TODO: Navedite vaše ime i prezime.
 \author{Magdalena Halusek}
@@ -44,7 +44,7 @@ ekstenzije, bit će prikazan LTZVisor monitor virtualnih strojeva (engl. \textit
 \textit{Virtual Machine Monitor}). LTZVisor omogućava virtualizaciju u ugradbenim računalima, odnosno konkurentno
 izvođenje dva operacijska sustava na jednoj jezgri procesora. Pojavom IoT uređaja u industriji, pojavila
 se i sve veća potreba za virtualizacijom zbog potrebe za karakteristikama operacijskih sustava za rad u stvarnom
-vremenu i operacijskih sustava opće namjene. Konkretno, karakteristike operacijskog sustava za rad u
+vremenu i operacijskih sustava opće namjene. Specifičnije, karakteristike operacijskog sustava za rad u
 stvarnom vremenu koje su potrebne su odziv u stvarnom vremenu, determinizam i pouzdanost. Operacijski
 sustav opće namjene je često tražen zbog dobre mrežne podrške koju nudi. U nastavku će biti opisano kako
 \textit{TrustZone} doprinosi izolaciji između navedenih operacijskih sustava. Pošto je LTZVisor monitor
@@ -70,11 +70,11 @@ izvođenje aplikacija i čuvanje njihovog sadržaja. Kako bi se minimizirao utje
 za izvođenje instrukcija grananja, Cortex-A9 implementira statičko i dinamičko predviđanje grananja (engl.
 \textit{branch prediction}). Statičko predviđanje je određeno za vrijeme prevođenja koda, a dinamičko koristi
 ishod izvođenja prošle instrukcije kako bi se odredilo hoće li se predviđeno grananje izvesti ili ne. Neka od
-grananja koja se mogu predvidjeti su uvjetna i bezuvjetna grananja te se navedeno dinamičko grananje može isključi.
+grananja koja se mogu predvidjeti su uvjetna i bezuvjetna grananja te se navedeno dinamičko grananje može isključiti.
 
 \section{Pokretanje i konfiguracija sustava}
-Nakon postavljanja izvornih vrijednosti koje se odvija nakon dovođenja napajanja platformi (engl. \textit{power
-on reset}), hardver ispituje izvode koji sadrže informaciju o tome na koji način će se pokrenuti sustav na
+Nakon postavljanja izvornih vrijednosti koje se odvija nakon dovođenja napajanja (engl. \textit{power
+on reset}), hardver ispituje izvode platforme koji sadrže informaciju o tome na koji način će se pokrenuti sustav na
 platformi. Moguće pokretanje sustava je s SD kartice, preko JTAG (engl. \textit{Joint Test Action Group}) modula
 ili QSPI (engl. \textit{Quad Serial Peripheral Interface}) memorije. Nakon inicijalnog
 čitanja izvoda, vrijednost se sprema u odgovarajući registar iz kojeg se čita način pokretanja sustava sve do
@@ -104,7 +104,7 @@ koje su opisane tablicom~\ref{boot_stages}.
     \textit{Second Stage Bootloader}) ili korisničke aplikacije, nakon čega slijedi i predavanje kontrole SSBL-u
     ili aplikaciji.\\
     \hline
-    Razina 2 & Izvođenje korisničke aplikacije ili u-Boot programa koji je sličan Linuxovoj ljusci te može
+    Razina 2 & Izvođenje korisničke aplikacije ili \textit{u-Boot} programa koji je sličan Linuxovoj ljusci te može
     poslužiti za učitavanje i pokretanje korisničke aplikacije.\\
     \hline
   \end{tabular}
@@ -114,7 +114,7 @@ koje su opisane tablicom~\ref{boot_stages}.
 \section{Prekidni sustav}
 Svaki CPU platforme ima set privatnih periferijskih prekida, PPI (engl. \textit{private peripheral interrupts}),
 za koje svaki procesor ima mogućnost privatnog pristupa registrima, gdje svaki registar ima svoju kopiju registara.
-U takvu vrtu prekida spada globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
+Takvoj vrsti prekida globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
 \textit{Fast Interrupt Request}) i IRQ (engl. \textit{Interrupt Request}) koji dolaze s programabilne logike.
 Kao i PPI, procesori također imaju mogućnost generiranja softverski generiranih prekida, SGI (engl. \textit{Software
 Generated Interrupt}), s vlastitim kopijama registara vezanih uz SGI. U sustavu postoje i periferijski prekidi
@@ -140,8 +140,8 @@ ili svim procesora u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi 
 jedan procesor u sustavu obradi prekid. Ostali procesori u sustavu prime nepredvidljivi (enlg. \textit{spurious}) prekid.
 Drugi model je N-N, gdje jedan procesor obrađuje prekid, a ostalima je prikazano stanje čekanja na obradu prekida.
 Kod takvog modela se koriste određeni protokoli kako bi prekid bio obrađen jednom. U sklopu GIC-a postoji više kopija
-prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za svaki procesor u sustavu jedan prekidni broj.
-GIC se može podijeliti na dvije logičke cjeline:
+prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za svaki procesor u sustavu postoji jedan prekidni
+broj. GIC se može podijeliti na dvije logičke cjeline:
 \begin{itemize}
   \item{jedan blok distributera}
   \item{jedan ili više blokova CPU sučelja}
@@ -193,17 +193,24 @@ Acknowledge Register}). Mogućnosti CPU sučelja su sljedeće:
 \end{itemize}
 
 \section{MMU (engl. \textit{Memory Management Unit})}
+\section{Koprocesorska podrška}
 
 
 \chapter{Višejezgrene konfiguracije Zynq-7000 platforme}
-Kao što je već napomenuto, ZedBoard implementira Cortex-A9 procesor s dvije jezgre te je za navedenu
+Kao što je već rečeno, ZedBoard implementira Cortex-A9 procesor s dvije jezgre te je za navedenu
 platformu moguće razviti aplikacije s različitim konfiguracijama obzirom na broj jezgri koje su potrebne
 u sustavu. Moguće je implementirati:
 \begin{itemize}
-  \item{Aplikacija namijenjena jednoj jezgri procesora (CPU0),}
-  \item{Dvije aplikacije, svaka namijenjena jednoj jezgri i}
-  \item{Aplikacija namijenjena objema jezgrama u sustavu.}
+  \item{aplikaciju namijenjena jednoj jezgri procesora (CPU0),}
+  \item{dvije aplikacije, svaka namijenjena jednoj jezgri i}
+  \item{aplikaciju namijenjena objema jezgrama u sustavu.}
 \end{itemize}
+Korištenjem prednosti višejezgrenih konfiguracija, dobiju se bolje performanse platforme u smislu da je višejezgrena platforma
+sposobna obavljati N zadataka u nekom vremenskom trenutku, gde je N broj jezgri platforme \cite{cortexa_pg}. Zbog paralelnosti
+obavljanja zadataka, određeni posao se može obaviti brže nego na platformi s jednom jezgrom. Nakon što obave potrebni posao,
+jezgre mogu ići u stanje gašenja kako bi se smanjila potrošnja. Još jedan način smanjenja potrošnje je da se smanji frekvencija
+na kojoj rade jezgre. Uz to, višejezgrene platforme mogu imati bolji odziv u odnosu na platforme s jednom jezgrom jer bilo koja
+jezgre može obraditi prekid, što smanjuje broj prekida koje je potrebno obraditi na jednoj jezgri.\\
 Važno je napomenuti da je jedna jezgra sustava (CPU0) primarna, a druga (CPU1) sekundarna. Prilikom
 pokretanja sustava, na platformi je aktivna samo primarna jezgra, dok se sekundarna jezgra nalazi u
 WFE (engl. \textit{Wait For Event}) stanju. Nakon što se sustav pokrenuo, primarna jezgra je zadužena
@@ -214,7 +221,7 @@ koja se izvršava na CPU0 upiše adresu na kojoj se nalazi aplikacija za CPU1 na
 0xFFFFFFF0 te izvrši SEV (engl. \textit{send event}) instrukciju koja rezultira buđenjem CPU1.
 Komunikaciju između dvije jezgre je moguće ostvariti pomoću prekida između procesora
 (\textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka. Prekidi između procesora
-na ovoj platformi se implementira pomoću softverski generiranih prekida (SGI). Za bolje razumijevanje
+na ovoj platformi se implementiraju pomoću softverski generiranih prekida (SGI). Za bolje razumijevanje
 višejezgrenih konfiguracija, u nastavku su dani jednostavni primjeri razvoja aplikacije za dvije različite
 konfiguracije. Obje aplikacije su razvijene pomoću lanca alata arm-none-eabi i Xilinx SDK 2019 (engl.
 \textit{Software Development Kit}) uz zadanu konfiguraciju hardvera (bez potrebe za generiranjem
@@ -230,9 +237,9 @@ odvojene skripte za memorijsko povezivanje (\textit{linker} skripte) i skripte z
 operacijska sustava dijele isti fizički memorijski prostor, odnosno ne postoji nikakva izolacija između dva
 operacijska sustava. Karakteristike AMP konfiguracije su sljedeće:
 \begin{itemize}
-  \item{Većina uređaja mora biti posvećena određenom procesoru}
-  \item{Upravitelj prekidima je dijeljen između procesora}
-  \item{Samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima}
+  \item{većina uređaja mora biti posvećena određenom procesoru}
+  \item{upravitelj prekidima je dijeljen između procesora}
+  \item{samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima}
 \end{itemize}
 FSBL je zadužen za učitavanje obje aplikacije u memoriju. Opisana konfiguracija je prikazana slikom \ref{amp}.
 
@@ -246,8 +253,8 @@ FSBL je zadužen za učitavanje obje aplikacije u memoriju. Opisana konfiguracij
 \subsection{Razvoj AMP aplikacije}
 Kod razvoja AMP aplikacije u XSDK, nužno je stvoriti dva projekta, jedan za procesor CPU0 i drugi za CPU1.
 Prilikom stvaranja projekta potrebno je odabrati za koji procesor je aplikacija namijenjena. Kod konfiguriranja
-projekta za CPU1, prevoditelju projekta je potrebno dodati poseban indikator: USE\_AMP=1 kako bi aplikacija mogla
-funkcionirati na ispravan način. Postavljanjem USE\_AMP zastavice, otklanja se mogućnost rekonfiguriranja L2 \textit{cache}
+projekta za CPU1, prevoditelju projekta je potrebno dodati poseban indikator: \textit{USE\_AMP=1} kako bi aplikacija mogla
+funkcionirati na ispravan način. Postavljanjem \textit{USE\_AMP} zastavice, otklanja se mogućnost rekonfiguriranja L2 \textit{cache}
 memorije i distributera GIC upravitelja što se smatra nepoželjnim rukovanjem navedenih resursa koji su zajednički procesorima
 u sustavu. Primjer nepoželjnog ponašanja zbog ne postavljanja navedene zastavice je dvostruka inicijalizacija distributera
 GIC-a što bi moglo rezultirati gubitkom postavki prekida koji su konfigurirani primarnim procesorom. Takvo ponašanje bi
@@ -255,9 +262,9 @@ prekršilo jedno svojstvo AMP aplikacija koje se odnosi na to da je samo jedan p
 prekidima, u ovom slučaju GIC distributera. CPU sučelje GIC-a se normalno inicijalizira na oba procesora, bez ograničenja.
 Obzirom da su za razvoj AMP aplikacije potrebna dva projekta, potrebne su i dvije skripte za memorijsko povezivanje što
 znači da svaki procesor mora imati svoje upravljačke programe za uređaje (\textit{device drivers}) koje treba koristiti.
-Ako se za primjer uzme funkcija print, koja se koristi za ispis preko serije korištenjem UART-a (engl. \textit{Universal
+Ako se za primjer uzme funkcija \textit{print}, koja se koristi za ispis preko serije korištenjem UART-a (engl. \textit{Universal
 Asynchronous Receiver Transmitter}), implementirana procesorom CPU0, jasno je da CPU1 neće moći pozvati tu istu funkciju
-jer funkcija nije vidljiva u memorijskom prostoru CPU1 aplikacije. Da bi CPU1 mogao koristiti istu print funkciju,
+jer funkcija nije vidljiva u memorijskom prostoru CPU1 aplikacije. Da bi CPU1 mogao koristiti istu \textit{print} funkciju,
 CPU1 treba implementirati funkcionalnost te funkcije kako bi skripta za memorijsko povezivanje mogla locirati navedenu
 funkciju. Iz ovog se vidi da nije praktično koristiti isti uređaj na oba procesora te se zbog toga većina uređaja dodjeljuje
 određenom procesoru. Iako se UART može dijeliti između procesora, neke periferije, kao što su to brojila, se ne mogu.
@@ -283,10 +290,11 @@ dvije skripte za pokretanje sustava. U slučaju razvoja aplikacije operacijskog 
 samo jedan raspoređivač zadataka koji je zadužen za raspoređivanje procesa, odnosno zadataka, na obje jezgre.
 Prilikom razvoja SMP aplikacije moguće je:
 \begin{itemize}
-  \item{Odrediti procesor koji će izvoditi određeni proces,}
-  \item{Obraditi prekid s bilo kojim slobodnim procesorom,}
-  \item{Odrediti jedan procesor koji će biti zadužen za inicijalizaciju i pokretanje drugih procesora.}
+  \item{odrediti procesor koji će izvoditi određeni proces,}
+  \item{obraditi prekid s bilo kojim slobodnim procesorom,}
+  \item{odrediti jedan procesor koji će biti zadužen za inicijalizaciju i pokretanje drugih procesora.}
 \end{itemize}
+SMP ima mogućnost dinamičkog određivanja uloge svakog procesora te se svaki zadatak može izvoditi na bilo kojoj jezgri.
 Opisana konfiguracija prikazana je slikom \ref{smp}.
 \begin{figure}[H]
   \centering
@@ -301,7 +309,7 @@ Pošto se sustav CPU0 procesora pokreće prvi, CPU0 je zadužen za inicijalizaci
 se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je boot.S skripta
 koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva posebni projekt za CPU1, potrebno je modificirati
 skriptu za pokretanje sustava na CPU1 na način da se izbaci dio s inicijalizacijom L2 \textit{cache} memorije (kod AMP
-aplikacije, to je ostvareno pomoću indikator USE\_AMP). Također, potrebno je promijeniti aplikaciju na koju se skače nakon
+aplikacije, to je ostvareno pomoću indikator \textit{USE\_AMP}). Također, potrebno je promijeniti aplikaciju na koju se skače nakon
 inicijalizacije procesora (postaviti skok na željenu CPU1 aplikaciju). Poznato je da svaki procesor ima svoju tablicu
 prekidnih vektora te je iz tog razloga potrebno dodati asemblerski kod koji će sadržavati potrebnu tablicu prekidnih vektora.
 Tablica prekidnih vektora mora biti sadržana u memoriji koja ima odmak 0x00 od početne adrese na kojoj se nalazi
@@ -313,6 +321,8 @@ aplikacija CPU1 procesora. Da bi se ostvario potrebni odmak, poduzeti su sljede�
   \item{U asemblerski kod tablice prekidnih vektora CPU1, dodana je direktiva .org 0 koja osigurava da se kod smjesti na
   početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije)}
 \end{enumerate}
+Važno je napomenuti i da CPU1 treba imati poseban stog namijenjen CPU1 procesoru te je stog potrebno dodati u skriptu za
+memorijsko povezivanje. Uz to, u skriptu za pokretanje je potrebno navesti odgovarajući stog CPU1 procesora.
 Nakon navedenih promjena, projekt je spreman za implementaciju aplikacije. Pošto se radi o SMP konfiguraciji, razvija se
 samo jedna aplikacija koja sadrži dva zadatka koji se konkurentno izvode (jedan na CPU0, a drugi na CPU1). Također, sve
 funkcije dostupne jednom procesoru su dostupne i drugom procesoru jer dijele jedan memorijski prostor (jedna skripta za
@@ -334,7 +344,31 @@ upiše adresa koja je jednaka početnoj adresi CPU1 sekcije. Tok programa od pok
 \end{figure}
 
 \chapter{\textit{TrustZone} sigurnosna ekstenzija Cortex-A platforma}
+Potreba za sigurnošću ugradbenih računala sve više raste zbog rastuće vrijednosti podataka pohranjenih na njima kao
+što su to bankovni računi ili sinkronizirane \textit{e-mail} adrese \cite{tz_wp}. Povećanjem vrijednosti podataka pohranjenih na
+uređaje povećava vjerojatnost napada na uređaj. Cilj \textit{TrustZone} ekstenzije je pružiti robusno sigurnosno okruženje
+uređajima bogatih operacijskih mogućnosti integrirajući zaštitne mjere u ARM-ov procesor, sabirnički sustav i periferalni
+sustav. Kako bi se odredile mjere zaštite, potrebno je odrediti napade od kojih se želi zaštititi, odnosno koji resursi
+moraju biti zaštićeni.
+
 \section{Potreba za sigurnosti u mobilnom sektoru}
+Dvije kritične komponente mobilnih uređaja su IMEI (engl. \textit{International Mobile Equipment Identity}) kod i
+\textit{SIMLock}. IMEI je jedinstveni kod koji se koristi za identifikaciju uređaja kad se priključi na mrežu te se prilikom
+krađe uređaja koristi za zabranu pristupa mreži. \textit{SIMLock} je protokol koji se koristi za povezivanje uređaja i
+SIM kartice određenog operatera te se kod krađe uređaja koristi za vezanje uređaja i operatera do isteka ugovora. Ovakvi
+zaštitni mehanizmi se mogu lako premostiti (obično reprogramabilnim alatom i USB kablom). O tome koliko je jednostavno
+srušiti takve sigurnosne mehanizme govori statistika Ujedinjenog Kraljevstva koja govori da se pola od ukupnih uličnih
+zločina odvija preko krađe mobilnih uređaja što donosi velike novčane štete industriji. Noviji uređaji imaju dodatne
+zaštitne mehanizme koji se odnose na sadržaj i servise koji su dostupni lokalno na uređaju. Kritične značajke novih
+uređaja su sinkronizirane \textit{e-mail} adrese, povećane mogućnosti žične i bežične povezanosti i velike količine
+podatkovne memorije. Primjer industrije koja nije otvorenog sustava je automobilska industrija koja također snosi velike
+novčane štete zbog napada na ugradbena računala. Sigurnosne značajke potrebne kod takvih ugradbenih sustava su autentičnost
+nadogradnje ugrađenog softvera i osiguravanje da se ispitivanje sustava ne može zlonamjerno iskoristiti.
+Takve značajke se mogu implementirati pomoću \textit{TrustZone} ekstenzije. Prilikom dizajna sigurnosnog rješenja, proizvođač
+mora izmjeriti omjer cijena koje moraju uložiti u dizajn i štete koju bi mogli imati zbog napada. Zbog niže kompleksnosti
+izvedbe \textit{TrustZone} ekstenzije, ARM ima i niže troškove proizvodnje ekstenzije što ide u prilog proizvođačima
+uređaja.
+
 \section{Softverska virtualizacija}
 \section{\textit{TrustZone} arhitektura}
 \subsection{Utjecaj sigurnosnih ekstenzija na prekidni sustav}
