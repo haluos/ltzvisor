@@ -76,13 +76,13 @@ int main() {
  */
 void led_blink( void * parameters ){
 
-	// static uint32_t toggle;
+	static uint32_t toggle;
 	/** 4GPIO (LED) in FPGA fabric */
-	// static uint32_t *ptr = (uint32_t *) 0x41200000;
+	static uint32_t *ptr = (uint32_t *) 0x41200000;
 
 	for( ;; ){
-		// toggle ^=0xF;
-		// *ptr = toggle;
+		toggle ^=0xF;
+		*ptr = toggle;
 		YIELD()
 	}
 }

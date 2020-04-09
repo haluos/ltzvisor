@@ -50,15 +50,12 @@
 #include <asm-offsets.h>
 #include <platform_asm.h>
 
+.org  0
 .text
+.section .cpu1_mon_entry
 
-.globl _reset_handler
-_reset_handler:
-
-	/** Run CPU0 and stuck other CPUs */
-	bl	get_cpu_id
-	cmp	r0, #0		@ CPU0?
-	bne	__stuck_loop
+.globl _cpu1_secure_entry
+_cpu1_secure_entry:
 
 __start_secure_core:
 
@@ -83,12 +80,8 @@ __setup_CPU:
 	ldr  	r0, =0x00				@ Clear registers
 	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
 
-	/** Set secure vector table (VBAR) */
-	ldr	r0, =_secure_vector_table		@ Read the Secure Vector Table's Base Address
-	mcr	p15, 0, r0, c12, c0, 0			@ Write VBAR
-
 	/** Set monitor vector table (VBAR) */
-	ldr	r0, =_monitor_vector_table		@ Read the Monitor Vector Table's Base Address
+	ldr	r0, =_cpu1_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
 	mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
 
 
@@ -98,27 +91,27 @@ __setup_stacks:
 	bl	get_cpu_id
 	/* FIQ mode */
 	msr	cpsr_c,#(FIQ_MODE | IRQ_BIT | FIQ_BIT)		@ Change CPSR to Fiq MODE and disable FIQ and IRQ
-	ldr	r1,=_fiq_stack
+	ldr	r1,=_cpu1_fiq_stack
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 	/* ABORT mode */
 	msr	cpsr_c,#(ABORT_MODE | IRQ_BIT | FIQ_BIT)	@ Change CPSR to Abort MODE and disable FIQ and IRQ
-	ldr	r1,=_abort_stack
+	ldr	r1,=_cpu1_abort_stack
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 	/* UNDEFINED mode */
 	msr	cpsr_c,#(UNDEFINED_MODE | IRQ_BIT | FIQ_BIT)	@ Change CPSR to Undefined MODE and disable FIQ and IRQ
-	ldr	r1,=_undefined_stack
+	ldr	r1,=_cpu1_undefined_stack
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 	/* SYSTEM mode */
 	msr	cpsr_c,#(SYSTEM_MODE | IRQ_BIT | FIQ_BIT)	@ Change CPSR to System MODE and disable FIQ and IRQ interrupts
-	ldr	r1,=_user_stack
+	ldr	r1,=_cpu1_user_stack
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 	/* MONITOR mode */
 	msr	cpsr_c,#(MONITOR_MODE | IRQ_BIT | FIQ_BIT)	@ Change CPSR to Monitor MODE and disable only IRQ interrupts
-	ldr	r1,=_monitor_stack
+	ldr	r1,=_cpu1_monitor_stack
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 
@@ -162,8 +155,10 @@ __init_c_env:
 __call_main:
 //.globl cpu_init
 	//bl	cpu_init				@@@ Jump to Operating System 'c' entry function
-.globl ltzvisor_main
-	bl	ltzvisor_main				@ Jump to LTZVisor entry function
+.globl interrupt_interface_init
+	bl	interrupt_interface_init			@ Jump to LTZVisor entry function
+  /* Restore NS context */
+	b boot_ns_cpu1
 	/* This point should never be reached */
 	b	.
 
@@ -177,40 +172,3 @@ __call_main:
  */
 __stuck_loop:
 	b	__stuck_loop
-
-/**
- * Get CPU id
- *
- * @param
- *
- * @retval 	r0 - CPU id
- */
-.global get_cpu_id
-.func get_cpu_id
-  @ uint32_t get_cpu_id(void)
-get_cpu_id:
-	mrc	p15, 0, r0, c0, c0, 5
-	and	r0, r0, #0x03
-	bx	lr
-.endfunc
-
-/**
- * Initializing C environment
- *
- * @param
- *
- * @retval
- */
-.globl c_environment_init
-c_environment_init:
-	/* bss initialization (zeros) */
-	ldr	r1, =_SW_BSS_START
-	ldr	r2, =_SW_BSS_END
-	mov	r0, #0
-2:
-	cmp	r1, r2
-	bgt	1f
-	str	r0,	[r1], #4
-	b	2b
-1:
-	mov		pc, lr

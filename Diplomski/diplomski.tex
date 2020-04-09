@@ -422,7 +422,7 @@ Dvije kritične komponente mobilnih uređaja su IMEI (engl. \textit{Internationa
 krađe uređaja koristi za zabranu pristupa mreži. \textit{SIMLock} je protokol koji se koristi za povezivanje uređaja i
 SIM kartice određenog operatera te se kod krađe uređaja koristi za vezanje uređaja i operatera do isteka ugovora. Ovakvi
 zaštitni mehanizmi se mogu lako premostiti (obično reprogramabilnim alatom i USB kablom). O tome koliko je jednostavno
-srušiti takve sigurnosne mehanizme govori statistika Ujedinjenog Kraljevstva koja govori da se pola od ukupnih uličnih
+srušiti takve sigurnosne mehanizme, govori statistika Ujedinjenog Kraljevstva koja iznosi da se pola od ukupnih uličnih
 zločina odvija preko krađe mobilnih uređaja što donosi velike novčane štete industriji. Noviji uređaji imaju dodatne
 zaštitne mehanizme koji se odnose na sadržaj i servise koji su dostupni lokalno na uređaju. Kritične značajke novih
 uređaja su sinkronizirane \textit{e-mail} adrese, povećane mogućnosti žične i bežične povezanosti i velike količine
@@ -457,7 +457,15 @@ podaci izvan kriptografičkih blokova. Ideja \textit{TrustZone} ekstenzije je da
 prostora. Ekstenzija pruža konfigurabilni sustav kojeg dizajner može konfigurirati na način koji je specifičan za željenu
 aplikaciju. AMBA3 AXI sabirnički protokol omogućava \textit{TrustZoneov} koncept dva svijeta: Sigurnog (\textit{Secure}) i
 Nesigurnog \textit{Non-Secure} ili Normalnog svijeta. Smještanje osjetljivih resursa u Sigurni svijet štiti uređaj i od napada
-od kojih se je teško obraniti, kao što je to unošenje lozinke putem tipkovnice ili dodirnog zaslona. Ekstenzija samog procesora
+od kojih se je teško obraniti, kao što je to unošenje lozinke putem tipkovnice ili dodirnog zaslona.
+Kako bi takva konfiguracija bila moguća, \textit{TrustZone} sadrži tri ključne komponente:
+\begin{itemize}
+  \item{TZPC (\textit{TrustZone Protection Controller}) - omogućava dinamičku izmjenu sigurnosnog stanja prilikom izvođenja
+  programa}
+  \item{TZASC (\textit{TrustZone Address Space Controller}) - omogućava podjelu memorije na Sigurne i Nesigurne segmente}
+  \item{TZMA (\textit{TrustZone Memory Adapter}) - omogućava označavanje segmenata statičke memorije kao Sigurna memorija}
+\end{itemize}
+Ekstenzija samog procesora
 omogućava efektivno izvođenje koda Normalnog i Sigurnog svijeta pomoću metode vremenskog dijeljenja (\textit{time-sliced
 fashion}). Ključna mogućnost ekstenzije je kontroliranje pristupa ispitivanja Sigurnog softvera. Promjena uvedena u AMBA3
 AXI sabirnicu je dodavanje 33. NS (\textit{Non-Secure}) bita prilikom čitanja i pisanja. Dodatni bit indicira s kojeg
@@ -469,7 +477,7 @@ jezgre za svaki procesor, gdje je jedna virtualna jezgra zadužena za Sigurni, a
 slici \ref{vcpu}. Na slici, oznaka VCPU označuje virtualni CPU.
 \begin{figure}[H]
   \centering
-	\includegraphics[width=250pt]{vcpu.png}%
+	\includegraphics[width=200pt]{vcpu2.png}%
 	\caption{Virtualizacija fizičkog procesora}
 	\label{vcpu}%
 \end{figure}
@@ -477,7 +485,16 @@ Uz promjenu na
 sabirnici, \textit{TrustZone} uvodi i novi način rada procesora: nadgledni (\textit{monitor mode}) uz dva stanja: Sigurno
 i Nesigurno stanje. Nadgledni način rada je uvijek u Sigurnom stanju.\\
 Koncept dva svijeta se može gledati kao dva zadatka u operacijskom sustavu, gdje je softver koji se izvodi
-u nadglednom načinu rada zadužen za zamjenu konteksta između dvije virtualne jezgre. Prijelazi iz Nesigurnog stanja u nadgledni
+u nadglednom načinu rada zadužen za zamjenu konteksta između dvije virtualne jezgre. Pokretanje cjelokupnog sustava s dva
+svijeta prikazano je slikom \ref{tz_boot}.
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=350pt]{tz_boot.png}%
+	\caption{Pokretanje \textit{TrustZone} sustava}
+	\label{tz_boot}%
+\end{figure}
+Sigurno pokretanje sustava dodaje kriptografičke provjere za svaku razinu pokretanja Sigurnog svijeta.
+Prijelazi iz Nesigurnog stanja u nadgledni
 način rada se izvode pomoću SMC (engl. \textit{Secure Monitor Call}) instrukcije ili konfiguracijom IRQ kao okidač za ulaz
 u nadgledni način rada. Identifikacija svijeta u kojem se softver izvodi se nalazi u NS bitu SCR (\textit{Secure
 Configuration Register}) registra CP15 koprocesora. Samo Sigurni softver može upravljati NS bitom SCR registra. Postavljanjem
@@ -567,7 +584,7 @@ Obzirom na SMP, moguće je ostvariti dva modela:
 \begin{enumerate}
   \item{Sigurni softver implementiran na jednom procesoru, a Nesigurni na oba (konfiguracija s 4 procesora u sustavu prikazana
   je na slici \ref{smp_tz})}
-  \item{Sigurni mijenja procesor na kojem je aktivan, a Nesigurni koristi oba procesora}
+  \item{Sigurni softver mijenja procesor na kojem je aktivan, a Nesigurni koristi oba procesora}
 \end{enumerate}
 Prednost prvog modela je jednostavnost prosljeđivanja prekida Sigurnom softveru, a nedostatak što raspoređivač zadataka
 Nesigurnog softvera postaje neefikasan zbog dodjeljivanja procesorskog vremena Sigurnom softveru. Prednost drugog modela je
@@ -582,7 +599,36 @@ ne zatraži zahtjev za zamjenu konteksta. Kad bi zahtjevi bili omogućeni, susta
 \end{figure}
 
 \chapter{Iskorištenje \textit{TrustZone} ekstenzije za ostvarenje LTZVisor monitora virtualnih strojeva}
+LTZVisor (\textit{Lightweight TrustZone hypervisor}) je jednostavan monitor virtualnih strojeva otvorenog koda s namjerom
+da se potakne rad na proučavanju i implementaciji aplikacija koje iskorištavaju \textit{TrustZone} ekstenziju \cite{ltzvisor}.
+Ideja LTZVisora je iskoristiti \textit{TrustZone} ekstenziju kao hardversku podršku za virtualizaciju te na taj način
+prezentirati mogućnosti koje nosi \textit{TrustZone} ekstenzija. LTZVisor je dao dobar uvid u mogućnosti \textit{TrustZone}
+ekstenzije koja je sada dostupna i u novoj ARMv8-M arhitekturi koja će nesumnjivo biti sve više dostupna u industriji te
+će pružati slične mogućnosti. Iskorištenje \textit{TrustZone} ekstenzije omogućava korištenje platforme kao dvostruki virtualni
+sustav, odnosno sustav s dva gost virtualna stroja: Sigurni gost i Nesigurni gost. Svaki od gost virtualnih strojeva može
+implementirati svoj OS (operacijski sustav). Opisani sustav prikazan je slikom \ref{ltzvisor}.
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=300pt]{ltzvisor.png}%
+	\caption{Arhitektura LTZVisor monitora virtualnih strojeva \cite{ltzvisor}}
+	\label{ltzvisor}%
+\end{figure}
+Na slici \ref{ltzvisor} se raspoznaju tri glavne komponente, a to su:
+\begin{itemize}
+  \item{monitor virtualnih strojeva koji se izvodi u najprivilegiranijem načinu rada procesora (nadglednom načinu rada)}
+  \item{Sigurni gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada Sigurnog svijeta}
+  \item{Nesigurni gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada Nesigurnog svijeta}
+\end{itemize}
+Iako se i Sigurni i Nesigurni gost virtualni strojevi izvode u \textit{supervisor} načinu rada, nisu jednako privilegirani
+(Nesigurni gost nema pristup jednakim resursima kao i Sigurni, dok Sigurni ima pristup većini resursa). Obzirom da
+Sigurni gost može upravljati resursima Nesigurnog gosta, Sigurni gost je svjestan virtualizacije. Pokušaj pristupa Nesigurnog
+gosta Sigurnom resursu izaziva iznimku monitoru virtualnih strojeva.
+Jedna od zadaća monitora virtualnih strojeva je konfiguriranje memorije, prekida i uređaja za gost virtualne strojeve.
+
 \section{Raspoređivanje Sigurnog i Nesigurnog svijeta}
+Dodatna zadaća monitora virtualnih strojeva, a veže se uz raspoređivanje Sigurnog i Nesigurnog gosta, je upravljanje s
+VMCB (engl. \textit{Virtual Machine Control Block}) blokovima koji su zaduženi za pohranjivanje stanja virtualnih strojeva.
+
 \section{Memorijski podsustav LTZVisora}
 \section{Prekidni podsustav LTZVisora}
 \section{Razvoj koda za Nesigurni gost virtualni stroj}
