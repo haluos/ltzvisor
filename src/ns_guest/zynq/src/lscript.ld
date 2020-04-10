@@ -24,7 +24,7 @@ _UNDEF_STACK_SIZE = DEFINED(_UNDEF_STACK_SIZE) ? _UNDEF_STACK_SIZE : 1024;
 MEMORY
 {
    ps7_ddr_0 : ORIGIN = 0x00100000, LENGTH = 0x1BEFFFFF
-   cpu1_code : ORIGIN = 0x110000, LENGTH = 0x010000
+   cpu1_code : ORIGIN = 0x00110000, LENGTH = 0x10000
    ps7_qspi_linear_0 : ORIGIN = 0xFC000000, LENGTH = 0x1000000
    ps7_ram_0 : ORIGIN = 0x0, LENGTH = 0x30000
    ps7_ram_1 : ORIGIN = 0xFFFF0000, LENGTH = 0xFE00
@@ -236,11 +236,13 @@ SECTIONS
 
 .bss (NOLOAD) : {
    __bss_start = .;
+   __bss_start__ = .;
    *(.bss)
    *(.bss.*)
    *(.gnu.linkonce.b.*)
    *(COMMON)
    __bss_end = .;
+   __bss_end__ = .;
 } > ps7_ddr_0
 
 _SDA_BASE_ = __sdata_start + ((__sbss_end - __sdata_start) / 2 );
@@ -260,6 +262,33 @@ _SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );
 } > ps7_ddr_0
 
 .stack (NOLOAD) : {
+   . = ALIGN(16);
+   _stack_end = .;
+   . += _STACK_SIZE;
+   . = ALIGN(16);
+   _stack = .;
+   __stack = _stack;
+   . = ALIGN(16);
+   _irq_stack_end = .;
+   . += _IRQ_STACK_SIZE;
+   . = ALIGN(16);
+   __irq_stack = .;
+   _supervisor_stack_end = .;
+   . += _SUPERVISOR_STACK_SIZE;
+   . = ALIGN(16);
+   __supervisor_stack = .;
+   _abort_stack_end = .;
+   . += _ABORT_STACK_SIZE;
+   . = ALIGN(16);
+   __abort_stack = .;
+   _fiq_stack_end = .;
+   . += _FIQ_STACK_SIZE;
+   . = ALIGN(16);
+   __fiq_stack = .;
+   _undef_stack_end = .;
+   . += _UNDEF_STACK_SIZE;
+   . = ALIGN(16);
+   __undef_stack = .;
    _stack_end1 = .;
    . += _STACK_SIZE;
    . = ALIGN(16);

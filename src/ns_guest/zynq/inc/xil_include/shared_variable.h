@@ -1,0 +1,13 @@
+/*
+ * shared_variable.h
+ *
+ *  Created on: Mar 30, 2020
+ *      Author: magdalena
+ */
+
+#ifndef PS7_CORTEXA9_0_LIBSRC_STANDALONE_V7_0_SRC_SHARED_VARIABLE_H_
+#define PS7_CORTEXA9_0_LIBSRC_STANDALONE_V7_0_SRC_SHARED_VARIABLE_H_
+
+#define CPU0_FLAG
+
+#endif /* PS7_CORTEXA9_0_LIBSRC_STANDALONE_V7_0_SRC_SHARED_VARIABLE_H_ */

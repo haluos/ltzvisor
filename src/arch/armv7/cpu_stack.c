@@ -72,22 +72,22 @@ uint32_t _supervisor_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribu
 /************************************** CPU1 stack ****************************************/
 
 /** IRQ stack allocation (4-bit alligned) */
-uint32_t _cpu1_irq_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_irq_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** FIQ stack allocation (4-bit alligned) */
-uint32_t _cpu1_fiq_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_fiq_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** ABORT stack allocation (4-bit alligned) */
-uint32_t _cpu1_abort_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_abort_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** UNDEF stack allocation (4-bit alligned) */
-uint32_t _cpu1_undefined_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_undefined_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** SYS stack allocation (4-bit alligned) */
-uint32_t _cpu1_user_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_user_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** MON stack allocation (4-bit alligned) */
 uint32_t _cpu1_monitor_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** SVC stack allocation (4-bit alligned) */
-uint32_t _cpu1_supervisor_stack[4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+uint32_t _cpu1_supervisor_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));

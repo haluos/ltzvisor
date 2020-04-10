@@ -321,15 +321,15 @@ board_smc:
 	call_c_function_arg board_handler
 	exception_return_arg
 
-  .globl _wake_cpu1
-  _wake_cpu1:
-    ldr r1, =0xfffffff0
-    ldr r2, =0x00100000
-    str r1, [r2]
-    sev
-    isb
-    dsb
-    movs pc, lr
+.globl _wake_cpu1
+_wake_cpu1:
+  .global add_entry_addr_cpu1
+  b add_entry_addr_cpu1
+  dmb
+  sev
+  isb
+  dsb
+  movs pc, lr
 
 /**
  * Monitor scheduler - schedule NS_guest
@@ -365,13 +365,13 @@ _mon_scheduler:
 	dsb
 	movs    pc, lr				@ Return from exception (MON -> NS_SVC)
 
-  .globl boot_ns_cpu1
-  boot_ns_cpu1:
-    /* Restore NS context */
-    GET_NS_WORLD_CONTEXT
-    WORLD_CONTEXT_RESTORE
-    /* Set NS bit and go NS world */
-    SCR_NS_SET
-    isb
-    dsb
-    movs    pc, lr				@ Return from exception (MON -> NS_SVC)
+.globl boot_ns_cpu1
+boot_ns_cpu1:
+  /* Restore NS context */
+  GET_NS_WORLD_CONTEXT
+  WORLD_CONTEXT_RESTORE
+  /* Set NS bit and go NS world */
+  SCR_NS_SET
+  isb
+  dsb
+  movs    pc, #0x00110000				@ Return from exception (MON -> NS_SVC)

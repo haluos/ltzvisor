@@ -76,24 +76,24 @@ extern uint32_t _supervisor_stack[STACK_SIZE/4];
 /********************************CPU1 stack************************************/
 
 /** IRQ stack allocation */
-extern uint32_t _cpu1_irq_stack[4];
+extern uint32_t _cpu1_irq_stack[STACK_SIZE/4];
 
 /** FIQ stack allocation */
-extern uint32_t _cpu1_fiq_stack[4];
+extern uint32_t _cpu1_fiq_stack[STACK_SIZE/4];
 
 /** ABORT stack allocation */
-extern uint32_t _cpu1_abort_stack[4];
+extern uint32_t _cpu1_abort_stack[STACK_SIZE/4];
 
 /** UNDEF stack allocation */
-extern uint32_t _cpu1_undefined_stack[4];
+extern uint32_t _cpu1_undefined_stack[STACK_SIZE/4];
 
 /** SYS stack allocation */
-extern uint32_t _cpu1_user_stack[4];
+extern uint32_t _cpu1_user_stack[STACK_SIZE/4];
 
 /** MON stack allocation */
 extern uint32_t _cpu1_monitor_stack[STACK_SIZE/4];
 
 /** SVC stack allocation */
-extern uint32_t _cpu1_supervisor_stack[4];
+extern uint32_t _cpu1_supervisor_stack[STACK_SIZE/4];
 
 #endif /* __ARMV7_CPU_STACK_H */

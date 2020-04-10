@@ -1,6 +1,5 @@
 #include "xparameters.h"
 #include "xil_errata.h"
-#include "shared_variable.h"
 
 .globl MMUTable
 .global _cpu1_entry
