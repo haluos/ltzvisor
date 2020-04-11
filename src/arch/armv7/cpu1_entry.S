@@ -155,8 +155,8 @@ __init_c_env:
 __call_main:
 //.globl cpu_init
 	//bl	cpu_init				@@@ Jump to Operating System 'c' entry function
-.globl interrupt_interface_init
-	bl	interrupt_interface_init			@ Jump to LTZVisor entry function
+.globl LTZVisor_CPU1_entry
+	bl	LTZVisor_CPU1_entry			@ Jump to LTZVisor entry function
   /* Restore NS context */
 	b boot_ns_cpu1
 	/* This point should never be reached */

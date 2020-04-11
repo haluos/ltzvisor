@@ -323,13 +323,14 @@ board_smc:
 
 .globl _wake_cpu1
 _wake_cpu1:
-  .global add_entry_addr_cpu1
-  b add_entry_addr_cpu1
+  /*.global add_entry_addr_cpu1*/
+  ldr r0,=0xfffffff0
+  ldr r1,=0x00110000
+  str r1,[r0]
+/*  b add_entry_addr_cpu1 */
   dmb
   sev
-  isb
-  dsb
-  movs pc, lr
+  movs    pc, lr
 
 /**
  * Monitor scheduler - schedule NS_guest

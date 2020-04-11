@@ -17,16 +17,15 @@ SECTIONS
 {
 	_code_begin = .;
 
+	.cpu1 :{
+		KEEP(*(.cpu1_mon_entry))
+	} > DDR_S_CPU1
+
 	.startup :{
 		__startup_start = .;
 			*(.startup)
 		__startup_end = .;
 	} > DDR_S
-	. = ALIGN(0x1000);
-
-	.cpu1 :{
-		KEEP(*(.cpu1_mon_entry))
-	} > DDR_S_CPU1
 	. = ALIGN(0x1000);
 
 	.text : {
