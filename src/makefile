@@ -227,7 +227,7 @@ ifneq ($(DEBUG), y)
 	$(V)$(sstrip) -s $@
 endif
 	rm -f $(cpu_arch_dir)/asm-offsets.s;
-	rm -f $(final-objs-y)
+	# rm -f $(final-objs-y)
 $(bin_dir)/$(PROJECT_NAME).bin: $(bin_dir)/$(PROJECT_NAME).elf
 	$(V)$(objcopy) -O binary $< $@
 

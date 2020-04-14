@@ -50,17 +50,18 @@
 #include <asm-offsets.h>
 #include <platform_asm.h>
 
-.org  0
 .text
 .section .cpu1_mon_entry
 
 .globl _cpu1_secure_entry
 _cpu1_secure_entry:
 
-__start_secure_core:
+__start_secure_core_cpu1:
 
 	/** Set CPU State */
-__setup_CPU:
+__setup_CPU1:
+	.global start_boot
+	bl start_boot
 	/* Set SCTLR */
 	mrc	p15, 0, r1, c1, c0, 0			@ Read SCTLR
 	bic	r1, r1, #0x10000000			@ Clear TEX bit
@@ -87,8 +88,6 @@ __setup_CPU:
 
 	/** Setup Stacks for all CPU modes */
 __setup_stacks:
-	/* Get CPU id*/
-	bl	get_cpu_id
 	/* FIQ mode */
 	msr	cpsr_c,#(FIQ_MODE | IRQ_BIT | FIQ_BIT)		@ Change CPSR to Fiq MODE and disable FIQ and IRQ
 	ldr	r1,=_cpu1_fiq_stack
@@ -147,8 +146,8 @@ __init_vfp:
 
 
 	/** Initializing C environment */
-__init_c_env:
-	bl	c_environment_init
+/*__init_c_env:
+	bl	c_environment_init*/
 
 
 	/**  Call Main */

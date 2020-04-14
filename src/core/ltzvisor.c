@@ -64,6 +64,9 @@ tzmachine NS_Guest __attribute__ ((aligned (4))) __attribute__ ((section (".bss"
  */
 void ltzvisor_main(void){
 	uint32_t ret;
+	extern uint32_t _cpu1_entry_address;
+	volatile uint32_t *cpu1_read_address = (volatile uint32_t *) 0xfffffff0;
+	// uint32_t * cpu1_entry_addr = _cpu1_entry_address;
 
 	/** Initialize LTZVisor */
 	ret = ltzvisor_init();
@@ -81,6 +84,11 @@ void ltzvisor_main(void){
 		printk("Error: LTZVisor NS_Guest Create\n\t");
 		while(1);
 	}
+	printk(" -> CPUs: Waking up CPU1\n\t");
+	*cpu1_read_address = _cpu1_entry_address;
+	asm volatile("dmb");
+	asm volatile("sev");
+	printk("CPU1 awake!\n\t");
 
 	/** Kick off LTZVisor and start running Guests */
 	printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
@@ -97,4 +105,9 @@ void LTZVisor_CPU1_entry (void)
 	printk("LTZVisor running on CPU1\r\n");
 	interrupt_interface_init();
 	LTZVISOR_MON_EXIT()
+}
+
+void start_boot (void)
+{
+	printk("CPU1 boot started\r\n");
 }

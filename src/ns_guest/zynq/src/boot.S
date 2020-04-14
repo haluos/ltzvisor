@@ -159,13 +159,6 @@
 .set IRQ_stack,		__irq_stack
 .set SYS_stack,		__stack
 
-.set Undef_stack1,	__undef_stack1
-.set FIQ_stack1,		__fiq_stack1
-.set Abort_stack1,	__abort_stack1
-.set SPV_stack1,		__supervisor_stack1
-.set IRQ_stack1,		__irq_stack1
-.set SYS_stack1,		__stack1
-
 .set vector_base,	_vector_table
 
 .set FPEXC_EN,		0x40000000		/* FPU enable bit, (1 << 30) */
@@ -204,71 +197,7 @@ shareable_loop:
 	subs	r3, r3, #1
 	bge	shareable_loop			/* loop till 1G is covered */
 #endif
-	mrc	p15,0,r1,c0,c0,5
-	and	r1, r1, #0xf
-    cmp	r1, #0
-	beq	cpu0_stack
-.global stack_conf
-stack_conf:
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the irq stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x12			/* IRQ mode */
-	msr	cpsr, r2
-	ldr	r13,=IRQ_stack1			/* IRQ stack pointer */
-	bic r2, r2, #(0x1 << 9)    		 /* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x13			/* supervisor mode */
-	msr	cpsr, r2
-	ldr	r13,=SPV_stack1			/* Supervisor stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the Abort  stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x17			/* Abort mode */
-	msr	cpsr, r2
-	ldr	r13,=Abort_stack1		/* Abort stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the FIQ stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x11			/* FIQ mode */
-	msr	cpsr, r2
-	ldr	r13,=FIQ_stack1		/* FIQ stack pointer */
-	bic r2, r2, #(0x1 << 9)    		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the Undefine stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x1b			/* Undefine mode */
-	msr	cpsr, r2
-	ldr	r13,=Undef_stack1		/* Undefine stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the system stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x1F			/* SYS mode */
-	msr	cpsr, r2
-	ldr	r13,=SYS_stack1			/* SYS stack pointer */
-
-	mrc	p15,0,r1,c0,c0,5
-	and	r1, r1, #0xf
-    cmp	r1, #1
-	beq	cpu1_func
-
-.globl cpu0_stack
-cpu0_stack:
 	mrs	r0, cpsr			/* get the current PSR */
 	mvn	r1, #0x1f			/* set up the irq stack pointer */
 	and	r2, r1, r0
@@ -347,8 +276,6 @@ cpu0_stack:
 	orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
 	orr	r0, r0, #(0x01 )		/* Cache/TLB maintenance broadcast */
 	mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
-
-
 
 	mov	r0, r0
 	mrc	p15, 0, r1, c1, c0, 2		/* read cp access control register (CACR) into r1 */

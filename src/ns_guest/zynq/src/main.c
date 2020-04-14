@@ -26,10 +26,10 @@ int main (void)
     printk("NS Guest: Hello World %d\r\n", cnt);
     flag = 1;
     cnt++;
-    if(cnt == 15)
-    {
-      boot_CPU1();
-    }
+    // if(cnt == 15)
+    // {
+    //   boot_CPU1();
+    // }
   }
   return 1;
 }

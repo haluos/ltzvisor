@@ -67,40 +67,6 @@
 
 _cpu1_entry:
 /* only allow cpu1 through */
-       mrc	p15,0,r1,c0,c0,5
-       and	r1, r1, #0xf
-       cmp	r1, #1
-       beq	CheckEFUSE1
-       b        EndlessLoop1
-
-CheckEFUSE1:
-        ldr r0,=EFUSEStaus
-        ldr r1,[r0]                             /* Read eFuse setting */
-        ands r1,r1,#0x80                        /* Check whether device is having single core */
-	beq OKToRun
-	EndlessLoop1:
-	        wfe
-	b	EndlessLoop1
-
-OKToRun:
-	mrc     p15, 0, r0, c0, c0, 0		/* Get the revision */
-	and     r5, r0, #0x00f00000
-	and     r6, r0, #0x0000000f
-	orr     r6, r6, r5, lsr #20-4
-
-#ifdef CONFIG_ARM_ERRATA_742230
-        cmp     r6, #0x22                       /* only present up to r2p2 */
-        mrcle   p15, 0, r10, c15, c0, 1         /* read diagnostic register */
-        orrle   r10, r10, #1 << 4               /* set bit #4 */
-        mcrle   p15, 0, r10, c15, c0, 1         /* write diagnostic register */
-#endif
-
-#ifdef CONFIG_ARM_ERRATA_743622
-	teq     r5, #0x00200000                 /* only present in r2p* */
-	mrceq   p15, 0, r10, c15, c0, 1         /* read diagnostic register */
-	orreq   r10, r10, #1 << 6               /* set bit #6 */
-	mcreq   p15, 0, r10, c15, c0, 1         /* write diagnostic register */
-#endif
 
 	/* set VBAR to the _vector_table address in linker script */
 	ldr	r0, =vector_base

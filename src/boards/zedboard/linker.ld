@@ -9,17 +9,12 @@ MEMORY
 	OCM (rwx): ORIGIN = 0x00000000, LENGTH = 0x00030000
 	DDR_NS  (rwx)  : ORIGIN = 0x00100000, LENGTH = 0x1BEFFFFF
 	DDR_S  (rwx)  : ORIGIN = 0x1C000000, LENGTH = 0x03F00000
-	DDR_S_CPU1  (rwx)  : ORIGIN = 0x1C010000, LENGTH = 0x00001000
 }
 
 
 SECTIONS
 {
 	_code_begin = .;
-
-	.cpu1 :{
-		KEEP(*(.cpu1_mon_entry))
-	} > DDR_S_CPU1
 
 	.startup :{
 		__startup_start = .;
@@ -30,6 +25,8 @@ SECTIONS
 
 	.text : {
 		*(.text)
+		_cpu1_entry_address = .;
+		*(.cpu1_mon_entry)
 	} > DDR_S
 	. = ALIGN(0x1000);
 
