@@ -6,7 +6,7 @@
 
 .globl _vector_table_cpu1
 
-.section .vectors_cpu1
+.section .vectors_cpu1,"ax"
 _vector_table_cpu1:
 	B	_cpu1_entry
 	B	Undefined

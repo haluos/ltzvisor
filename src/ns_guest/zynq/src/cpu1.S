@@ -63,10 +63,12 @@
 
 .set FPEXC_EN,		0x40000000		/* FPU enable bit, (1 << 30) */
 
-.section .boot_cpu1
+.section .boot_cpu1,"ax"
 
 _cpu1_entry:
 /* only allow cpu1 through */
+	.global start_cpu1_ns
+	bl start_cpu1_ns
 
 	/* set VBAR to the _vector_table address in linker script */
 	ldr	r0, =vector_base

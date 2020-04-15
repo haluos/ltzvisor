@@ -375,4 +375,4 @@ boot_ns_cpu1:
   SCR_NS_SET
   isb
   dsb
-  movs    pc, #0x00110000				@ Return from exception (MON -> NS_SVC)
+  movs    pc, #0x00120000				@ Return from exception (MON -> NS_SVC)

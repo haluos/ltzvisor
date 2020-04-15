@@ -50,11 +50,20 @@
 void led_blink( void * pvParameters );
 
 int main() {
+	extern uint32_t _cpu1_entry_address;
+	uint32_t *address = &_cpu1_entry_address;
+	volatile uint32_t *cpu1_read_address = (volatile uint32_t *) 0xfffffff0;
 
 	/** Initialize hardware */
 	hw_init();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
+
+	printk(" -> CPUs: Waking up CPU1\n\t");
+	*cpu1_read_address = address;
+	asm volatile("dmb");
+	printk("* Issuing SEV command...\n\t");
+	asm volatile("sev");
 
 	/** Generate tick every 1s */
 	tick_set(1000000);

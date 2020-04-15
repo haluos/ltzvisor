@@ -6,8 +6,8 @@ CFLAGS += -Wall -mfpu=vfpv3 -mfloat-abi=hard
 CFLAGS += -Wl,-build-id=none
 
 LD = $(ARCH)-ld
-LDFLAGS = -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -T src/lscript.ld
-LDFLAGS += -Wl,-build-id=none
+LDFLAGS = -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
+LDFLAGS += -Wl,-build-id=none -Wl,-T -Wl,./src/lscript.ld
 
 CASM = $(ARCH)-asm
 CASM_FLAGS = -g -mcpu=cortex-a9
@@ -29,7 +29,7 @@ OBJS = $(addprefix build/, $(OBJ))
 
 TARGETS = $(NS_DIR)/ns_guest.elf $(NS_DIR)/ns_guest.bin
 
-all: $(TARGETS) $(INC_FILES)
+all: $(TARGETS) $(INC_FILES) src/lscript.ld
 	@echo "NS Guest ready!"
 
 $(NS_DIR)/ns_guest.elf: $(OBJS) $(INC_FILES)

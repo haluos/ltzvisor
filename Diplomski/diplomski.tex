@@ -71,13 +71,15 @@ za izvođenje instrukcija grananja, Cortex-A9 implementira statičko i dinamičk
 \textit{branch prediction}). Statičko predviđanje je određeno za vrijeme prevođenja koda, a dinamičko koristi
 ishod izvođenja prošle instrukcije kako bi se odredilo hoće li se predviđeno grananje izvesti ili ne. Neka od
 grananja koja se mogu predvidjeti su uvjetna i bezuvjetna grananja te se navedeno dinamičko grananje može isključiti.
+Platforma sadrži i MMU (engl. \textit{Memory Management Unit}) jedinicu koja je prilagođena višeprocesorskim i sigurnosnim
+ekstenzijama.
 
 \section{Pokretanje i konfiguracija sustava}
 Nakon postavljanja izvornih vrijednosti koje se odvija nakon dovođenja napajanja (engl. \textit{power
 on reset}), hardver ispituje izvode platforme koji sadrže informaciju o tome na koji način će se pokrenuti sustav na
 platformi. Moguće pokretanje sustava je s SD kartice, preko JTAG (engl. \textit{Joint Test Action Group}) modula
 ili QSPI (engl. \textit{Quad Serial Peripheral Interface}) memorije. Nakon inicijalnog
-čitanja izvoda, vrijednost se sprema u odgovarajući registar iz kojeg se čita način pokretanja sustava sve do
+čitanja izvoda, vrijednost se sprema u odgovarajući registar iz kojeg se čita na koji način se pokreće sustav sve do
 nestanka napajanja platforme. Određivanjem načina pokretanja sustava započinje sam proces pokretanja, odnosno
 počinje se izvoditi BootROM kod kojeg nije moguće mijenjati. Sveukupno pokretanje sustava se odvija u tri razine
 koje su opisane tablicom~\ref{boot_stages}.
@@ -111,7 +113,7 @@ koje su opisane tablicom~\ref{boot_stages}.
 \end{table}
 Korisnička aplikacija mora sadržavati postupak CPU inicijalizacije, koji je sljedeći:
 \begin{enumerate}
-  \item{Postaviti registar za adresu tablice prekidnih vektora}
+  \item{Upisati adresu tablice prekidnih vektora u odgovarajući registar}
   \item{Onesposobiti L1 \textit{cache} memoriju, TLB (\textit{translation look-aside buffers}) i predviđanje grananja}
   \item{Onesposobiti L2 \textit{cache} memoriju}
   \item{Pripremiti tablice stranica i učitati ih u fizičku memoriju}
@@ -127,27 +129,28 @@ Korisnička aplikacija mora sadržavati postupak CPU inicijalizacije, koji je sl
 Sigurno pokretanje sustava se odnosi na sposobnost uređaja da provede pokretanje sustava koje učitava autentičnu i
 kriptiranu PS sliku sustava i PL \textit{bitstream}. BootROM jedini može inicirati sigurno pokretanje sustava.
 Ako je RSA-PSS (\textit{Rivest, Sharim and Adleman~-~Probabilistic Signature Scheme}) autentifikacija  omogućena,
-BootROM će koristiti javni ključ PuK (\textit{Public Key}) FSBL-a prije nego je dekriptiran. Omogućavanje sigurnog
+BootROM će koristiti javni ključ PuK (\textit{Public Key}) za autentifikaciju FSBL-a. Omogućavanje sigurnog
 pokretanja sustava se može izvesti modificiranjem BootROM zaglavlja u kojem se mora postaviti identifikator sigurnog
 pokretanja sustava. Ako je sigurno pokretanje sustava omogućeno, BootROM automatski omogućuje AES (\textit{Advanced
-Encryption Standard}) i HMAC (\textit{Key-hash message authentication code}) jedinice u PL-u. Kriptiranog FSBL-a BootROM
+Encryption Standard}) i HMAC (\textit{Key-hash message authentication code}) jedinice u PL-u. Kriptiranog FSBL-a, BootROM
 šalje u AES i HMAC te se dekriptirani FSBL vraća u PS i kopira u \textit{on-chip} RAM (OCM). Nakon toga, PS može sigurno
-dizajnirati PL slanjem kriptiranog PL \textit{bitstreama} u AES/HMAC jedinice nakon čega se dekriptirani primjenjuje na PL.
+dizajnirati PL slanjem kriptiranog PL \textit{bitstreama} u AES/HMAC jedinice nakon čega se dekriptirani
+\textit{bitstream} primjenjuje na PL.
 Prilikom pokretanja sustava s SD kartice, ako autentifikacija FSBL-a ne prođe, uređaj ide u sigurnosno zaključavanje
 ili u stanje greške. Kako je sigurno pokretanje sustava izvedeno u PL-u, BootROM mora pričekati da se PL-u dovede napajanje
 prija slanja FSBL-a u PL. Nakon što se FSBL uspješno autentificira, FSBL kreće s izvođenjem. Ako je FSBL kriptiran,
 preporučuje se da se i ostali podaci kriptiraju. Slike za pokretanje sustava se kriptiraju pomoću Bootgen alata kojeg nudi
-Xilinxov SDK (engl. \textit{Software Development Kit}) koji traži upis ključ kriptiranja i autentični potpis (HMAC ključ i
-potpis). Ako FSBL nije kriptiran, sustav se nalazi u Nesigurnom stanju i nema načina za prijelaz u Sigurno stanje (više o
-navedenim stanjima se nalazi u kasnijim poglavljima).
+Xilinxov SDK (engl. \textit{Software Development Kit}) koji traži upis ključa kriptiranja i autentični potpis (HMAC ključ i
+potpis).
 \section{Prekidni sustav}
 Svaki CPU platforme ima set privatnih periferijskih prekida, PPI (engl. \textit{private peripheral interrupts}),
-za koje svaki procesor ima mogućnost privatnog pristupa registrima, gdje svaki registar ima svoju kopiju registara.
-Takvoj vrsti prekida globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
+za koje svaki procesor ima mogućnost privatnog pristupa registrima. Oba procesora platforme imaju svoju kopiju privatnih
+registara.
+Takvoj vrsti prekida pripadaju globalno brojilo, privatno \textit{watchdog} brojilo, privatno brojilo i FIQ (engl.
 \textit{Fast Interrupt Request}) i IRQ (engl. \textit{Interrupt Request}) koji dolaze s programabilne logike.
 Kao i PPI, procesori također imaju mogućnost generiranja softverski generiranih prekida, SGI (engl. \textit{Software
-Generated Interrupt}), s vlastitim kopijama registara vezanih uz SGI. U sustavu postoje i periferijski prekidi
-koji su dijeljeni između procesora~-~SPI (engl. \textit{Shared Peripheral Interrupt}) koji, ovisno o konfiguraciji
+Generated Interrupt}), s vlastitim kopijama registara za podešavanje SGI prekida. U sustavu postoje i periferijski prekidi
+koji su dijeljeni između procesora~-~SPI (engl. \textit{Shared Peripheral Interrupt}) koji, ovisno o konfiguraciji,
 mogu biti dostupni jednom ili oba procesora. Glavni upravitelj prekidima u sustavu je GIC (engl. \textit{Generic
 Interrupt Controller}) koji prekide prosljeđuje odabranom CPU-u. Svi prekidi imaju svoj konfigurabilni prioritet
 i listu CPU-a koji mogu obraditi prekid.
@@ -165,8 +168,8 @@ procesora. Uz implementaciju sigurnosnih ekstenzija GIC-a, uvodi se funkcionalno
   \item{izborno zaključavanje konfiguriranja nekih prekida Grupe~0}
 \end{itemize}
 Kod višeprocesorskih sustava, GIC implementira dva modela obrade prekida u slučaju da je prekid namijenjen više
-ili svim procesora u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi prekid, ali se GIC pobrine da samo
-jedan procesor u sustavu obradi prekid. Ostali procesori u sustavu prime nepredvidljivi (enlg. \textit{spurious}) prekid.
+ili svim procesorima u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi prekid, ali se GIC pobrine da samo
+jedan procesor u sustavu obradi prekid. Ostali procesori u sustavu prime nepredvidljivi (engl. \textit{spurious}) prekid.
 Drugi model je N-N, gdje jedan procesor obrađuje prekid, a ostalima je prikazano stanje čekanja na obradu prekida.
 Kod takvog modela se koriste određeni protokoli kako bi prekid bio obrađen jednom. U sklopu GIC-a postoji više kopija
 prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za svaki procesor u sustavu postoji jedan prekidni
@@ -227,7 +230,7 @@ CP0~-~CP15 \cite{arch_man}. Posebne namjene koprocesora su:
 \begin{itemize}
   \item{CP15: ima funkcionalnost kontrole nad sustavom, služi za identifikaciju arhitekture i mogućnosti platforme. Drži
   kontrolu, status informacija i konfiguraciju sustava}
-  \item{CP14: sadrži sustav za ispitivanje, kontrolu nad Thumb okruženju izvođenja koda i konfiguraciju izvršavanja Java
+  \item{CP14: sadrži sustav za ispitivanje, kontrolu nad Thumb okruženjem izvođenja koda i konfiguraciju izvršavanja Java
   bajt kodova}
   \item{CP10 i CP11: zajedno podržavaju \textit{floating-point} operacije i operacije s vektorima}
   \item{CP8, CP9, CP12 i CP13: rezervirani}
@@ -246,13 +249,13 @@ Prilikom pristupa koprocesorskim registrima, potrebno je specificirati:
 
 \section{MMU (engl. \textit{Memory Management Unit})}
 MMU jedinica pruža zaštitu memorije i adresna prevođenja. Stranice za tablice za prevođenje mogu imati veličine od 4~kB,
-64~kB, 1~MB i 16~MB i 16 pristupnih domena (skup memorijskih regija). Jedinica ZedBoard platforme je prilagođena sigurnosnim
+64~kB, 1~MB i 16~MB i 16 pristupnih domena (skup memorijskih regija). MMU ZedBoard platforme je prilagođena sigurnosnim
 ekstenzijama i višeprocesorskim konfiguracijama. Kontrolira setove adresnih mapa za prevođenje virtualne memorije u fizičku.
 Atributi memorije sadržani su u instrukcijskim i podatkovnim spremnicima za prevođenje TLB (\textit{translation look-aside
 buffers}). Glavna funkcija MMU jedinice je adresno prevođenje koje služi za prevođenje adresa koda i podataka iz virtualnih u
 fizičke. Omogućava dodjelu memorije zadacima na način da zadaci nemaju znanja o postojanju drugih zadataka u sustavu. Takvo
 memorijsko konfiguriranje omogućuje jednostavniju implementaciju aplikacija obzirom da sve aplikacije/zadaci koriste jednak
-virtualan memorijski prostor. MMU sadrži dvije glavne komponente ključne za ostvarenje adresnih prevođenja:
+virtualni memorijski prostor. MMU sadrži dvije glavne komponente ključne za ostvarenje adresnih prevođenja:
 \begin{itemize}
   \item{pretraživač tablica koji automatski dohvaća točan ulaz tablice za prevođenje za zahtjevano prevođenje}
   \item{spremnici za prevođenje koji pohranjuju nedavno korištene ulaze za prevođenje i ponašaju se slično kao \textit{cache}
@@ -266,7 +269,7 @@ Kao što je već rečeno, ZedBoard implementira Cortex-A9 procesor s dvije jezgr
 platformu moguće razviti aplikacije s različitim konfiguracijama obzirom na broj jezgri koje su potrebne
 u sustavu. Moguće je implementirati:
 \begin{itemize}
-  \item{aplikaciju namijenjena jednoj jezgri procesora (CPU0),}
+  \item{aplikaciju namijenjenu jednoj jezgri procesora (CPU0),}
   \item{dvije aplikacije, svaka namijenjena jednoj jezgri i}
   \item{aplikaciju namijenjena objema jezgrama u sustavu.}
 \end{itemize}
@@ -275,7 +278,7 @@ sposobna obavljati N zadataka u nekom vremenskom trenutku, gde je N broj jezgri 
 obavljanja zadataka, određeni posao se može obaviti brže nego na platformi s jednom jezgrom. Nakon što obave potrebni posao,
 jezgre mogu ići u stanje gašenja kako bi se smanjila potrošnja. Još jedan način smanjenja potrošnje je da se smanji frekvencija
 na kojoj rade jezgre. Uz to, višejezgrene platforme mogu imati bolji odziv u odnosu na platforme s jednom jezgrom jer bilo koja
-jezgre može obraditi prekid, što smanjuje broj prekida koje je potrebno obraditi na jednoj jezgri.\\
+jezgra može obraditi prekid, što smanjuje broj prekida koje je potrebno obraditi na jednoj jezgri.\\
 Važno je napomenuti da je jedna jezgra sustava (CPU0) primarna, a druga (CPU1) sekundarna. Prilikom
 pokretanja sustava, na platformi je aktivna samo primarna jezgra, dok se sekundarna jezgra nalazi u
 WFE (engl. \textit{Wait For Event}) stanju. Nakon što se sustav pokrenuo, primarna jezgra je zadužena
@@ -322,7 +325,7 @@ projekta za CPU1, prevoditelju projekta je potrebno dodati poseban indikator: \t
 funkcionirati na ispravan način. Postavljanjem \textit{USE\_AMP} zastavice, otklanja se mogućnost rekonfiguriranja L2 \textit{cache}
 memorije i distributera GIC upravitelja što se smatra nepoželjnim rukovanjem navedenih resursa koji su zajednički procesorima
 u sustavu. Primjer nepoželjnog ponašanja zbog ne postavljanja navedene zastavice je dvostruka inicijalizacija distributera
-GIC-a što bi moglo rezultirati gubitkom postavki prekida koji su konfigurirani primarnim procesorom. Takvo ponašanje bi
+GIC-a što bi moglo rezultirati gubitkom postavki prekida koje su postavljene primarnim procesorom. Takvo ponašanje bi
 prekršilo jedno svojstvo AMP aplikacija koje se odnosi na to da je samo jedan procesor zadužen za inicijalizaciju upravitelja
 prekidima, u ovom slučaju GIC distributera. CPU sučelje GIC-a se normalno inicijalizira na oba procesora, bez ograničenja.
 Obzirom da su za razvoj AMP aplikacije potrebna dva projekta, potrebne su i dvije skripte za memorijsko povezivanje što
@@ -374,8 +377,9 @@ Pošto se sustav CPU0 procesora pokreće prvi, CPU0 je zadužen za inicijalizaci
 se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je boot.S skripta
 koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva posebni projekt za CPU1, potrebno je modificirati
 skriptu za pokretanje sustava na CPU1 na način da se izbaci dio s inicijalizacijom L2 \textit{cache} memorije (kod AMP
-aplikacije, to je ostvareno pomoću indikator \textit{USE\_AMP}). Također, potrebno je promijeniti aplikaciju na koju se skače nakon
-inicijalizacije procesora (postaviti skok na željenu CPU1 aplikaciju). Poznato je da svaki procesor ima svoju tablicu
+aplikacije, to je ostvareno pomoću indikatora \textit{USE\_AMP}). Također, potrebno je promijeniti aplikaciju na koju se skače
+nakon inicijalizacije CPU1 procesora (postaviti skok na željenu CPU1 aplikaciju u skripti za pokretanje sustava).
+Poznato je da svaki procesor ima svoju tablicu
 prekidnih vektora te je iz tog razloga potrebno dodati asemblerski kod koji će sadržavati potrebnu tablicu prekidnih vektora.
 Tablica prekidnih vektora mora biti sadržana u memoriji koja ima odmak 0x00 od početne adrese na kojoj se nalazi
 aplikacija CPU1 procesora. Da bi se ostvario potrebni odmak, poduzeti su sljedeći koraci:
@@ -428,7 +432,7 @@ zaštitne mehanizme koji se odnose na sadržaj i servise koji su dostupni lokaln
 uređaja su sinkronizirane \textit{e-mail} adrese, povećane mogućnosti žične i bežične povezanosti i velike količine
 podatkovne memorije. Primjer industrije koja nije otvorenog sustava je automobilska industrija koja također snosi velike
 novčane štete zbog napada na ugradbena računala. Sigurnosne značajke potrebne kod takvih ugradbenih sustava su autentičnost
-nadogradnje ugrađenog softvera i osiguravanje da se ispitivanje sustava ne može zlonamjerno iskoristiti.
+nadogradnje ugrađenog softvera i osiguranje da se ispitivanje sustava ne može zlonamjerno iskoristiti.
 Takve značajke se mogu implementirati pomoću \textit{TrustZone} ekstenzije. Prilikom dizajna sigurnosnog rješenja, proizvođač
 mora izmjeriti omjer cijena koje moraju uložiti u dizajn i štete koju bi mogli imati zbog napada. Zbog niže kompleksnosti
 izvedbe \textit{TrustZone} ekstenzije, ARM ima i niže troškove proizvodnje ekstenzije što ide u prilog proizvođačima
@@ -437,7 +441,7 @@ uređaja.
 \section{Softverska virtualizacija}
 Virtualizacija je jedan od načina kako ostvariti sigurnosni mehanizam u kojem se visoko pouzdani sloj za upravljanje,
 odnosno monitor virtualnih strojeva, izvodi u privilegiranom načinu rada procesora. Monitor virtualnih strojeva razdvaja
-više neovisnih softverskih okruženja, koja se izvode povrh povrh monitora, koristeći MMU. Svako softversko okruženje je
+više neovisnih softverskih okruženja, koja se izvode povrh monitora, koristeći MMU. Svako softversko okruženje je
 smješteno u virtualni stroj kojim upravlja monitor virtualnih strojeva. Virtualni strojevi su sigurni od međusobnih softverskih
 napada virtualnih strojeva upravo zato što njima upravlja monitor virtualnih strojeva. Ovakav opis virtualizacije pripada
 paravirtualizaciji koja je specifična za ugradbena računala. Za implementaciju monitora virtualnih strojeva, minimalan
@@ -456,7 +460,7 @@ platforme koji se koriste za zaštitu ključeva. Takvi blokovi gube svoju glavnu
 podaci izvan kriptografičkih blokova. Ideja \textit{TrustZone} ekstenzije je dati mogućnost zaštite cjelokupnog hardverskog
 prostora. Ekstenzija pruža konfigurabilni sustav kojeg dizajner može konfigurirati na način koji je specifičan za željenu
 aplikaciju. AMBA3 AXI sabirnički protokol omogućava \textit{TrustZoneov} koncept dva svijeta: Sigurnog (\textit{Secure}) i
-Nesigurnog \textit{Non-Secure} ili Normalnog svijeta. Smještanje osjetljivih resursa u Sigurni svijet štiti uređaj i od napada
+Nesigurnog ili Normalnog (\textit{Non-Secure}) svijeta. Smještanje osjetljivih resursa u Sigurni svijet štiti uređaj i od napada
 od kojih se je teško obraniti, kao što je to unošenje lozinke putem tipkovnice ili dodirnog zaslona.
 Kako bi takva konfiguracija bila moguća, \textit{TrustZone} sadrži tri ključne komponente:
 \begin{itemize}
@@ -470,8 +474,8 @@ omogućava efektivno izvođenje koda Normalnog i Sigurnog svijeta pomoću metode
 fashion}). Ključna mogućnost ekstenzije je kontroliranje pristupa ispitivanja Sigurnog softvera. Promjena uvedena u AMBA3
 AXI sabirnicu je dodavanje 33. NS (\textit{Non-Secure}) bita prilikom čitanja i pisanja. Dodatni bit indicira s kojeg
 svijeta dolazi zahtjev za razmjenu podataka te onemogućava pristup Nesigurnog svijeta Sigurnom. Sigurnost periferija je
-izvedeno pomoću AXI-prema-APB mosta, gdje je APB (engl. \textit{Advanced Peripheral Bus}) sabirnica na koju su spojene
-periferije. APB ne implementira dodatni bit kao AXI sabirnice te je stoga AXI-prema-APB most zadužen za provjeru valjanosti
+izvedena pomoću AXI-APB mosta, gdje je APB (engl. \textit{Advanced Peripheral Bus}) sabirnica na koju su spojene
+periferije. APB ne implementira dodatni bit kao AXI sabirnice te je stoga AXI-APB most zadužen za provjeru valjanosti
 zahtjeva. Takvo svojstvo omogućuje osiguravanje tipkovnice za potrebe unosa lozinke. Ekstenzija procesora uvodi dvije virtualne
 jezgre za svaki procesor, gdje je jedna virtualna jezgra zadužena za Sigurni, a druga za Nesigurni svijet kako je prikazano na
 slici \ref{vcpu}. Na slici, oznaka VCPU označuje virtualni CPU.
@@ -486,7 +490,7 @@ sabirnici, \textit{TrustZone} uvodi i novi način rada procesora: nadgledni (\te
 i Nesigurno stanje. Nadgledni način rada je uvijek u Sigurnom stanju.\\
 Koncept dva svijeta se može gledati kao dva zadatka u operacijskom sustavu, gdje je softver koji se izvodi
 u nadglednom načinu rada zadužen za zamjenu konteksta između dvije virtualne jezgre. Pokretanje cjelokupnog sustava s dva
-svijeta prikazano je slikom \ref{tz_boot}.
+svijeta prikazano je slikom~\ref{tz_boot}.
 \begin{figure}[H]
   \centering
 	\includegraphics[width=350pt]{tz_boot.png}%
@@ -501,7 +505,7 @@ Configuration Register}) registra CP15 koprocesora. Samo Sigurni softver može u
 NS bita u jedinicu se okida zamjena konteksta iz Sigurnog svijeta u Nesigurni svijet. \textit{TrustZone} predstavlja i
 virtualnu MMU jedinicu, gdje je jedna virtualna MMU jedinica zadužena za jedan virtualni procesor. Opisnik tablice za prevođenje
 sadrži NS polje koje dozvoljava Sigurnom softveru pristupanje Sigurnoj i Nesigurnoj tablici, a onemogućava pristup Sigurnoj
-tablici od strane Nesigurnog softvera. Uz MMU, L1 \textit{cache} memorija se dijeli na Sigurnu i Nesigurnu.\\
+tablici od strane Nesigurnog softvera. Uz MMU, L1 \textit{cache} memorija se također dijeli na Sigurnu i Nesigurnu.\\
 Softver nadglednog načina rada je zadužen za prijelaz između Sigurnog i Nesigurnog stanja te osigurava spremanje konteksta
 svijeta iz kojeg prelazi i točnog povratka konteksta svijeta u koji se vraća. Za jednostavnost implementacije, preporučuje
 se isključivanje prekida prilikom izvođenja nadglednog softvera. Sigurno stanje registara treba pospremiti u Sigurnu memoriju
@@ -514,7 +518,7 @@ izabere takva konfiguracija, nadgledni način rada izvodi lijenu zamjenu konteks
 GIC je svjestan sigurnosnih ekstenzija i daje mogućnost konfiguriranja Sigurnih i Nesigurnih prekida. Kod prekidnog sustava,
 ARM preporučuje korištenje IRQ kao Nesigurne prekide, a FIQ kao Sigurne prekide što je konfigurabilno u GIC-ovim registrima.
 Ako se koristi takav model, preporučeno je da se prilikom prijelaza u Nesigurni svijet SCR registar podesi tako da se izbriše
-IRQ bit, a postavi FIQ bit. Kod prijelaza u Sigurni svijet preporučeno je podesiti SCR bit tako da se postavi IRQ bit, a
+IRQ bit, a postavi FIQ bit. Kod prijelaza u Sigurni svijet preporučeno je podesiti SCR registar tako da se postavi IRQ bit, a
 izbriše FIQ bit.
 Sigurnosne ekstenzije omogućuju tri vrste tablica prekidnih vektora:
 \begin{itemize}
@@ -535,7 +539,7 @@ Memorijsko mapiranje spomenutih tablica prekidnih vektora dano je tablicom \ref{
     \hline
     0x04 & Nedefinirana instrukcija & Nedefinirana instrukcija & Ne koristi se\\
     \hline
-    0x08 & Poziv \textit{supervisoru} & Poziv \textit{supervisoru} & Sigurni poziv nadgledniku\\
+    0x08 & Poziv \textit{supervisoru} & Poziv \textit{supervisoru} & Sigurni poziv nadgledniku (SMC)\\
     \hline
     0x0C & \textit{Prefetch abort} & \textit{Prefetch abort} & \textit{Prefetch abort}\\
     \hline
@@ -553,7 +557,7 @@ Bazna adresa Sigurne tablice prekidnih vektora može biti 0x0 ili 0xFFFF0000, do
 Nesigurni prekidi nemaju mogućnost konfiguriranja Sigurnih prekida te je opredjeljenje prekida kao Sigurni ili Nesigurni
 moguće samo u Sigurnom softveru. Sigurni softver može osigurati da su svi Sigurni prekidi većeg prioriteta od Nesigurnih.
 To je moguće jer prioritetni registar prekida u Sigurnom stanju ima implementirano 5 bitova, dok u Nesigurnom stanju ima
-implementirano 4 bita.
+implementirano 4~bita.
 Prekid Grupe 0 GIC-a se označava kao Sigurni prekid, a prekid Grupe 1 kao Nesigurni prekid. Pristup GIC-ovim registrima uz
 sigurnosne ekstenzije imaju sljedeće značajke:
 \begin{itemize}
@@ -577,7 +581,7 @@ korištenje u AMP ili SMP modelu. Kod SMP modela, korištenje L1 \textit{cache} 
 je omogućeno SCU jedinicom. Prilikom razvoja AMP aplikacije, mora se ručno voditi briga o koherenciji (prazniti \textit{cache}
 gdje je potrebno). Prijelaz između svjetova na jednom procesoru je neovisan o drugim procesorima. Za povećanje sigurnosti
 prilikom implementacije Sigurnog softvera u višeprocesorskim sustavima, preporučuje se da Sigurni softver ne iskorištava
-mogućnosti više procesora, iako Nesigurni softver možda i koristi. Razlog tome je kompleksnost implementacije što povlači
+mogućnosti više procesora, iako Nesigurni softver možda i iskorištava. Razlog tome je kompleksnost implementacije što povlači
 veću vjerojatnost pogreške, odnosno sustav postaje ranjiviji. Ako Sigurni softver ne koristi višeprocesorske mogućnosti,
 a Nesigurni koristi potrebno je implementirati sinkronizaciju komunikacije između SMP Nesigurnog softvera i Sigurnog softvera.
 Obzirom na SMP, moguće je ostvariti dva modela:

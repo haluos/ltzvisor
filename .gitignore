@@ -9,4 +9,5 @@ src/ns_guest/zynq/build/*
 src/ns_guest/zynq/ns_guest.bin
 src/ns_guest/zynq/ns_guest.elf
 disassembly_LTZVisor.txt
+disassembly_ns_guest.txt
 **/*.o

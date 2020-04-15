@@ -4,6 +4,11 @@
 
 int flag = 0;
 
+void start_cpu1_ns (void)
+{
+  printk("CPU1 NS boot start\r\n");
+}
+
 void helloworld_cpu1 (void)
 {
   uint32_t i, cnt = 0;
