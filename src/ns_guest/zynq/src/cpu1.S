@@ -74,6 +74,18 @@ _cpu1_entry:
 	ldr	r0, =vector_base
 	mcr	p15, 0, r0, c12, c0, 0
 
+	/* Invalidate caches and TLBs */
+	mov	r0,#0				/* r0 = 0  */
+	mcr	p15, 0, r0, c8, c7, 0		/* invalidate TLBs */
+	mcr	p15, 0, r0, c7, c5, 0		/* invalidate icache */
+	mcr	p15, 0, r0, c7, c5, 6		/* Invalidate branch predictor array */
+	bl	invalidate_dcache		/* invalidate dcache */
+
+	/* Disable MMU, if enabled */
+	mrc	p15, 0, r0, c1, c0, 0		/* read CP15 register 1 */
+	bic	r0, r0, #0x1			/* clear bit 0 */
+	mcr	p15, 0, r0, c1, c0, 0		/* write value back */
+
 	mrs	r0, cpsr			/* get the current PSR */
 	mvn	r1, #0x1f			/* set up the irq stack pointer */
 	and	r2, r1, r0
@@ -126,6 +138,38 @@ _cpu1_entry:
 	msr	cpsr, r2
 	ldr	r13,=SYS_stack			/* SYS stack pointer */
 
+	/*set scu enable bit in scu*/
+	ldr	r7, =0xf8f00000
+	ldr	r0, [r7]
+	orr	r0, r0, #0x1
+	str	r0, [r7]
+
+	/* enable MMU and cache */
+
+	ldr	r0,=TblBase			/* Load MMU translation table base */
+	orr	r0, r0, #0x5B			/* Outer-cacheable, WB */
+	mcr	15, 0, r0, c2, c0, 0		/* TTB0 */
+
+	mvn	r0,#0				/* Load MMU domains -- all ones=manager */
+	mcr	p15,0,r0,c3,c0,0
+
+	/* Enable mmu, icahce and dcache */
+	ldr	r0,=CRValMmuCac
+	mcr	p15,0,r0,c1,c0,0		/* Enable cache and MMU */
+	dsb					/* dsb	allow the MMU to start up */
+	isb					/* isb	flush prefetch buffer */
+
+	/* Write to ACTLR */
+	mrc	p15, 0, r0, c1, c0, 1		/* Read ACTLR*/
+	orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
+	orr	r0, r0, #(0x01 )		/* Cache/TLB maintenance broadcast */
+	mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
+
+	mov	r0, r0
+	mrc	p15, 0, r1, c1, c0, 2		/* read cp access control register (CACR) into r1 */
+	orr	r1, r1, #(0xf << 20)		/* enable full access for p10 & p11 */
+	mcr	p15, 0, r1, c1, c0, 2		/* write back into CACR */
+
 	/* enable vfp */
 	fmrx	r1, FPEXC			/* read the exception register */
 	orr	r1,r1, #FPEXC_EN		/* set VFP enable bit, leave the others in orig state */
@@ -134,6 +178,11 @@ _cpu1_entry:
 	mrc	p15,0,r0,c1,c0,0		/* flow prediction enable */
 	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
 	mcr	p15,0,r0,c1,c0,0
+
+	mrc	p15,0,r0,c1,c0,1		/* read Auxiliary Control Register */
+	orr	r0, r0, #(0x1 << 2)		/* enable Dside prefetch */
+	orr	r0, r0, #(0x1 << 1)		/* enable L2 Prefetch hint */
+	mcr	p15,0,r0,c1,c0,1		/* write Auxiliary Control Register */
 
 	mrs	r0, cpsr			/* get the current PSR */
 	bic	r0, r0, #0x100			/* enable asynchronous abort exception */

@@ -17,7 +17,7 @@
 /*
 * Macro used from NS Guest to generate request to LTZVisor for booting CPU1:   *
 *                                                                              *
-* ~0xaaaabbbb is identifier of request (set in ltzvisor_syscall_asm.h file)~   *
+* ~0x0ffffffb is identifier of request (set in ltzvisor_syscall_asm.h file)~   *
 * ~CPU1 needs to boot into Monitor mode, so that LTZVisor on CPU1 can set      *
 * initial context of CPU1~                                                     *
 *                                                                              *

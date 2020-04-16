@@ -2,11 +2,13 @@
 #include "gic.h"
 #include "boot_cpu1.h"
 
-int flag = 0;
+// volatile uint32_t flag;
+#define flag  		(*(volatile unsigned long *)(0x001F0000))
 
 void start_cpu1_ns (void)
 {
   printk("CPU1 NS boot start\r\n");
+  flag = 1;
 }
 
 void helloworld_cpu1 (void)
@@ -28,9 +30,10 @@ int main (void)
   while(1)
   {
     for (i = 0; i < 100000000; i++);
-    printk("NS Guest: Hello World %d\r\n", cnt);
+    printk("NS Guest: Hello World %d %d\r\n", cnt, flag);
     flag = 1;
     cnt++;
+    // while(flag);
     // if(cnt == 15)
     // {
     //   boot_CPU1();

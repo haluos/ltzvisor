@@ -48,6 +48,7 @@
 
 #include <ltzvisor.h>
 #include <ltzvisor_hw.h>
+#include "ltzvisor_cpu1_api.h"
 
 /** Config NS_Guest struct */
 extern struct nsguest_conf_entry nsguest_config;
@@ -64,6 +65,9 @@ tzmachine NS_Guest __attribute__ ((aligned (4))) __attribute__ ((section (".bss"
  */
 void ltzvisor_main(void){
 	uint32_t ret;
+	extern uint32_t _cpu1_entry_address;
+	uint32_t *address = &_cpu1_entry_address;
+	volatile uint32_t *cpu1_read_address = (volatile uint32_t *) 0xfffffff0;
 	// uint32_t * cpu1_entry_addr = _cpu1_entry_address;
 
 	/** Initialize LTZVisor */
@@ -82,11 +86,16 @@ void ltzvisor_main(void){
 		printk("Error: LTZVisor NS_Guest Create\n\t");
 		while(1);
 	}
+	printk(" -> CPUs: Waking up CPU1\n\t");
+	*cpu1_read_address = address;
+	asm volatile("dmb");
+	printk("* Issuing SEV command...\n\t");
+	asm volatile("sev");
 
 	/** Kick off LTZVisor and start running Guests */
-	printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
-	printk(" -> LTZVisor: starting S_Guest ... \n\t", ARCH);
-	printk("----------------------------------------------------------\n\n\t");
+	// printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
+	// printk(" -> LTZVisor: starting S_Guest ... \n\t", ARCH);
+	// printk("----------------------------------------------------------\n\n\t");
 	ltzvisor_kickoff();
 
 	/** This point should never be reached */
@@ -97,8 +106,9 @@ void LTZVisor_CPU1_entry (void)
 {
 	printk("LTZVisor running on CPU1\r\t");
 	interrupt_interface_init();
+	ltzvisor_cpu1_nsguest_create();
 	// LTZVISOR_MON_EXIT()
-	printk(" Monitor mode exit\r\n");
+	// printk(" Monitor mode exit\r\n");
 }
 
 void start_boot (void)

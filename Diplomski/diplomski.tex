@@ -3,6 +3,7 @@
 \usepackage{tabu, multirow}
 \usepackage{tabularx}
 \usepackage{float}
+\usepackage{pdfpages}
 
 \begin{document}
 
@@ -10,7 +11,7 @@
 \renewcommand{\labelitemii}{$-$}
 
 % TODO: Navedite broj rada.
-\thesisnumber{000}
+\thesisnumber{1995}
 
 % TODO: Navedite naslov rada.
 \title{Proširenje LTZVisor monitora virtualnih strojeva \\za višejezgrene procesore}
@@ -21,7 +22,8 @@
 \maketitle
 
 % Ispis stranice s napomenom o umetanju izvornika rada. Uklonite naredbu \izvornik ako želite izbaciti tu stranicu.
-\izvornik
+% \izvornik{0688\_001.pdf}
+\includepdf[pages=-,pagecommand={}]{0688_001.pdf}
 
 % Dodavanje zahvale ili prazne stranice. Ako ne želite dodati zahvalu, naredbu ostavite radi prazne stranice.
 \zahvala{}

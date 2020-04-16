@@ -1,5 +1,6 @@
 /* THIS FILE WAS GENERATED AUTOMATICALLY */
 #define _ASM_CP_SCTLR_OFFSET 124 /* pos(tzmachine, core.vcpu_regs_cp15.c1_SCTLR) */
+#define _ASM_CP_ACTLR_OFFSET 128 /* pos(tzmachine, core.vcpu_regs_cp15.c1_ACTLR) */
 #define _ASM_MON_SPSR_OFFSET 52 /* pos(tzmachine, core.vcpu_regs_core.spsr_mon) */
 #define _ASM_MON_LR_OFFSET 56 /* pos(tzmachine, core.vcpu_regs_core.lr_mon) */
 #define _ASM_R4_OFFSET 16 /* pos(tzmachine, core.vcpu_regs_core.r4) */

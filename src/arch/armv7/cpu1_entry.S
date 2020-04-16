@@ -139,6 +139,10 @@ __init_vmemory:
 	mov 	r1, #0x0
 	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
 
+	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
+	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
+	mcr p15, 0, r1, c1, c0, 1
+
 
 	/** Handling VFP and NEON */
 __init_vfp:
