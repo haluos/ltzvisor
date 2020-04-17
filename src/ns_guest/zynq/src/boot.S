@@ -274,7 +274,6 @@ shareable_loop:
 	/* Write to ACTLR */
 	mrc	p15, 0, r0, c1, c0, 1		/* Read ACTLR*/
 	orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
-	orr	r0, r0, #(0x01 )		/* Cache/TLB maintenance broadcast */
 	mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
 
 	mov	r0, r0
@@ -291,18 +290,13 @@ shareable_loop:
 	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
 	mcr	p15,0,r0,c1,c0,0
 
-	mrc	p15,0,r0,c1,c0,1		/* read Auxiliary Control Register */
-	orr	r0, r0, #(0x1 << 2)		/* enable Dside prefetch */
-	orr	r0, r0, #(0x1 << 1)		/* enable L2 Prefetch hint */
-	mcr	p15,0,r0,c1,c0,1		/* write Auxiliary Control Register */
-
 	mrs	r0, cpsr			/* get the current PSR */
 	bic	r0, r0, #0x100			/* enable asynchronous abort exception */
 	msr	cpsr_xsf, r0
 
 	.globl main
 	b main
-	/*b	_start				/* jump to C startup code */
+	/*b	_start */				/* jump to C startup code */
 
 cpu1_func:
 

@@ -134,7 +134,7 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	printk("      * NS_Guest CP15 registers - OK  \n\t");
 
 //	#ifdef CONFIG_CACHE_L2X0
-		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000040; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
+		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
 		printk("      * NS_Guest L2 Cache - OK  \n\t");
 //	#endif
 

@@ -8,11 +8,25 @@
 |______________________________________________________________________________|
 
   ~ This file contains configuration of CPU1 NS Guest context and passing
-    control to NS Guest on CPU1
+    control to NS Guest on CPU1 and CPU1 Monitor exception handlers
 
 *******************************************************************************/
 #include <asm-offsets.h>
 
+.global _cpu1_monitor_vector_table
+_cpu1_monitor_vector_table:
+	b	.				@ Not available on MON
+	b	.				@ Not available on MON
+	mov pc, lr   @ CPU1 reserved only for NS Guest -> don't do context switch
+	b .
+	b .
+	b	.				@ Reserved for HYP
+	b .       @ IRQ not routed to LTZVisor
+	b .       @ FIQ not routed to LTZVisor
+
+/*
+    Input argument is the address of CPU1 NS Guest initial context
+*/
 .global cpu1_monitor_boot_nsguest
 .func cpu1_monitor_boot_nsguest
 cpu1_monitor_boot_nsguest:

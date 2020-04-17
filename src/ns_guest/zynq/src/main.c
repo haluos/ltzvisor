@@ -13,7 +13,7 @@ void start_cpu1_ns (void)
 
 void helloworld_cpu1 (void)
 {
-  uint32_t i, cnt = 0;
+  uint32_t cnt = 0;
   printk("CPU1 awake\r\n");
   while(1)
   {
@@ -34,10 +34,10 @@ int main (void)
     flag = 1;
     cnt++;
     // while(flag);
-    // if(cnt == 15)
-    // {
-    //   boot_CPU1();
-    // }
+    if(cnt == 15)
+    {
+      boot_CPU1();
+    }
   }
   return 1;
 }

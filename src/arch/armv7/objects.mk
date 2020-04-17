@@ -6,7 +6,6 @@ cpu-objs-y += cpu_cache.o
 cpu-objs-y += cpu_cp15_switch.o
 cpu-objs-y += cpu_helper.o
 cpu-objs-y +=  cpu1_entry.o
-cpu-objs-y += cpu1_monitor_handler.o
 cpu-objs-y += cpu1_monitor.o
 cpu-objs-$(MP_AMP) += cpu_sec_entry.o
 cpu-objs-$(MP_AMP) += cpu_sec_monitor.o

@@ -1,5 +1,5 @@
 /*******************************************************************************
-|                            LTZVisor SMP library code                         |
+|                    ZedBoard's LTZVisor SMP library code                      |
 ********************************************************************************
 |@author:   Magdalena Halusek                                                  |
 |@date:     04/09/2020                                                         |
@@ -19,7 +19,7 @@
 *                                                                              *
 * ~0x0ffffffb is identifier of request (set in ltzvisor_syscall_asm.h file)~   *
 * ~CPU1 needs to boot into Monitor mode, so that LTZVisor on CPU1 can set      *
-* initial context of CPU1~                                                     *
+* initial context of CPU1 NS Guest~                                            *
 *                                                                              *
 */
 #define boot_CPU1()\

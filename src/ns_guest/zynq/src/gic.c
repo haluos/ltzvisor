@@ -158,7 +158,7 @@ tHandler* fiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {
 
 uint32_t DataAbortAddr;       /* Address of instruction causing data abort */
 uint32_t PrefetchAbortAddr;   /* Address of instruction causing prefetch abort */
-uint32_t UndefinedExceptionAddr;   /* Address of instruction causing Undefined
+uint32_t UndefinedExceptionAddr;   /* Address of instruction causing Undefined */
 
 /* TODO - This is exception handling */
 void fiq_handler(uint32_t interrupt){

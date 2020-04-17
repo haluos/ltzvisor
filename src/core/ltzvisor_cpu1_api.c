@@ -16,6 +16,18 @@
 
 #include "ltzvisor_cpu1_api.h"
 
+void LTZVisor_CPU1_entry (void)
+{
+	printk("LTZVisor running on CPU1\r\t");
+	interrupt_interface_init();
+	ltzvisor_cpu1_nsguest_create();
+}
+
+void start_boot (void)
+{
+	printk("CPU1 boot started\r\n");
+}
+
 void ltzvisor_cpu1_nsguest_create (void)
 {
   tzmachine NS_CPU1_Guest;
@@ -45,7 +57,7 @@ void ltzvisor_cpu1_nsguest_create (void)
                   - enable L2 prefetch hint
                   - disable cache and TLB broadcast
                   - disable processor to take part in coherency */
-  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000040;
+  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047;
 
   // /* Set CPU1 NS Guest context */
   // cp15_restore(&NS_CPU1_Guest.core.vcpu_regs_cp15);

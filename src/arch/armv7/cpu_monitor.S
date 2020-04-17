@@ -46,9 +46,31 @@
  * (#) $id: cpu_monitor.S 18-09-2017 s_pinto (modified) $
 */
 
+/*******************************************************************************
+|                 ZedBoard's LTZVisor SMP library code                         |
+********************************************************************************
+|@author:   Magdalena Halusek                                                  |
+|@date:     04/09/2020                                                         |
+|@version:  v1.0 (initial)                                                     |
+|@changes:  -04/09/2020: implemented fuction that triggers waking up of CPU1   |
+|           -04/17/2020: changed fixed CPU1 LTZVisor start address to address  |
+|                        provided by linker.ld                                 |
+|______________________________________________________________________________|
+|    Besides of the Monitor implementation for one core (CPU0), this file      |
+|    contains small amount of code used to trigger waking up the CPU1.         |
+|    This part of code is called when NS Guest issues SMC instruction with     |
+|    certain parameter defined in ltzvisor_syscall_asm.h. It is only used      |
+|    when LTZVisor is to be used in SMP mode, where S Guest uses only CPU0     |
+|    and NS Guest uses both CPU0 and CPU1.                                     |
+*******************************************************************************/
+
  #include <cpu_defines.h>
  #include <asm-offsets.h>
  #include <ltzvisor_syscall_asm.h>
+
+/* Variable defined in linker.ld which contains start address of CPU1 LTZVisor
+   code */
+.extern  _cpu1_entry_address
 
 /**
  * SCR Non-Secure bit set (macro)
@@ -254,6 +276,7 @@ _mon_smc_handler:
 	blt	board_smc
 	cmp 	r0, #LTZVISOR_SCHED_SYSCALL
 	beq	_mon_scheduler
+  /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
   beq _wake_cpu1
 	bx	lr
@@ -321,16 +344,21 @@ board_smc:
 	call_c_function_arg board_handler
 	exception_return_arg
 
+/*
+    _wake_cpu1 is part of ZedBoard's LTZVisor SMP library code. It follows
+    ZedBoard's protocol of waking up CPU1:
+        1. Write address of LTZVisor CPU1 entry code to 0xFFFFFFF0
+        2. Issue SEV command - this triggers CPU1 jumping to address written in
+           0xfffffff0
+*/
 .globl _wake_cpu1
 _wake_cpu1:
-  /*.global add_entry_addr_cpu1*/
-  ldr r0,=0xfffffff0
-  ldr r1,=0x00110000
-  str r1,[r0]
-/*  b add_entry_addr_cpu1 */
-  dmb
-  sev
-  movs    pc, lr
+  ldr r0,=0xfffffff0    @ location to which code address needs to be written
+  ldr r1,=_cpu1_entry_address   @ fetch start address of code
+  str r1,[r0]   @ store start address to predefined location
+  dmb         @ wait till address is written to 0xfffffff0
+  sev         @ issue Send Event instruction
+  movs    pc, lr    @ go back to NS World
 
 /**
  * Monitor scheduler - schedule NS_guest
@@ -365,14 +393,3 @@ _mon_scheduler:
 	isb
 	dsb
 	movs    pc, lr				@ Return from exception (MON -> NS_SVC)
-
-.globl boot_ns_cpu1
-boot_ns_cpu1:
-  /* Restore NS context */
-  GET_NS_WORLD_CONTEXT
-  WORLD_CONTEXT_RESTORE
-  /* Set NS bit and go NS world */
-  SCR_NS_SET
-  isb
-  dsb
-  movs    pc, #0x00120000				@ Return from exception (MON -> NS_SVC)

@@ -140,7 +140,7 @@ __init_vmemory:
 	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
 
 	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
-	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
+	orr r1, r1, #AUXREG_SMP				@ Set CPU1 for SMP mode (cache coherency and chache and MMU broadcast)
 	mcr p15, 0, r1, c1, c0, 1
 
 
@@ -148,30 +148,9 @@ __init_vmemory:
 __init_vfp:
 	/* FIX IT */
 
-
-	/** Initializing C environment */
-/*__init_c_env:
-	bl	c_environment_init*/
-
-
 	/**  Call Main */
 __call_main:
-//.globl cpu_init
-	//bl	cpu_init				@@@ Jump to Operating System 'c' entry function
 .globl LTZVisor_CPU1_entry
 	bl	LTZVisor_CPU1_entry			@ Jump to LTZVisor entry function
-  /* Restore NS context */
-	b boot_ns_cpu1
 	/* This point should never be reached */
 	b	.
-
-
-/**
- * Stuck other CPUs than CPU0
- *
- * @param
- *
- * @retval
- */
-__stuck_loop:
-	b	__stuck_loop
