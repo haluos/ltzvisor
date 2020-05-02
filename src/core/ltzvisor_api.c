@@ -123,7 +123,8 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* Clean core registers */
 	memset(&NS_Guest.core.vcpu_regs_core,0,sizeof(struct core_regs));
 	/* lr = start_addr & spsr=supervisor */
-	NS_Guest.core.vcpu_regs_core.lr_mon = g->gce_bin_load;
+	// NS_Guest.core.vcpu_regs_core.lr_mon = g->gce_bin_load;
+	NS_Guest.core.vcpu_regs_core.lr_mon = 0x2007000;
 	NS_Guest.core.vcpu_regs_core.spsr_mon = 0x193;
 	printk("      * NS_Guest core registers - OK  \n\t");
 
@@ -131,10 +132,18 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* Clean CP15 registers */
 	memset(&NS_Guest.core.vcpu_regs_cp15,0,sizeof(struct cp15_regs));
 	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
+	/* Enable Cache (bit 2) and MMU (bit 0) */
+	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x5;
+	// /* Enable I-cache (bit 12) */
+	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 12;
+	// /* Enable branch prediction (bit 11) */
+	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 11;
 	printk("      * NS_Guest CP15 registers - OK  \n\t");
 
 //	#ifdef CONFIG_CACHE_L2X0
-		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
+		// NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000006; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
+		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x76760007;
+		NS_Guest.core.vcpu_regs_cp15.c2_TTBCR = 0x00000c09;
 		printk("      * NS_Guest L2 Cache - OK  \n\t");
 //	#endif
 

@@ -47,6 +47,7 @@
 */
 
 #include <board.h>
+#include <ltzvisor_hw.h>
 
 /**
  * TrustZone-specific initializations
@@ -59,6 +60,11 @@ uint32_t board_init(void){
 
 	/** Unlocking SLCR register */
 	write32( (void *)SLCR_UNLOCK, SLCR_UNLOCK_KEY);
+
+	write32( (void *)DEV_CFG_APB_BASEADDR + 0x34, 0x757BDF0D);
+	write32( (void *)DEV_CFG_APB_BASEADDR + 0x28, 0xFFFFFFFF);
+	write32( (void *)SLCR_BASE + 0x910, 0x1F);
+	write32( (void *)SLCR_BASE + 0x240, 0);
 
 	/** Handling memory security */
 	write32( (void *)TZ_OCM_RAM0, 0xffffffff);
@@ -77,14 +83,24 @@ uint32_t board_init(void){
 	write32( (void *)SECURITY4_QSPI, 0x1);
 	/* APB slave security (NS) */
 	write32( (void *) SECURITY6_APBSL, 0x00007fff);
-	/* DMA slave security (S) */
-	write32( (void *)TZ_DMA_NS, 0x0);
-	write32( (void *)TZ_DMA_IRQ_NS, 0x0);
+	// /* DMA slave security (S) */
+	write32( (void *)TZ_DMA_NS, 0x1);
+	write32( (void *)TZ_DMA_IRQ_NS, 0x0000ffff);
+	write32( (void *)TZ_DMA_PERIPH_NS, 0xf);
+	write32( (void *)DMAC_RST_CTRL, 0);
+	write32( (void *)DMAC_RST_CTRL, 1);
 	/* Ethernet security */
 	write32( (void *)TZ_GEM, 0x3);
+	write32( (void *)SLCR_BASE + 0x61c, 0);
+	write32( (void *)SLCR_BASE + 0x600, 0xC);
 	/* FPGA AFI AXI ports TrustZone */
 	write32( (void *)SECURITY_APB, 0x3F);
+	write32( (void *)TZ_FPGA_M, 0x3);
+	write32( (void *)SECURITY_FSSW_S0, 0x1);
+	write32( (void *)0xF8F00040, 0);
 	/* Handling more devices ... */
+	write32( (void *)SCU_SAC, 0xf);
+	write32( (void *)SCU_NSAC, 0xfff);
 	printk("      * Devices security - OK  \n\t");
 
 	/** Locking SLCR register */
@@ -109,6 +125,12 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
 			write32( (volatile void*)arg1, arg2);
+			break;
+		}
+		case (-32):{
+			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
+									 "orr r0, r0, #1\n"
+									 "mcr p15, 0, r0, c15, c0, 0\n");
 			break;
 		}
 		default:

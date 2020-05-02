@@ -52,6 +52,10 @@
 #define LTZVISOR_SCHED_SYSCALL		(0x0ffffff1)
 #define LTZVISOR_READ_SYSCALL		(-30)
 #define LTZVISOR_WRITE_SYSCALL		(-31)
+
+/* SMC requests for NS world */
 #define LTZVISOR_BOOT_CPU1        (0x0ffffffb)
+#define LTZVISOR_NS_AUX_WRITE     (0x01010101)
+#define LTZVISOR_NS_TTBCR_WRITE   (0x3333ffff)
 
 #endif /* __LTZVISOR_SYSCALL_ASM */

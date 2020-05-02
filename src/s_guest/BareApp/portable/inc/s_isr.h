@@ -50,6 +50,7 @@
 #include <types.h>
 
 #define YIELD(){ \
+	asm(".arch_extension sec\n\t");\
 	asm volatile("ldr r0, =0x0ffffff1");\
 	asm volatile("smc #0");\
 }
@@ -58,4 +59,3 @@
 typedef void (handler)(void * t);
 
 #endif /* __S_ISR_H */
-

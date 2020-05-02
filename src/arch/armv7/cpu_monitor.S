@@ -279,7 +279,26 @@ _mon_smc_handler:
   /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
   beq _wake_cpu1
+  mov r3, #0x0101
+  movt r3, #0x0101
+  cmp r0, r3
+  beq _ns_request_aux_write
+  mov r3, #0xffff
+  movt r3, #0x3333
+  @ cmp r0, #LTZVISOR_NS_TTBCR_WRITE
+  cmp r0, r3
+  beq _ns_request_ttbcr_write
 	bx	lr
+
+.globl _ns_request_aux_write
+_ns_request_aux_write:
+  mcr p15, 0, r1, c1, c0, 1
+  movs pc, lr
+
+.globl _ns_request_ttbcr_write
+_ns_request_ttbcr_write:
+  mcr	p15, 0, r1, c2, c0, 2
+  movs pc, lr
 
 /**
  * Monitor FIQ handler
