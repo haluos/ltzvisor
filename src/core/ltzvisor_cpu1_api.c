@@ -18,9 +18,13 @@
 
 void LTZVisor_CPU1_entry (void)
 {
-	printk("LTZVisor running on CPU1\r\t");
+	extern void put_cpu1_back_to_sleep(void);
+	// printk("LTZVisor running on CPU1\n\t");
 	interrupt_interface_init();
+	// printk("CPU1 interface initialized!\n\t");
 	ltzvisor_cpu1_nsguest_create();
+	// printk("CPU1 Ns Guest context OK!\n\t");
+	put_cpu1_back_to_sleep();
 }
 
 void start_boot (void)
@@ -58,11 +62,42 @@ void ltzvisor_cpu1_nsguest_create (void)
                   - disable cache and TLB broadcast
                   - disable processor to take part in coherency */
   NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047;
+	cpu1_monitor_initial_context_nsguest(&NS_CPU1_Guest);
+}
 
-  // /* Set CPU1 NS Guest context */
-  // cp15_restore(&NS_CPU1_Guest.core.vcpu_regs_cp15);
-  // /* Set the address of CPU1 NS Guest context to CP15 */
-  // set_guest_context(&NS_CPU1_Guest);
-  cpu1_monitor_boot_nsguest(&NS_CPU1_Guest);
-  while(1);
+/**
+ * Handling syscalls (SMCs)
+ *
+ * @param
+ *
+ * @retval
+ */
+uint32_t cpu1_board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
+{
+	switch(arg0) {
+		case (LTZVISOR_READ_SYSCALL):{
+			arg0 = read32((volatile void*)arg1);
+			break;
+		}
+		case (LTZVISOR_WRITE_SYSCALL):{
+			write32( (volatile void*)arg1, arg2);
+			break;
+		}
+		case (-32):{
+			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
+									 "orr r0, r0, #1\n"
+									 "mcr p15, 0, r0, c15, c0, 0\n");
+			break;
+		}
+		default:
+
+			break;
+	}
+
+		return arg0;
+}
+
+void print_addr (uint32_t arg)
+{
+	printk("Address that Monitor received: 0x%x\n", arg);
 }

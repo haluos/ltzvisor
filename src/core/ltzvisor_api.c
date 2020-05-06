@@ -51,6 +51,23 @@
 /** Main is part of the secure VM */
 extern void main(void);
 
+uint8_t sync_flag;
+
+void lock_cpu0 (void)
+{
+	sync_flag = 0;
+}
+
+void wait_till_cpu1_boots(void)
+{
+	while(!sync_flag);
+}
+
+void unlock_cpu0(void)
+{
+	sync_flag = 1;
+}
+
 /**
  * LTZVisor initialization
  *
@@ -125,6 +142,7 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* lr = start_addr & spsr=supervisor */
 	// NS_Guest.core.vcpu_regs_core.lr_mon = g->gce_bin_load;
 	NS_Guest.core.vcpu_regs_core.lr_mon = 0x2007000;
+	// NS_Guest.core.vcpu_regs_core.lr_mon = 0x100000;
 	NS_Guest.core.vcpu_regs_core.spsr_mon = 0x193;
 	printk("      * NS_Guest core registers - OK  \n\t");
 
@@ -142,8 +160,8 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 
 //	#ifdef CONFIG_CACHE_L2X0
 		// NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000006; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
-		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x76760007;
-		NS_Guest.core.vcpu_regs_cp15.c2_TTBCR = 0x00000c09;
+		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047;
+		// NS_Guest.core.vcpu_regs_cp15.c2_TTBCR = 0x00000c09;
 		printk("      * NS_Guest L2 Cache - OK  \n\t");
 //	#endif
 

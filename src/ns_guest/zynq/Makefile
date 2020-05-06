@@ -1,12 +1,13 @@
 ARCH = arm-none-eabi
-CC = $(ARCH)-gcc -specs=nosys.specs
+CC = $(ARCH)-gcc
 OBJCOPY = $(ARCH)-objcopy
-CFLAGS = -g -mcpu=cortex-a9
+CFLAGS = --specs=nosys.specs -g -mcpu=cortex-a9
 CFLAGS += -Wall -mfpu=vfpv3 -mfloat-abi=hard
 CFLAGS += -Wl,-build-id=none
 
 LD = $(ARCH)-ld
-LDFLAGS = -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
+LDFLAGS = --specs=nosys.specs
+LDFLAGS += -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
 LDFLAGS += -Wl,-build-id=none -Wl,-T -Wl,./src/lscript.ld
 
 CASM = $(ARCH)-asm

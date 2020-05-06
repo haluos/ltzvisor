@@ -63,6 +63,7 @@ struct nsguest_conf_entry nsguest_config[] ={
 		.gce_bin_end = (uint32_t) &GPOS0_end,
 		/* Load address */
 		.gce_bin_load = 0x2000000,
+		// .gce_bin_load = 0x100000,
 
 	}
 };

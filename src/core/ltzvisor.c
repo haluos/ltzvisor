@@ -65,6 +65,7 @@ tzmachine NS_Guest __attribute__ ((aligned (4))) __attribute__ ((section (".bss"
  */
 void ltzvisor_main(void){
 	uint32_t ret;
+	extern void _wake_cpu1(void);
 
 	/** Initialize LTZVisor */
 	ret = ltzvisor_init();
@@ -83,11 +84,14 @@ void ltzvisor_main(void){
 		while(1);
 	}
 	printk(" -> CPUs: Waking up CPU1\n\t");
+	lock_cpu0();
+	_wake_cpu1();
+	// wait_till_cpu1_boots();
 
 	/** Kick off LTZVisor and start running Guests */
-	printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
-	printk(" -> LTZVisor: starting S_Guest ... \n\t", ARCH);
-	printk("----------------------------------------------------------\n\n\t");
+	// printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
+	// printk(" -> LTZVisor: starting S_Guest ... \n\t", ARCH);
+	// printk("----------------------------------------------------------\n\n\t");
 	ltzvisor_kickoff();
 
 	/** This point should never be reached */

@@ -63,7 +63,7 @@ uint32_t board_init(void){
 
 	write32( (void *)DEV_CFG_APB_BASEADDR + 0x34, 0x757BDF0D);
 	write32( (void *)DEV_CFG_APB_BASEADDR + 0x28, 0xFFFFFFFF);
-	write32( (void *)SLCR_BASE + 0x910, 0x1F);
+	// write32( (void *)SLCR_BASE + 0x910, 0x1F);
 	write32( (void *)SLCR_BASE + 0x240, 0);
 
 	/** Handling memory security */
@@ -120,14 +120,17 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 {
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
+			printk("Board read handler, register to read from: 0x%x\n", arg1);
 			arg0 = read32((volatile void*)arg1);
 			break;
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
 			write32( (volatile void*)arg1, arg2);
+			printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, arg2);
 			break;
 		}
 		case (-32):{
+			printk("Board CP15 write\n");
 			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
 									 "mcr p15, 0, r0, c15, c0, 0\n");

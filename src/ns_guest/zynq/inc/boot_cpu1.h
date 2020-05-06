@@ -23,7 +23,10 @@
 *                                                                              *
 */
 #define boot_CPU1()\
-  asm volatile ("ldr r0, =0x0ffffffb");\
-  asm volatile ("smc #0")\
+do{\
+  asm volatile ("ldr r0, =0x0ffffffb\n"\
+                "ldr r1, =0x00120000\n"\
+                "smc #0");\
+}while(0)
 
 #endif

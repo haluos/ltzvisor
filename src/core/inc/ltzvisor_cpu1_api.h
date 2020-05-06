@@ -27,6 +27,6 @@
 */
 void ltzvisor_cpu1_nsguest_create (void);
 
-void cpu1_monitor_boot_nsguest(tzmachine* NS_CPU1_Guest);
+void cpu1_monitor_initial_context_nsguest(tzmachine* NS_CPU1_Guest);
 
 #endif

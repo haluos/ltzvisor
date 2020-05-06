@@ -27,9 +27,9 @@ _cpu1_monitor_vector_table:
 /*
     Input argument is the address of CPU1 NS Guest initial context
 */
-.global cpu1_monitor_boot_nsguest
-.func cpu1_monitor_boot_nsguest
-cpu1_monitor_boot_nsguest:
+.global cpu1_monitor_initial_context_nsguest
+.func cpu1_monitor_initial_context_nsguest
+cpu1_monitor_initial_context_nsguest:
   /*  Disable routing of FIQ, IRQ and Async Abort Exceptions to Monitor and go
       to NS World */
   mrc p15, 0, r2, c1, c1, 0
@@ -43,6 +43,22 @@ cpu1_monitor_boot_nsguest:
   ldr r2, [r0, #_ASM_CP_SCTLR_OFFSET]
   mcr p15, 0, r2, c1, c0, 0
   /* Go to CPU1 NS World boot sequence */
-  ldr r2, [r0, #_ASM_MON_LR_OFFSET]
-  mov pc, r2
+  @ ldr r2, [r0, #_ASM_MON_LR_OFFSET]
+  @ mov pc, r2
+	bx lr
 .endfunc
+
+.global put_cpu1_back_to_sleep
+put_cpu1_back_to_sleep:
+	ldr r0, =0xfffffff0
+	ldr r1, =0
+	str r1, [r0]
+wait:
+	bl unlock_cpu0
+	wfe
+	ldr r0, =0xfffffff0
+	ldr r1, [r0]
+	cmp r1, #0
+	beq wait
+	mov lr, r1
+	mov pc, lr

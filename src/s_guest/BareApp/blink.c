@@ -83,6 +83,7 @@ void led_blink( void * parameters ){
 	for( ;; ){
 		toggle ^=0xF;
 		*ptr = toggle;
+		// printk("call yield\n");
 		YIELD()
 	}
 }
