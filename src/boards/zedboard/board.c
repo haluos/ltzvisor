@@ -126,7 +126,13 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
 			write32( (volatile void*)arg1, arg2);
-			printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, arg2);
+			printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
+			// if(arg1 == 0xfffffff0)
+			// {
+			// 	printk("Issue SEV\n");
+			// 	asm volatile("sev");
+			// 	asm volatile("dmb");
+			// }
 			break;
 		}
 		case (-32):{

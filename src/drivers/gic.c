@@ -11,28 +11,28 @@
  *
  * LTZVisor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2
- * as published by the Free Software Foundation, with a special   
+ * as published by the Free Software Foundation, with a special
  * exception described below.
- * 
- * Linking this code statically or dynamically with other modules 
- * is making a combined work based on this code. Thus, the terms 
- * and conditions of the GNU General Public License V2 cover the 
+ *
+ * Linking this code statically or dynamically with other modules
+ * is making a combined work based on this code. Thus, the terms
+ * and conditions of the GNU General Public License V2 cover the
  * whole combination.
  *
- * As a special exception, the copyright holders of LTZVisor give  
- * you permission to link LTZVisor with independent modules to  
- * produce a statically linked executable, regardless of the license 
- * terms of these independent modules, and to copy and distribute  
- * the resulting executable under terms of your choice, provided that 
- * you also meet, for each linked independent module, the terms and 
- * conditions of the license of that module. An independent module  
+ * As a special exception, the copyright holders of LTZVisor give
+ * you permission to link LTZVisor with independent modules to
+ * produce a statically linked executable, regardless of the license
+ * terms of these independent modules, and to copy and distribute
+ * the resulting executable under terms of your choice, provided that
+ * you also meet, for each linked independent module, the terms and
+ * conditions of the license of that module. An independent module
  * is a module which is not derived from or based on LTZVisor.
  *
  * LTZVisor is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -41,7 +41,7 @@
  * [gic.c]
  *
  * This file contains the GIC driver implementation.
- * 
+ *
  * (#) $id: gic.c 10-05-2015 s_pinto$
  * (#) $id: gic.c 19-09-2017 s_pinto (modified)$
 */
@@ -58,101 +58,101 @@ Cpu_Interface * const cpu_inter = (Cpu_Interface *)(MPIC_BASE);
 /** Array of FIQ handlers */
 /* TODO - This is board specific */
 tHandler* fiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	(tHandler*) ttc_interrupt_clear, 
-	(tHandler*) ttc_interrupt_clear, 
-	(tHandler*) ttc_interrupt_clear, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	(tHandler*) ttc_interrupt_clear,
-	(tHandler*) ttc_interrupt_clear, 
-	(tHandler*) ttc_interrupt_clear, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
+	(tHandler*) ttc_interrupt_clear,
+	(tHandler*) ttc_interrupt_clear,
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
 	NULL,
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
-	NULL, 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	(tHandler*) ttc_interrupt_clear,
+	(tHandler*) ttc_interrupt_clear,
+	(tHandler*) ttc_interrupt_clear,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL
 };
 
@@ -166,9 +166,9 @@ void fiq_handler(uint32_t interrupt){
 /**
  * Initialize the GIC Distributor
  *
- * @param  	
+ * @param
  *
- * @retval	True for success and FALSE in case ERROR 	
+ * @retval	True for success and FALSE in case ERROR
  */
 uint32_t interrupt_distributor_init(void){
 
@@ -191,13 +191,13 @@ uint32_t interrupt_distributor_init(void){
 	/** Disable all interrupts */
 	for (i = 0; i < GIC_NUM_REGISTERS; i++){
 		/* Clear-Enable */
-		int_dist->ICDICERx[i] = 0xFFFFFFFF;	
+		int_dist->ICDICERx[i] = 0xFFFFFFFF;
 	}
 
 	/** Clear all SPI interrupts */
 	for (i = 1; i < GIC_NUM_REGISTERS; i++){
 		/* Clear-Pending */
-		int_dist->ICDICPRx[i] = 0xFFFFFFFF;	
+		int_dist->ICDICPRx[i] = 0xFFFFFFFF;
 	}
 
 	/** Reset SPI interrupt priorities */
@@ -228,9 +228,9 @@ uint32_t interrupt_distributor_init(void){
 /**
  * Initialize the CPU Interface
  *
- * @param  	
+ * @param
  *
- * @retval	True for success and FALSE in case ERROR 	
+ * @retval	True for success and FALSE in case ERROR
  */
 uint32_t interrupt_interface_init(void){
 
@@ -238,7 +238,7 @@ uint32_t interrupt_interface_init(void){
 
 	/** Clear the bits of the distributor which are CPU-specific */
 	/* Clear-Pending */
-	int_dist->ICDICPRx[0] = 0xFFFFFFFF;			
+	int_dist->ICDICPRx[0] = 0xFFFFFFFF;
 	for (i = 0; i < 8; i++){
 		/* SGI and PPI interrupt priorities */
 		int_dist->ICDIPRx[i] = 0x00000000;
@@ -254,25 +254,26 @@ uint32_t interrupt_interface_init(void){
 	cpu_inter->ICCPMR = 0x000000F0;
 
 	/** All priority bits are compared for pre-emption */
-	cpu_inter->ICCBPR = 0x00000003;	
+	cpu_inter->ICCBPR = 0x00000003;
 
 	/** Clear any pending interrupts */
 	for( ; ; ){
 
 		uint32_t temp;
 		/* interrupt_ack */
-		temp = cpu_inter->ICCIAR;			
+		temp = cpu_inter->ICCIAR;
 
 		if((temp & GIC_ACK_INTID_MASK) == FAKE_INTERRUPT)
 		{
 			break;
 		}
 		/* end_of_interrupt */
-		cpu_inter->ICCEOIR = temp;			
+		cpu_inter->ICCEOIR = temp;
 	}
 
 	/** Enable the CPU Interface */
-	cpu_inter->ICCICR = 0x00000009;	
+	cpu_inter->ICCICR = 0x00000009;
+	cpu_inter->ICCICR |= 0x00000002;
 
 	return TRUE;
 }
@@ -282,9 +283,9 @@ uint32_t interrupt_interface_init(void){
  * Interrupt enable/disable
  *
  * @param	interrupt = interrupt number
- *		enable = set (enable=1) or clear (enable=0)   	
+ *		enable = set (enable=1) or clear (enable=0)
  *
- * @retval	 	
+ * @retval
  */
 void interrupt_enable(uint32_t interrupt, uint32_t enable){
 
@@ -309,9 +310,9 @@ void interrupt_enable(uint32_t interrupt, uint32_t enable){
  * Interrupt priority set
  *
  * @param	interrupt = interrupt number
- *		priority = priority value   	
+ *		priority = priority value
  *
- * @retval	Return original priority	 	
+ * @retval	Return original priority
  */
 uint32_t interrupt_priority_set(uint32_t interrupt, uint32_t priority){
 
@@ -319,28 +320,28 @@ uint32_t interrupt_priority_set(uint32_t interrupt, uint32_t priority){
 
 	priority &= 0xF;
 	/* Get register of interrupt */
-	word = interrupt / 4; 					
-	bit_shift = (interrupt % 4) * 8 + 4; 			
+	word = interrupt / 4;
+	bit_shift = (interrupt % 4) * 8 + 4;
 
 	/* Get priority register */
-	temp = old_priority = int_dist->ICDIPRx[word]; 		
+	temp = old_priority = int_dist->ICDIPRx[word];
 	/* Reset the priority for this interrupt to 0 */
-	temp &= ~((uint32_t)0xF << bit_shift); 			
+	temp &= ~((uint32_t)0xF << bit_shift);
 	/* Set the new priority */
-	temp |= (priority << bit_shift); 			
-	int_dist->ICDIPRx[word] = temp; 			
+	temp |= (priority << bit_shift);
+	int_dist->ICDIPRx[word] = temp;
 
-	return ((old_priority >> bit_shift) & 0xF); 		
+	return ((old_priority >> bit_shift) & 0xF);
 }
 
 /**
  * Set interrupt target
  *
  * @param	interrupt = interrupt number
- *		cpu = target cpu id 
- *		set = set value  	
+ *		cpu = target cpu id
+ *		set = set value
  *
- * @retval	 	
+ * @retval
  */
 void interrupt_target_set(uint32_t interrupt, uint32_t cpu, uint32_t set){
 
@@ -367,9 +368,9 @@ void interrupt_target_set(uint32_t interrupt, uint32_t cpu, uint32_t set){
  * Clear interrupt
  *
  * @param	interrupt = interrupt number
- *		target =  	
+ *		target =
  *
- * @retval	 	
+ * @retval
  */
 void interrupt_clear(uint32_t interrupt, uint32_t target){
 
@@ -380,9 +381,9 @@ void interrupt_clear(uint32_t interrupt, uint32_t target){
 /**
  * Configure all interrupts' security
  *
- * @param	
+ * @param
  *
- * @retval	 	
+ * @retval
  */
 void interrupt_security_configall(void){
 
@@ -398,9 +399,9 @@ void interrupt_security_configall(void){
  * Config interrupt security
  *
  * @param	interrupt = interrupt number
- * 		security = security state (NS or S)	
+ * 		security = security state (NS or S)
  *
- * @retval	 	
+ * @retval
  */
 void interrupt_security_config(uint32_t interrupt, IntSecurity_TypeDef security){
 
@@ -426,7 +427,7 @@ void interrupt_security_config(uint32_t interrupt, IntSecurity_TypeDef security)
  *
  * @param
  *
- * @retval	Return the number of current interrupt	 	
+ * @retval	Return the number of current interrupt
  */
 uint32_t interrupt_number_get() {
 
@@ -438,7 +439,7 @@ uint32_t interrupt_number_get() {
  *
  * @param
  *
- * @retval		
+ * @retval
  */
 void interrupt_critical_entry() {
 	/* Set higher priority to 0x00 */
@@ -450,7 +451,7 @@ void interrupt_critical_entry() {
  *
  * @param
  *
- * @retval		
+ * @retval
  */
 void interrupt_critical_exit() {
 	/* Set higher priority to 0xF0 */
@@ -463,12 +464,9 @@ void interrupt_critical_exit() {
  * @param	id = IPI identifier
  *		target = target CPU
  *
- * @retval		
+ * @retval
  */
 void interrupt_IPI_generate(uint32_t id, uint32_t target){
 	/* Software Generated Interrupt Register */
-   	int_dist->ICDSGIR = (target << IPI_TARGET_SHIFT) | id;		
+   	int_dist->ICDSGIR = (target << IPI_TARGET_SHIFT) | id;
 }
-
-
-

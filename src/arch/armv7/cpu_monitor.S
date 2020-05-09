@@ -288,6 +288,7 @@ _mon_smc_handler:
   @ cmp r0, #LTZVISOR_NS_TTBCR_WRITE
   cmp r0, r3
   beq _ns_request_ttbcr_write
+  bl not_determined
 	bx	lr
 
 .globl _ns_request_aux_write

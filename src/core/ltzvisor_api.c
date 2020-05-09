@@ -196,3 +196,8 @@ uint32_t ltzvisor_nsguest_restart( struct nsguest_conf_entry *g ){
 	/** TODO - Implement restart of NS_Guest */
 	while(1);
 }
+
+void not_determined (void)
+{
+	printk("SMC with undefined request\n");
+}

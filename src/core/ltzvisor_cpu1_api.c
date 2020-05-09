@@ -21,6 +21,18 @@ void LTZVisor_CPU1_entry (void)
 	extern void put_cpu1_back_to_sleep(void);
 	// printk("LTZVisor running on CPU1\n\t");
 	interrupt_interface_init();
+	interrupt_security_config(27, Int_NS);
+	interrupt_security_config(29, Int_NS);
+	interrupt_target_set(29, 0, 1);
+	interrupt_target_set(29, 1, 1);
+	interrupt_target_set(27, 0, 1);
+	interrupt_target_set(27, 1, 1);
+	for(int i = 0; i < 8; i++)
+	{
+		interrupt_security_config(i, Int_NS);
+		// interrupt_target_set(i, 0, 1);
+		// interrupt_target_set(i, 1, 1);
+	}
 	// printk("CPU1 interface initialized!\n\t");
 	ltzvisor_cpu1_nsguest_create();
 	// printk("CPU1 Ns Guest context OK!\n\t");
@@ -76,14 +88,17 @@ uint32_t cpu1_board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_
 {
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
+			printk("CPU1 Board read handler, register to read from: 0x%x\n", arg1);
 			arg0 = read32((volatile void*)arg1);
 			break;
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
+			printk("CPU1 Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
 			write32( (volatile void*)arg1, arg2);
 			break;
 		}
 		case (-32):{
+			printk("CPU1 CP15 secure write\n");
 			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
 									 "mcr p15, 0, r0, c15, c0, 0\n");

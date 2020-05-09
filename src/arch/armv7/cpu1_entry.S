@@ -82,8 +82,8 @@ __setup_CPU1:
 	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
 
 	/** Set monitor vector table (VBAR) */
-	@ ldr	r0, =_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
-	@ mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
+	ldr	r0, =_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
+	mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
 
 
 	/** Setup Stacks for all CPU modes */
