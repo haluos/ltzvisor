@@ -48,6 +48,7 @@
 
 #include <gic.h>
 #include <zynq_ttc.h>
+#include <printk.h>
 
 /** Interrupt Distributor instance */
 Interrupt_Distributor * int_dist = (Interrupt_Distributor *)(MPID_BASE);
@@ -168,18 +169,25 @@ void fiq_handler(uint32_t interrupt){
 
 void UndefinedException(void)
 {
+	printk("Undefined Exception\n");
+	while(1);
 }
 
 void SWInterrupt(void)
 {
+	printk("SVC\n");
 }
 
 void DataAbortInterrupt(void)
 {
+	printk("Data abort\n");
+	while(1);
 }
 
 void PrefetchAbortInterrupt(void)
 {
+	printk("Prefetch abort\n");
+	while(1);
 }
 
 void FIQInterrupt(void)

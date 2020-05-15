@@ -101,6 +101,9 @@ uint32_t board_init(void){
 	/* Handling more devices ... */
 	write32( (void *)SCU_SAC, 0xf);
 	write32( (void *)SCU_NSAC, 0xfff);
+	// uint32_t scu_val = read32( (void *)XSCU_BASE);
+	// scu_val |= 0x1;
+	// write32( (void *)XSCU_BASE, scu_val);
 	printk("      * Devices security - OK  \n\t");
 
 	/** Locking SLCR register */

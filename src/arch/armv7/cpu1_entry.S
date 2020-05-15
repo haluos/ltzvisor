@@ -62,28 +62,69 @@ __start_secure_core_cpu1:
 __setup_CPU1:
 	.global start_boot
 	bl start_boot
+	mrs r0, cpsr
+	bic r0, #0x80
+	bic r0, #0x40
+	msr cpsr, r0
+	bl print_addr
+
+	mcr	 15,0,r0,cr7,cr5,0		/* Invalidate Instruction cache */
+	mcr	 15,0,r0,cr7,cr5,6		/* Invalidate branch predictor array */
+	dsb
+	isb					/* make sure it completes */
+
+	ldr	r4, =0
+	mcr	 15,0,r4,cr1,cr0,0		/* disable the ICache and MMU */
+	isb					/* make sure it completes */
+
 	/* Set SCTLR */
 	mrc	p15, 0, r1, c1, c0, 0			@ Read SCTLR
+	mov r0, r1
+	bl print_addr
 	bic	r1, r1, #0x10000000			@ Clear TEX bit
 	bic	r1, r1, #0x00002000			@ Clear Vectors bit
+	bic r1, r1, #0x8000000
+	orr r1, r1, #0x400
 	mcr	p15, 0, r1, c1, c0, 0			@ Write SCTLR
 	/* Set NSACR */
 	mrc	p15, 0, r1, c1, c1, 2			@ Read NSACR
 	ldr	r2, =NSACR_REG_VAL
 	orr	r1, r1, r2				@ Mask r1 with r2
 	mcr	p15, 0, r1, c1, c1, 2			@ Write NSACR
+	isb
+	mrc	p15, 0, r0, c1, c1, 2
+	bl print_addr
 	/* Non-Route FIQs Monitor */
 	mrc	p15, 0, r1, c1, c1, 0			@ Read SCR
+	mov r0, r1
+	bl print_addr
 	bic  	r1, r1, #SCR_FIQ_BIT			@ Clear FIQ bit (disable route FIQs monitor)
 	mcr	p15, 0, r1, c1, c1, 0			@ Write SCR
 	/* Set Auxiliary register reset value */
 	mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
-	ldr  	r0, =0x00				@ Clear registers
+	ldr  	r0, =0x47				@ Clear registers
 	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
 
-	/** Set monitor vector table (VBAR) */
-	ldr	r0, =_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
+	/** Set secure vector table (VBAR) */
+	ldr	r0, =_cpu1_secure_vector_table		@ Read the Secure Vector Table's Base Address
+	@ ldr	r0, =_secure_vector_table
+	ldr r1, =0x0
+	mcr	p15, 0, r1, c12, c0, 0
+	isb
+	mcr	p15, 0, r0, c12, c0, 0			@ Write VBAR
+	isb
+	dsb
+	mrc	p15, 0, r0, c12, c0, 0
+	bl print_addr
+
+	/** Set monitor vector table (MVBAR) */
+	ldr	r0, =_cpu1_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
+	@ bl print_addr
 	mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
+	isb
+	dsb
+	mrc	p15, 0, r0, c12, c0, 1
+	bl print_addr
 
 
 	/** Setup Stacks for all CPU modes */
@@ -154,3 +195,15 @@ __call_main:
 	bl	LTZVisor_CPU1_entry			@ Jump to LTZVisor entry function
 	/* This point should never be reached */
 	b	.
+
+.align 8
+.globl _cpu1_secure_vector_table
+_cpu1_secure_vector_table:
+	b	.
+	b	.
+	b	.
+	b .
+	b .
+	b	.
+	b .
+	b .

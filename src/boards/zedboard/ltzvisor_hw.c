@@ -90,12 +90,6 @@ uint32_t ltzvisor_hw_init(void){
 	{
 		interrupt_security_config(i, Int_NS);
 	}
-	// interrupt_target_set(1, 0, 1);
-	// interrupt_target_set(1, 1, 1);
-	// interrupt_target_set(29, 0, 1);
-	// interrupt_target_set(29, 1, 1);
-	// interrupt_target_set(27, 0, 1);
-	// interrupt_target_set(27, 1, 1);
 	printk("      * GIC security - OK  \n\t");
 
 	/** Initialize Platform-specific */
@@ -106,6 +100,8 @@ uint32_t ltzvisor_hw_init(void){
 		printk("ERROR: Platform init!\n\r");
 		return ret;
 	}
+	asm volatile("mrc	p15, 0, r0, c1, c1, 0\n"
+								"bl print_addr");
 
 	return ret;
 }

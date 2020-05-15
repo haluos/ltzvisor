@@ -288,6 +288,9 @@ _mon_smc_handler:
   @ cmp r0, #LTZVISOR_NS_TTBCR_WRITE
   cmp r0, r3
   beq _ns_request_ttbcr_write
+  @ mov r4, #911
+  @ cmp r0, r4
+  @ beq _NS_wfi
   bl not_determined
 	bx	lr
 
@@ -307,10 +310,11 @@ _secondary_wake_cpu1:
   str r1, [r3]
   dmb
   sev
-  mov r0, r1
-  call_c_function_arg print_addr
-  exception_return_arg
   movs pc, lr
+
+.globl _NS_wfi
+_NS_wfi:
+  bl set_no_sched
 
 /**
  * Monitor FIQ handler

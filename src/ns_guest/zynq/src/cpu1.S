@@ -64,6 +64,7 @@
 .set FPEXC_EN,		0x40000000		/* FPU enable bit, (1 << 30) */
 
 .section .boot_cpu1,"ax"
+.arm
 
 _cpu1_entry:
 /* only allow cpu1 through */
@@ -73,6 +74,9 @@ _cpu1_entry:
 	/* set VBAR to the _vector_table address in linker script */
 	ldr	r0, =vector_base
 	mcr	p15, 0, r0, c12, c0, 0
+	isb
+	mrc	p15, 0, r0, c12, c0, 0
+	bl print_addr
 
 	/* Invalidate caches and TLBs */
 	mov	r0,#0				/* r0 = 0  */
@@ -93,15 +97,6 @@ _cpu1_entry:
 	msr	cpsr, r2
 	ldr	r13,=IRQ_stack			/* IRQ stack pointer */
 	bic r2, r2, #(0x1 << 9)    		 /* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x13			/* supervisor mode */
-	msr	cpsr, r2
-	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
 	msr spsr_fsxc,r2
 
 	mrs	r0, cpsr			/* get the current PSR */
@@ -137,6 +132,15 @@ _cpu1_entry:
 	orr	r2, r2, #0x1F			/* SYS mode */
 	msr	cpsr, r2
 	ldr	r13,=SYS_stack			/* SYS stack pointer */
+	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
+	msr spsr_fsxc,r2
+
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
+	and	r2, r1, r0
+	orr	r2, r2, #0x13			/* supervisor mode */
+	msr	cpsr, r2
+	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
 
 	/*set scu enable bit in scu*/
 	ldr	r7, =0xf8f00000

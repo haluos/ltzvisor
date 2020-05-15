@@ -49,11 +49,15 @@
 
 #include <types.h>
 
-#define YIELD(){ \
-	asm(".arch_extension sec\n\t");\
-	asm volatile("ldr r0, =0x0ffffff1");\
-	asm volatile("smc #0");\
-}
+extern uint8_t get_sched_flag(void);
+// if (!get_sched_flag()){
+// }
+#define YIELD() \
+do{ \
+		asm volatile(".arch_extension sec\n");\
+		asm volatile("ldr r0, =0x0ffffff1\n");\
+		asm volatile("smc #0");\
+}while(0)
 
 /** Type definition of the interrupt handler */
 typedef void (handler)(void * t);

@@ -5,6 +5,11 @@
 // volatile uint32_t flag;
 #define flag  		(*(volatile unsigned long *)(0x001F0000))
 
+void print_addr (uint32_t arg)
+{
+  printk("address: 0x%x\n", arg);
+}
+
 void start_cpu1_ns (void)
 {
   printk("CPU1 NS boot start\r\n");
@@ -15,6 +20,11 @@ void helloworld_cpu1 (void)
 {
   uint32_t cnt = 0;
   printk("CPU1 awake\r\n");
+  asm volatile("svc #0\n");
+  asm volatile("mrs r0, spsr\n"
+                "bl print_addr\n");
+  // asm volatile(".arch_extension sec\n");
+  asm volatile("smc #1\n");
   while(1)
   {
     while(!flag);

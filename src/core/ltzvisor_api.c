@@ -51,7 +51,7 @@
 /** Main is part of the secure VM */
 extern void main(void);
 
-uint8_t sync_flag;
+uint8_t sync_flag, no_sched;
 
 void lock_cpu0 (void)
 {
@@ -78,6 +78,8 @@ void unlock_cpu0(void)
 uint32_t ltzvisor_init(void){
 
 	uint32_t ret;
+
+	no_sched = 0;
 
 	/** Initialize LTZVisor-related hardware*/
 	ret = ltzvisor_hw_init();
@@ -141,8 +143,8 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	memset(&NS_Guest.core.vcpu_regs_core,0,sizeof(struct core_regs));
 	/* lr = start_addr & spsr=supervisor */
 	// NS_Guest.core.vcpu_regs_core.lr_mon = g->gce_bin_load;
-	NS_Guest.core.vcpu_regs_core.lr_mon = 0x2007000;
-	// NS_Guest.core.vcpu_regs_core.lr_mon = 0x100000;
+	// NS_Guest.core.vcpu_regs_core.lr_mon = 0x2007000;
+	NS_Guest.core.vcpu_regs_core.lr_mon = 0x100000;
 	NS_Guest.core.vcpu_regs_core.spsr_mon = 0x193;
 	printk("      * NS_Guest core registers - OK  \n\t");
 
@@ -150,6 +152,7 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* Clean CP15 registers */
 	memset(&NS_Guest.core.vcpu_regs_cp15,0,sizeof(struct cp15_regs));
 	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
+	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
 	/* Enable Cache (bit 2) and MMU (bit 0) */
 	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x5;
 	// /* Enable I-cache (bit 12) */
@@ -200,4 +203,16 @@ uint32_t ltzvisor_nsguest_restart( struct nsguest_conf_entry *g ){
 void not_determined (void)
 {
 	printk("SMC with undefined request\n");
+}
+
+void set_no_sched (void)
+{
+	printk("No sched\n");
+	no_sched = 1;
+}
+
+uint8_t get_sched_flag (void)
+{
+	printk("Get flag\n");
+	return no_sched;
 }

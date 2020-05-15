@@ -19,29 +19,23 @@
 void LTZVisor_CPU1_entry (void)
 {
 	extern void put_cpu1_back_to_sleep(void);
-	// printk("LTZVisor running on CPU1\n\t");
+	printk("LTZVisor running on CPU1\n\t");
 	interrupt_interface_init();
 	interrupt_security_config(27, Int_NS);
 	interrupt_security_config(29, Int_NS);
-	interrupt_target_set(29, 0, 1);
-	interrupt_target_set(29, 1, 1);
-	interrupt_target_set(27, 0, 1);
-	interrupt_target_set(27, 1, 1);
 	for(int i = 0; i < 8; i++)
 	{
 		interrupt_security_config(i, Int_NS);
-		// interrupt_target_set(i, 0, 1);
-		// interrupt_target_set(i, 1, 1);
 	}
-	// printk("CPU1 interface initialized!\n\t");
+	printk("CPU1 interface initialized!\n\t");
 	ltzvisor_cpu1_nsguest_create();
-	// printk("CPU1 Ns Guest context OK!\n\t");
+	printk("CPU1 Ns Guest context OK!\n\t");
 	put_cpu1_back_to_sleep();
 }
 
 void start_boot (void)
 {
-	printk("CPU1 boot started\r\n");
+	printk("CPU1 boot started\r\t");
 }
 
 void ltzvisor_cpu1_nsguest_create (void)
@@ -68,6 +62,7 @@ void ltzvisor_cpu1_nsguest_create (void)
                   - global disable branch prediction
                   - disable MMU */
   NS_CPU1_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
+	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
   /* Set ACTLR to:
                   - enable L1 prefetch
                   - enable L2 prefetch hint
@@ -86,6 +81,7 @@ void ltzvisor_cpu1_nsguest_create (void)
  */
 uint32_t cpu1_board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
+	printk("CPU1 Board handler\n");
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
 			printk("CPU1 Board read handler, register to read from: 0x%x\n", arg1);
@@ -115,4 +111,9 @@ uint32_t cpu1_board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_
 void print_addr (uint32_t arg)
 {
 	printk("Address that Monitor received: 0x%x\n", arg);
+}
+
+void print_warning (void)
+{
+	printk("Undefined SMC argument\n");
 }

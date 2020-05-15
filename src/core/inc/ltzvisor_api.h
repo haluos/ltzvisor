@@ -106,5 +106,7 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g );
  */
 uint32_t ltzvisor_nsguest_restart( struct nsguest_conf_entry *g );
 
+uint8_t get_sched_flag (void);
+
 
 #endif /* __LTZVISOR_API_H */

@@ -20,7 +20,7 @@
  *
  * @retval
  */
-.macro exception_return_arg
+.macro cpu1_exception_return_arg
 	ldmfd	sp!, {r1}
 	msr	spsr, r1
 	push	{r1}
@@ -37,24 +37,24 @@
  *
  * @retval
  */
-.macro call_c_function_arg func_name
+.macro cpu1_call_c_function_arg func_name
 	stmfd   sp!, {r1-r12, lr}
 	mrs	r4, spsr
 	stmfd   sp!, {r4}
 	bl	\func_name
 .endm
 
-.global _cpu1_monitor_vector_table
+.align 8
+.globl _cpu1_monitor_vector_table
 _cpu1_monitor_vector_table:
 	b	.				@ Not available on MON
 	b	.				@ Not available on MON
-	ldr	pc, _smc_handler   @ CPU1 reserved only for NS Guest -> don't do context switch
-	@ mov pc, lr
-	b .
-	b .
+	movs	pc, #_smc_handler   @ CPU1 reserved only for NS Guest -> don't do context switch
+	movs	pc, #_prefetch_handler
+	movs	pc, #_abort_handler
 	b	.				@ Reserved for HYP
-	b .       @ IRQ not routed to LTZVisor
-	b .       @ FIQ not routed to LTZVisor
+	movs	pc, #_irq_handler		@ Should never come here
+	movs	pc, #_fiq_handler
 
 /*
     Input argument is the address of CPU1 NS Guest initial context
@@ -68,6 +68,8 @@ cpu1_monitor_initial_context_nsguest:
   bic r2, r2, #0x0000000E
   orr r2, r2, #0x00000001
   mcr p15, 0, r2, c1, c1, 0
+	isb
+	dsb
   /*  Set the ACTLR register for NS World */
   ldr r2, [r0, #_ASM_CP_ACTLR_OFFSET]
   mcr p15, 0, r2, c1, c0, 1
@@ -103,19 +105,39 @@ wait:
 	and r4, r4, r5
 	orr r4, r4, r3
 	msr cpsr, r4
-	@ mov r3, #0x8000
-	@ movt r3, #0x0200
-	@ cmp r1, r3
-	@ addlt r1, r1, r3
 	mov pc, r1
 
 .globl _smc_handler
 	/** Monitor - SMC handler */
 _smc_handler:
+	bl print_warning
 	cmn	r0, #0
 	blt	cpu1_board_smc
+	mov pc, lr
+	bl print_warning
+	mov pc, lr
 
 .globl cpu1_board_smc
 cpu1_board_smc:
-	call_c_function_arg cpu1_board_handler
-	exception_return_arg
+	cpu1_call_c_function_arg cpu1_board_handler
+	cpu1_exception_return_arg
+
+.globl _prefetch_handler
+_prefetch_handler:
+	bl print_warning
+	movs pc, lr
+
+.globl _abort_handler
+_abort_handler:
+	bl print_warning
+	movs pc, lr
+
+.globl _irq_handler
+_irq_handler:
+	bl print_warning
+	movs pc, lr
+
+.globl _fiq_handler
+_fiq_handler:
+	bl print_warning
+	movs pc, lr

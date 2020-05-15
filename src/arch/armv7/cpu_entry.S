@@ -138,14 +138,19 @@ __init_vmemory:
 	mov 	r1,#0
 	mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
 	/* Invalidate Data caches */
-	@mov	r0, #1
-	@bl	data_cache_clean_invalidate_all		@ Invalidate data cache
+	mov	r0, #1
+	bl	data_cache_clean_invalidate_all		@ Invalidate data cache
 	/* Invalidate Branch Predictor arrays */
 	mov 	r1,#0
 	mcr	p15, 0, r1, c7, c5, 6			@ Invalidate BP
 	/* Invalidate TLBs */
 	mov 	r1, #0x0
 	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
+
+	ldr r0, =0xF8F00000
+	ldr r1, [r0]
+	orr r1, r1, #0x1
+	str r1, [r0]
 
 	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
 	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
