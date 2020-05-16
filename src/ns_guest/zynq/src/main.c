@@ -20,15 +20,15 @@ void helloworld_cpu1 (void)
 {
   uint32_t cnt = 0;
   printk("CPU1 awake\r\n");
-  asm volatile("svc #0\n");
-  asm volatile("mrs r0, spsr\n"
-                "bl print_addr\n");
   // asm volatile(".arch_extension sec\n");
-  asm volatile("smc #1\n");
+  asm volatile("smc #0\n");
+  // interrupt_IPI_generate(0, 1);
   while(1)
   {
     while(!flag);
-    printk("CPU1: Hello World %d\r\n", cnt);
+    // for (int i = 0; i < 100000000; i++);
+    // asm volatile("dsb");
+    printk("CPU1: Hello World 0x%x\r\n", cnt);
     flag = 0;
     cnt++;
   }

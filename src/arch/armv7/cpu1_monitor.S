@@ -44,17 +44,17 @@
 	bl	\func_name
 .endm
 
-.align 8
+@ .align 8
 .globl _cpu1_monitor_vector_table
 _cpu1_monitor_vector_table:
 	b	.				@ Not available on MON
 	b	.				@ Not available on MON
-	movs	pc, #_smc_handler   @ CPU1 reserved only for NS Guest -> don't do context switch
-	movs	pc, #_prefetch_handler
-	movs	pc, #_abort_handler
+	ldr	pc, =_smc_handler   @ CPU1 reserved only for NS Guest -> don't do context switch
+	ldr	pc, =_prefetch_handler
+	ldr	pc, =_abort_handler
 	b	.				@ Reserved for HYP
-	movs	pc, #_irq_handler		@ Should never come here
-	movs	pc, #_fiq_handler
+	ldr	pc, =_irq_handler		@ Should never come here
+	ldr	pc, =_fiq_handler
 
 /*
     Input argument is the address of CPU1 NS Guest initial context
@@ -66,7 +66,8 @@ cpu1_monitor_initial_context_nsguest:
       to NS World */
   mrc p15, 0, r2, c1, c1, 0
   bic r2, r2, #0x0000000E
-  orr r2, r2, #0x00000001
+  @ orr r2, r2, #0x00000100
+	orr r2, r2, #0x00000003
   mcr p15, 0, r2, c1, c1, 0
 	isb
 	dsb
@@ -107,15 +108,18 @@ wait:
 	msr cpsr, r4
 	mov pc, r1
 
+@ .align 8
 .globl _smc_handler
 	/** Monitor - SMC handler */
 _smc_handler:
-	bl print_warning
+	@ bl print_warning
+	cpu1_call_c_function_arg print_warning
+	cpu1_exception_return_arg
 	cmn	r0, #0
 	blt	cpu1_board_smc
 	mov pc, lr
-	bl print_warning
-	mov pc, lr
+	@ bl print_warning
+	@ mov pc, lr
 
 .globl cpu1_board_smc
 cpu1_board_smc:
@@ -124,20 +128,24 @@ cpu1_board_smc:
 
 .globl _prefetch_handler
 _prefetch_handler:
-	bl print_warning
-	movs pc, lr
+	cpu1_call_c_function_arg print_warning
+	cpu1_exception_return_arg
+	b .
 
 .globl _abort_handler
 _abort_handler:
-	bl print_warning
-	movs pc, lr
+	cpu1_call_c_function_arg print_warning
+	cpu1_exception_return_arg
+	b .
 
 .globl _irq_handler
 _irq_handler:
-	bl print_warning
+	cpu1_call_c_function_arg print_warning
+	cpu1_exception_return_arg
 	movs pc, lr
 
 .globl _fiq_handler
 _fiq_handler:
-	bl print_warning
+	cpu1_call_c_function_arg print_warning
+	cpu1_exception_return_arg
 	movs pc, lr

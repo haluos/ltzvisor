@@ -25,6 +25,7 @@ SECTIONS
 
 	.text : {
 		*(.text)
+		*(.mmu_tbl)
 		_cpu1_entry_address = .;
 		*(.cpu1_mon_entry)
 	} > DDR_S

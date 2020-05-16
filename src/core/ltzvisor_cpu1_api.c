@@ -68,7 +68,7 @@ void ltzvisor_cpu1_nsguest_create (void)
                   - enable L2 prefetch hint
                   - disable cache and TLB broadcast
                   - disable processor to take part in coherency */
-  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047;
+  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000046;
 	cpu1_monitor_initial_context_nsguest(&NS_CPU1_Guest);
 }
 

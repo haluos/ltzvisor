@@ -83,8 +83,8 @@ __setup_CPU1:
 	bl print_addr
 	bic	r1, r1, #0x10000000			@ Clear TEX bit
 	bic	r1, r1, #0x00002000			@ Clear Vectors bit
-	bic r1, r1, #0x8000000
-	orr r1, r1, #0x400
+	@ bic r1, r1, #0x8000000
+	@ orr r1, r1, #0x400
 	mcr	p15, 0, r1, c1, c0, 0			@ Write SCTLR
 	/* Set NSACR */
 	mrc	p15, 0, r1, c1, c1, 2			@ Read NSACR
@@ -99,11 +99,20 @@ __setup_CPU1:
 	mov r0, r1
 	bl print_addr
 	bic  	r1, r1, #SCR_FIQ_BIT			@ Clear FIQ bit (disable route FIQs monitor)
+	orr r1, r1, #SCR_HCR_BIT
 	mcr	p15, 0, r1, c1, c1, 0			@ Write SCR
 	/* Set Auxiliary register reset value */
-	mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
-	ldr  	r0, =0x47				@ Clear registers
-	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
+	@ mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
+	@ ldr  	r0, =0x47				@ Clear registers
+	@ mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
+	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
+	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
+	mcr p15, 0, r1, c1, c0, 1
+
+	ldr r0, =0xF8F00000
+	ldr r1, [r0]
+	orr r1, r1, #0x1
+	str r1, [r0]
 
 	/** Set secure vector table (VBAR) */
 	ldr	r0, =_cpu1_secure_vector_table		@ Read the Secure Vector Table's Base Address
@@ -196,7 +205,7 @@ __call_main:
 	/* This point should never be reached */
 	b	.
 
-.align 8
+@ .align 8
 .globl _cpu1_secure_vector_table
 _cpu1_secure_vector_table:
 	b	.
