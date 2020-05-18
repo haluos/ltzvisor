@@ -16,6 +16,8 @@
 
 #include "ltzvisor_cpu1_api.h"
 
+tzmachine NS_CPU1_Guest;
+
 void LTZVisor_CPU1_entry (void)
 {
 	extern void put_cpu1_back_to_sleep(void);
@@ -28,8 +30,11 @@ void LTZVisor_CPU1_entry (void)
 		interrupt_security_config(i, Int_NS);
 	}
 	printk("CPU1 interface initialized!\n\t");
+	asm volatile("isb");
 	ltzvisor_cpu1_nsguest_create();
+	asm volatile("isb");
 	printk("CPU1 Ns Guest context OK!\n\t");
+	asm volatile("isb");
 	put_cpu1_back_to_sleep();
 }
 
@@ -40,7 +45,6 @@ void start_boot (void)
 
 void ltzvisor_cpu1_nsguest_create (void)
 {
-  tzmachine NS_CPU1_Guest;
   char *NS_CPU1_name = "Bare-metal CPU1";
   /* Configuring CPU1 NS Guest's descriptors */
   strcpy(NS_CPU1_Guest.name, NS_CPU1_name);
@@ -62,13 +66,19 @@ void ltzvisor_cpu1_nsguest_create (void)
                   - global disable branch prediction
                   - disable MMU */
   NS_CPU1_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
-	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
+	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
+	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 28;
   /* Set ACTLR to:
                   - enable L1 prefetch
                   - enable L2 prefetch hint
                   - disable cache and TLB broadcast
                   - disable processor to take part in coherency */
-  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000046;
+  NS_CPU1_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000045;
+	// cpu1_monitor_initial_context_nsguest(&NS_CPU1_Guest);
+}
+
+void set_initial_context(void)
+{
 	cpu1_monitor_initial_context_nsguest(&NS_CPU1_Guest);
 }
 

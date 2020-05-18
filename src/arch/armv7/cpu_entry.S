@@ -77,6 +77,7 @@ __setup_CPU:
 	/* Non-Route FIQs Monitor */
 	mrc	p15, 0, r1, c1, c1, 0			@ Read SCR
 	bic  	r1, r1, #SCR_FIQ_BIT			@ Clear FIQ bit (disable route FIQs monitor)
+	@ orr r1, r1, #SCR_HCR_BIT
 	mcr	p15, 0, r1, c1, c1, 0			@ Write SCR
 	/* Set Auxiliary register reset value */
 	@ mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
@@ -142,18 +143,54 @@ __init_vmemory:
 	bic 	r1, r1, #SCTLR_DCACHE_BIT		@ Clear C bit (disable D-Cache)
 	bic 	r1, r1, #SCTLR_ICACHE_BIT		@ Clear I bit (disable I-Cache)
 	mcr 	p15, 0, r1, c1, c0, 0			@ Write SCTLR register
-	/* Invalidate Instruction cache */
-	mov 	r1,#0
-	mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
-	/* Invalidate Data caches */
-	mov	r0, #1
-	bl	data_cache_clean_invalidate_all		@ Invalidate data cache
+
+	@ bl cachel2_init
+	@ bl cachel2_disable
+	@ mov		r0, #0
+	@ mov		r1, #0xF0
+	@ bl		cachel2_lockdown
+	@ mov		r0, #1
+	@ mov		r1, #0x0F
+	@ bl		cachel2_lockdown
+
+	bl		mmu_tlb_invalidate
+	bl		dCache_invalidate
+	bl		iCache_invalidate
+	@ bl cachel2_invalidate
+
+	@ /* Invalidate Instruction cache */
+	@ mov 	r1,#0
+	@ mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
+	@ /* Invalidate Data caches */
+	@ mov	r0, #1
+	@ bl	data_cache_clean_invalidate_all		@ Invalidate data cache
 	/* Invalidate Branch Predictor arrays */
 	mov 	r1,#0
 	mcr	p15, 0, r1, c7, c5, 6			@ Invalidate BP
-	/* Invalidate TLBs */
-	mov 	r1, #0x0
-	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
+	@ /* Invalidate TLBs */
+	@ mov 	r1, #0x0
+	@ mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
+
+	ldr		r0, =s_main_page_table
+	bl		mmu_ttbr0_set
+
+	ldr		r0, =0x55555555
+	bl 		mmu_set_domain_access
+
+	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
+	orr r1, r1, #0x1			@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
+	mcr p15, 0, r1, c1, c0, 1
+
+	bl		iCache_enable
+	bl		dCache_enable
+
+	@ bl	cachel2_enable
+
+	bl		mmu_enable
+
+	mrc	p15,0,r0,c1,c0,0		/* flow prediction enable */
+	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
+	mcr	p15,0,r0,c1,c0,0
 
 	/** Handling VFP and NEON */
 __init_vfp:

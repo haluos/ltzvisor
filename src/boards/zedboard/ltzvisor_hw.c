@@ -100,8 +100,8 @@ uint32_t ltzvisor_hw_init(void){
 		printk("ERROR: Platform init!\n\r");
 		return ret;
 	}
-	asm volatile("mrc	p15, 0, r0, c1, c1, 0\n"
-								"bl print_addr");
+	// asm volatile("mrc	p15, 0, r0, c1, c1, 0\n"
+	// 							"bl print_addr");
 
 	return ret;
 }

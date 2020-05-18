@@ -162,9 +162,12 @@ SECTIONS
    *(.gcc_except_table)
 } > ps7_ddr_0
 
-.mmu_tbl (ALIGN(16384)) : {
+/* . = ALIGN(0x1000); */
+
+.mmu_tbl (ALIGN(0x4000)): {
    __mmu_tbl_start = .;
    *(.mmu_tbl)
+   /* *(.nspage_table) */
    __mmu_tbl_end = .;
 } > ps7_ddr_0
 

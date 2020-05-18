@@ -170,9 +170,6 @@
 
 _prestart:
 _boot:
-	ldr	r0, =vector_base
-	mcr	p15, 0, r0, c12, c0, 0
-
 	/* Invalidate caches and TLBs */
 	mov	r0,#0				/* r0 = 0  */
 	mcr	p15, 0, r0, c8, c7, 0		/* invalidate TLBs */
@@ -180,9 +177,20 @@ _boot:
 	mcr	p15, 0, r0, c7, c5, 6		/* Invalidate branch predictor array */
 	bl	invalidate_dcache		/* invalidate dcache */
 
+	@ bl print_addr
+	ldr	r0, =vector_base
+	mcr	p15, 0, r0, c12, c0, 0
+
+	/* Write to ACTLR */
+	mrc	p15, 0, r0, c1, c0, 1		/* Read ACTLR*/
+	orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
+	mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
+
 	/* Disable MMU, if enabled */
 	mrc	p15, 0, r0, c1, c0, 0		/* read CP15 register 1 */
 	bic	r0, r0, #0x1			/* clear bit 0 */
+	@ bic r0, r0, #0x4
+	@ orr r0, r0, #(1 << 5)
 	mcr	p15, 0, r0, c1, c0, 0		/* write value back */
 
 #ifdef SHAREABLE_DDR
@@ -263,20 +271,20 @@ shareable_loop:
 	mcr	15, 0, r0, c2, c0, 0		/* TTB0 */
 
 	mvn	r0,#0				/* Load MMU domains -- all ones=manager */
+	@ ldr r0, =0x55555555
 	mcr	p15,0,r0,c3,c0,0
 
 	/* Enable mmu, icahce and dcache */
+	@ mrc	p15,0,r1,c1,c0,0
 	ldr	r0,=CRValMmuCac
+	@ ldr r0, =0x1
+	@ orr r0, r1, r0
 	mcr	p15,0,r0,c1,c0,0		/* Enable cache and MMU */
 	dsb					/* dsb	allow the MMU to start up */
 	isb					/* isb	flush prefetch buffer */
+	@ smc #0
 
-	/* Write to ACTLR */
-	mrc	p15, 0, r0, c1, c0, 1		/* Read ACTLR*/
-	orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
-	mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
-
-	mov	r0, r0
+	@ mov	r0, r0
 	mrc	p15, 0, r1, c1, c0, 2		/* read cp access control register (CACR) into r1 */
 	orr	r1, r1, #(0xf << 20)		/* enable full access for p10 & p11 */
 	mcr	p15, 0, r1, c1, c0, 2		/* write back into CACR */

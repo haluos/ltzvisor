@@ -48,6 +48,10 @@
 
 extern tHandler* sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED];
 
+void tick_handler(){
+	 ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+}
+
 /**
  * Zynq-specific hardware initialization
  *
@@ -64,6 +68,7 @@ void hw_init( void ){
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT,6);
+	register_handler(TTC0_TTCx_2_INTERRUPT, tick_handler);
 
 }
 

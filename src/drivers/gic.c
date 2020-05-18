@@ -365,6 +365,18 @@ void interrupt_target_set(uint32_t interrupt, uint32_t cpu, uint32_t set){
 }
 
 /**
+ * Acknowledge interrupt
+ *
+ * @param
+ *
+ * @retval
+ * 		read value
+ */
+uint32_t interrupt_acknowledge(){
+	return cpu_inter->ICCIAR;
+}
+
+/**
  * Clear interrupt
  *
  * @param	interrupt = interrupt number

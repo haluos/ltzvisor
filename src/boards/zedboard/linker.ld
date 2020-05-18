@@ -9,6 +9,7 @@ MEMORY
 	OCM (rwx): ORIGIN = 0x00000000, LENGTH = 0x00030000
 	DDR_NS  (rwx)  : ORIGIN = 0x00100000, LENGTH = 0x1BEFFFFF
 	DDR_S  (rwx)  : ORIGIN = 0x1C000000, LENGTH = 0x03F00000
+	DDR_S_TABLE (rwx) : ORIGIN = 0x1C00F000, LENGTH = 0x100000
 }
 
 
@@ -59,5 +60,11 @@ SECTIONS
 		PROVIDE(_heap_end = .);
 		HeapLimit = .;
 	}  > DDR_S
+	. = ALIGN(0x1000);
+
+	.spage_table : {
+		*(.spage_table)
+	} > DDR_S
+
 	_SW_CODE_END = .;
  }

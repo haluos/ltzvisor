@@ -49,7 +49,12 @@
 
 #include <types.h>
 
+typedef void (*fiq_handler)(void);
+
+void sFIQ_handler() __attribute__ ((interrupt ("FIQ")));
+
 extern uint8_t get_sched_flag(void);
+void register_handler(uint32_t interrupt, fiq_handler handler);
 // if (!get_sched_flag()){
 // }
 #define YIELD() \

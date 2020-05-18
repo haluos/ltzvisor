@@ -11,28 +11,28 @@
  *
  * LTZVisor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2
- * as published by the Free Software Foundation, with a special   
+ * as published by the Free Software Foundation, with a special
  * exception described below.
- * 
- * Linking this code statically or dynamically with other modules 
- * is making a combined work based on this code. Thus, the terms 
- * and conditions of the GNU General Public License V2 cover the 
+ *
+ * Linking this code statically or dynamically with other modules
+ * is making a combined work based on this code. Thus, the terms
+ * and conditions of the GNU General Public License V2 cover the
  * whole combination.
  *
- * As a special exception, the copyright holders of LTZVisor give  
- * you permission to link LTZVisor with independent modules to  
- * produce a statically linked executable, regardless of the license 
- * terms of these independent modules, and to copy and distribute  
- * the resulting executable under terms of your choice, provided that 
- * you also meet, for each linked independent module, the terms and 
- * conditions of the license of that module. An independent module  
+ * As a special exception, the copyright holders of LTZVisor give
+ * you permission to link LTZVisor with independent modules to
+ * produce a statically linked executable, regardless of the license
+ * terms of these independent modules, and to copy and distribute
+ * the resulting executable under terms of your choice, provided that
+ * you also meet, for each linked independent module, the terms and
+ * conditions of the license of that module. An independent module
  * is a module which is not derived from or based on LTZVisor.
  *
  * LTZVisor is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -41,7 +41,7 @@
  * [cpu_cp15_switch.S]
  *
  * This file contains the CP15 coprocessor context-switch code.
- * 
+ *
  * (#) $id: cpu_cp15_switch.S 04-05-2015 s_pinto & j_pereira $
 */
 
@@ -67,9 +67,9 @@
 /**
  * CP15 save context (macro)
  *
- * @param	r0 - cp15 context pointer  
+ * @param	r0 - cp15 context pointer
  *
- * @retval 
+ * @retval
  */
 .macro save_cp15_context
 	mrc	p15, 2, r2, c0, c0, 0 /* CSSELR */
@@ -117,9 +117,9 @@
 /**
  * CP15 restore context (macro)
  *
- * @param	r0 - cp15 context pointer 
+ * @param	r0 - cp15 context pointer
  *
- * @retval 
+ * @retval
  */
 .macro restore_cp15_context
 	ldr	r2, [r0], #4
@@ -127,6 +127,8 @@
 	ldr	r2, [r0], #4
 	mcr	p15, 0, r2, c1, c0, 0 /* SCTLR */
 	ldr	r2, [r0], #4
+	mrc	p15, 0, r3, c1, c0, 1
+	orr r2, r3, r2
 	mcr	p15, 0, r2, c1, c0, 1 /* ACTLR */
 	ldr	r2, [r0], #4
 	mcr	p15, 0, r2, c2, c0, 0 /* TTBR0 */
@@ -169,7 +171,7 @@
  *
  * @param	r0 - cp15 context pointer
  *
- * @retval 
+ * @retval
  */
 .global cp15_restore
 .func cp15_restore

@@ -291,7 +291,9 @@ _mon_smc_handler:
   @ mov r4, #911
   @ cmp r0, r4
   @ beq _NS_wfi
-  bl not_determined
+  @ bl not_determined
+  @ call_c_function_arg not_determined
+  @ exception_return_arg
 	bx	lr
 
 .globl _ns_request_aux_write
@@ -315,6 +317,26 @@ _secondary_wake_cpu1:
 .globl _NS_wfi
 _NS_wfi:
   bl set_no_sched
+
+.globl inv_all
+inv_all:
+  mov	r0,#0				/* r0 = 0  */
+  mcr	p15, 0, r0, c8, c7, 0		/* invalidate TLBs */
+  mcr	p15, 0, r0, c7, c5, 0		/* invalidate icache */
+  mcr	p15, 0, r0, c7, c5, 6		/* Invalidate branch predictor array */
+  movs pc, lr
+
+.globl update_ttbr0
+update_ttbr0:
+  mcr	15, 0, r1, c2, c0, 0
+  dsb
+  isb
+  movs pc, lr
+
+.globl set_mmu_domain
+set_mmu_domain:
+  mcr	p15,0,r1,c3,c0,0
+  movs pc, lr
 
 /**
  * Monitor FIQ handler

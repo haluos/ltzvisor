@@ -90,6 +90,10 @@
 #define SECURITY_FSSW_S1        (SECURITY_MOD3 + 0x20)
 #define SECURITY_APB            (SECURITY_MOD3 + 0x28)
 
+#define RESERVED                0xF8000A1C
+
+#define PL310_BASE  0xF8F02000
+
 /**
  * TrustZone-specific initializations
  *
