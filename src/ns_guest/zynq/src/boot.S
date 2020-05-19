@@ -302,6 +302,9 @@ shareable_loop:
 	bic	r0, r0, #0x100			/* enable asynchronous abort exception */
 	msr	cpsr_xsf, r0
 
+	@ dsb
+	@ isb
+
 	.globl main
 	b main
 	/*b	_start */				/* jump to C startup code */
@@ -323,6 +326,7 @@ cpu1_func:
  *
  *************************************************************************
  */
+.globl invalidate_dcache
 invalidate_dcache:
 	mrc	p15, 1, r0, c0, c0, 1		/* read CLIDR */
 	ands	r3, r0, #0x7000000
@@ -367,6 +371,29 @@ finished:
 	isb
 
 	bx	lr
+
+/**
+ * (I/D)-cache flush
+ *
+ * @param
+ *
+ * @retval
+ */
+.global flush_icache_and_dcache
+.func flush_icache_and_dcache
+	@ void flush_icache_and_dcache(void);
+flush_icache_and_dcache:
+	push	{r0-r12, lr}
+	mov 	r0, #0
+	bl  	invalidate_dcache
+	mov 	r0, #0
+	/* Invalidate instruction cache */
+	mcr 	p15, 0, r0, c7, c5, 0
+	dsb
+	isb
+	pop	{r0-r12, lr}
+	mov pc, lr
+.endfunc
 
 .end
 /**

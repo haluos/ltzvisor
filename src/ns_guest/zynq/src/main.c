@@ -2,6 +2,8 @@
 #include "gic.h"
 #include "boot_cpu1.h"
 
+extern void invalidate_dcache(void);
+
 // volatile uint32_t flag;
 #define flag  		(*(volatile unsigned long *)(0x001F0000))
 uint8_t booted;
@@ -22,12 +24,10 @@ void helloworld_cpu1 (void)
   booted = 1;
   uint32_t cnt = 0;
   printk("CPU1 awake\r\n");
-  // asm volatile(".arch_extension sec\n");
-  asm volatile("dsb");
-  asm volatile("smc #0\n");
-  // interrupt_IPI_generate(0, 1);
   while(1)
   {
+    asm volatile("dsb");
+    asm volatile("dmb");
     while(!flag);
     // for (int i = 0; i < 100000000; i++);
     printk("CPU1: Hello World 0x%x\r\n", cnt);
@@ -50,14 +50,13 @@ int main (void)
     // while(flag);
     if(cnt == 15)
     {
-      asm volatile("dsb");
-      asm volatile("isb");
+      // asm volatile( "ldr r0, =0\n"
+      //               "mcr 	p15, 0, r0, c7, c5, 0\n");
+      // asm volatile("dsb");
+      // asm volatile("isb");
       boot_CPU1();
-      for (i = 0; i < 100000; i++);
-      if(!booted)
-      {
-        boot_CPU1();
-      }
+      // asm volatile("dmb");
+      // asm volatile("isb");
     }
   }
   return 1;

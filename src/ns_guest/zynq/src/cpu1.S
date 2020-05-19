@@ -144,11 +144,11 @@ _cpu1_entry:
 	msr	cpsr, r2
 	ldr	r13,=SYS_stack			/* SYS stack pointer */
 
-	/*set scu enable bit in scu*/
-	ldr	r7, =0xf8f00000
-	ldr	r0, [r7]
-	orr	r0, r0, #0x1
-	str	r0, [r7]
+	@ /*set scu enable bit in scu*/
+	@ ldr	r7, =0xf8f00000
+	@ ldr	r0, [r7]
+	@ orr	r0, r0, #0x1
+	@ str	r0, [r7]
 
 	/* enable MMU and cache */
 

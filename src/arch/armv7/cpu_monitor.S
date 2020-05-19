@@ -311,6 +311,8 @@ _secondary_wake_cpu1:
   ldr r3, =0xfffffff0
   str r1, [r3]
   dmb
+  dsb
+  isb
   sev
   movs pc, lr
 
@@ -413,6 +415,7 @@ _wake_cpu1:
   ldr r0,=0xfffffff0    @ location to which code address needs to be written
   ldr r1,=_cpu1_entry_address   @ fetch start address of code
   str r1,[r0]   @ store start address to predefined location
+  bl flush_icache_and_dcache
   dmb         @ wait till address is written to 0xfffffff0
   sev         @ issue Send Event instruction
   bl wait_till_cpu1_boots

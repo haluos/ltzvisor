@@ -156,14 +156,6 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* Clean CP15 registers */
 	memset(&NS_Guest.core.vcpu_regs_cp15,0,sizeof(struct cp15_regs));
 	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
-	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
-	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 28;
-	/* Enable Cache (bit 2) and MMU (bit 0) */
-	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x5;
-	// /* Enable I-cache (bit 12) */
-	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 12;
-	// /* Enable branch prediction (bit 11) */
-	// NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 11;
 	printk("      * NS_Guest CP15 registers - OK  \n\t");
 
 //	#ifdef CONFIG_CACHE_L2X0

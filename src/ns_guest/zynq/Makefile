@@ -48,6 +48,6 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(NS_DIR)/*.bin rm -f $(NS_DIR)/*.elf
+	rm -f $(NS_DIR)/ns_guest.bin rm -f $(NS_DIR)/*.elf
 	rm -rf build
 	@echo 'Finished cleaning'

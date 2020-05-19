@@ -91,7 +91,9 @@ put_cpu1_back_to_sleep:
 	ldr r0, =0xfffffff0
 	ldr r1, =0
 	str r1, [r0]
-	dmb
+	bl flush_icache_and_dcache
+	@ dsb
+	@ isb
 	bl unlock_cpu0
 wait:
 	wfe

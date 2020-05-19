@@ -109,10 +109,10 @@ __setup_CPU1:
 	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
 	mcr p15, 0, r1, c1, c0, 1
 
-	ldr r0, =0xF8F00000
-	ldr r1, [r0]
-	orr r1, r1, #0x1
-	str r1, [r0]
+	@ ldr r0, =0xF8F00000
+	@ ldr r1, [r0]
+	@ orr r1, r1, #0x1
+	@ str r1, [r0]
 
 	/** Set secure vector table (VBAR) */
 	ldr	r0, =_cpu1_secure_vector_table		@ Read the Secure Vector Table's Base Address
