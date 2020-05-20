@@ -1,8 +1,11 @@
 #include "printk.h"
 #include "gic.h"
-#include "boot_cpu1.h"
+#include "smc_requests.h"
+#include "zynq_ttc.h"
 
 extern void invalidate_dcache(void);
+
+void hw_init (void);
 
 // volatile uint32_t flag;
 #define flag  		(*(volatile unsigned long *)(0x001F0000))
@@ -30,7 +33,7 @@ void helloworld_cpu1 (void)
     asm volatile("dmb");
     while(!flag);
     // for (int i = 0; i < 100000000; i++);
-    printk("CPU1: Hello World 0x%x\r\n", cnt);
+    // printk("CPU1: Hello World 0x%x\r\n", cnt);
     flag = 0;
     cnt++;
   }
@@ -40,7 +43,11 @@ int main (void)
 {
   uint32_t i, cnt = 0;
   booted = 0;
+  hw_init();
   // asm volatile("smc #0");
+  // asm volatile("mrs r0, cpsr\n"
+  //               "bl print_addr\n");
+  printk("\n****** NS World running on CPU0 ******\n");
   while(1)
   {
     for (i = 0; i < 100000000; i++);
@@ -48,16 +55,29 @@ int main (void)
     flag = 1;
     cnt++;
     // while(flag);
-    if(cnt == 15)
+    if(cnt == 5)
     {
-      // asm volatile( "ldr r0, =0\n"
-      //               "mcr 	p15, 0, r0, c7, c5, 0\n");
-      // asm volatile("dsb");
-      // asm volatile("isb");
       boot_CPU1();
-      // asm volatile("dmb");
-      // asm volatile("isb");
+    }
+    if(cnt == 10)
+    {
+      got_to_sleep();
     }
   }
   return 1;
+}
+
+void hw_init (void)
+{
+  /** Initialize TTC0_2 as S Tick */
+	ttc_init(TTC1,TTCx_2,INTERVAL);
+
+	/** Config TTC1_2 ISR*/
+	interrupt_enable(TTC1_TTCx_2_INTERRUPT,TRUE);
+	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
+	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,7);
+  ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
+  ttc_request(TTC1, TTCx_2, 1000000);
+	/** Start counting */
+	ttc_enable(TTC1, TTCx_2);
 }

@@ -51,6 +51,7 @@
 
 /** */
 Zynq_Ttc * const Ptr_Ttc[NUM_TTC] = {(Zynq_Ttc *)TTC0_BASE, (Zynq_Ttc *)TTC1_BASE};
+uint8_t ttc_flag;
 
 
 /**
@@ -66,6 +67,7 @@ uint32_t ttc_init(uint32_t ttc_num, uint32_t timer_num, uint32_t mode){
 
 	Zynq_Ttc * ptr_ttc = NULL;
 	uint32_t clk_cntrl = 0;
+	ttc_flag = 0;
 
 	/**  Check Arguments  */
 	if( (ttc_num > TTC1) || (timer_num > TTCx_2) || (mode > FREE_RUNNING) ){
@@ -264,6 +266,7 @@ uint32_t ttc_interrupt_clear(uint32_t interrupt){
 		case TTC0_TTCx_2_INTERRUPT:
 			ttc_num = 0;
 			ttc_tim_num = 1;
+			ttc_flag = 1;
 			break;
 		case TTC0_TTCx_3_INTERRUPT:
 			ttc_num = 0;

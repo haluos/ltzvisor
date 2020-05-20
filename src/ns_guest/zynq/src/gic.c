@@ -196,6 +196,18 @@ void FIQInterrupt(void)
 
 void IRQInterrupt(void)
 {
+	uint32_t interrupt;
+	uint32_t temp;
+	temp = cpu_inter->ICCIAR;
+	interrupt = temp & GIC_ACK_INTID_MASK;
+	if(interrupt != SPURIOUS_INTERRUPT)
+	{
+		// printk("CPU0 Handler\r\n");
+	//	xil_printf("interrupt %d\r\n", interrupt);
+		if (fiq_handlers[interrupt])
+			fiq_handlers[interrupt]((void *) interrupt);
+		cpu_inter->ICCEOIR = temp;
+	}
 }
 
 void FIQInterrupt_CPU1(void)
@@ -263,7 +275,8 @@ uint32_t interrupt_distributor_init(void){
 	}
 
 	/** Enable the interrupt controller (group0 and group1) */
-	int_dist->ICDDCR = 0x00000003;
+	int_dist->ICDDCR = 0x00000001;
+	int_dist->ICDDCR |= 0x00000002;
 
 	return TRUE;
 }
@@ -317,6 +330,7 @@ uint32_t interrupt_interface_init(void){
 
 	/** Enable the CPU Interface */
 	cpu_inter->ICCICR = 0x00000009;
+	cpu_inter->ICCICR |= 0x00000002;
 
 	return TRUE;
 }

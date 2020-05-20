@@ -48,6 +48,7 @@
 
 #include <board.h>
 #include <ltzvisor_hw.h>
+#include "gic.h"
 
 /**
  * TrustZone-specific initializations
@@ -121,6 +122,7 @@ uint32_t board_init(void){
  */
 uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
+	interrupt_critical_entry();
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
 			printk("Board read handler, register to read from: 0x%x\n", arg1);
@@ -149,6 +151,7 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 
 			break;
 	}
+	interrupt_critical_exit();
 
 		return arg0;
 }

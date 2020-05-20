@@ -46,7 +46,7 @@
 
 #include<hw_zynq.h>
 
-extern tHandler* sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED];
+// extern tHandler* sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED];
 
 void tick_handler(){
 	 ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);

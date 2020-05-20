@@ -54,7 +54,7 @@ int main() {
 	/** Initialize hardware */
 	hw_init();
 
-	// printk(" * Secure bare metal VM: running ... \n\t");
+	printk(" * Secure bare metal VM: running ... \n\t");
 
 	/** Generate tick every 1s */
 	tick_set(1000000);

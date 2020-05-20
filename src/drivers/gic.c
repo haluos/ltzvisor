@@ -219,7 +219,8 @@ uint32_t interrupt_distributor_init(void){
 	}
 
 	/** Enable the interrupt controller (group0 and group1) */
-	int_dist->ICDDCR = 0x00000003;
+	int_dist->ICDDCR = 0x00000001;
+	int_dist->ICDDCR |= 0x00000002;
 
 	return TRUE;
 }

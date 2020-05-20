@@ -216,15 +216,6 @@ shareable_loop:
 	msr spsr_fsxc,r2
 
 	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x13			/* supervisor mode */
-	msr	cpsr, r2
-	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
 	mvn	r1, #0x1f			/* set up the Abort  stack pointer */
 	and	r2, r1, r0
 	orr	r2, r2, #0x17			/* Abort mode */
@@ -257,6 +248,15 @@ shareable_loop:
 	orr	r2, r2, #0x1F			/* SYS mode */
 	msr	cpsr, r2
 	ldr	r13,=SYS_stack			/* SYS stack pointer */
+	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
+	msr spsr_fsxc,r2
+
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
+	and	r2, r1, r0
+	orr	r2, r2, #0x13			/* supervisor mode */
+	msr	cpsr, r2
+	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
 
 	/*set scu enable bit in scu*/
 	ldr	r7, =0xf8f00000
@@ -299,8 +299,9 @@ shareable_loop:
 	mcr	p15,0,r0,c1,c0,0
 
 	mrs	r0, cpsr			/* get the current PSR */
-	bic	r0, r0, #0x100			/* enable asynchronous abort exception */
-	msr	cpsr_xsf, r0
+	@ bic	r0, r0, #0x100			/* enable asynchronous abort exception */
+	bic r0, r0, #0x80				/* enable IRQ */
+	msr	cpsr, r0
 
 	@ dsb
 	@ isb

@@ -205,12 +205,18 @@ void not_determined (void)
 
 void set_no_sched (void)
 {
-	printk("No sched\n");
+	// printk("No sched\n");
 	no_sched = 1;
+}
+
+void clear_no_sched (void)
+{
+	// printk("No sched\n");
+	no_sched = 0;
 }
 
 uint8_t get_sched_flag (void)
 {
-	printk("Get flag\n");
+	// printk("Get flag\n");
 	return no_sched;
 }

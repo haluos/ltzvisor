@@ -11,8 +11,8 @@
 
 */
 
-#ifndef BOOT_CPU1_H
-#define BOOT_CPU1_H
+#ifndef SMC_REQUESTS_H
+#define SMC_REQUESTS_H
 
 /*
 * Macro used from NS Guest to generate request to LTZVisor for booting CPU1:   *
@@ -26,6 +26,12 @@
 do{\
   asm volatile ("ldr r0, =0x0ffffffb\n"\
                 "ldr r1, =0x00120000\n"\
+                "smc #0");\
+}while(0)
+
+#define got_to_sleep()\
+do{\
+  asm volatile( "ldr r0, =0x911\n"\
                 "smc #0");\
 }while(0)
 

@@ -48,6 +48,37 @@
 
  .arch_extension sec
 
+ /**
+  * Exception return emulation (macro)
+  *
+  * @param
+  *
+  * @retval
+  */
+ .macro exception_return_arg
+ 	ldmfd	sp!, {r1}
+ 	msr	spsr, r1
+ 	push	{r1}
+ 	mov	r1, #0
+ 	dsb
+ 	pop	{r1}
+ 	ldmfd	sp!, {r1-r12, pc}^
+ .endm
+
+ /**
+  * C function call prolog (macro)
+  *
+  * @param
+  *
+  * @retval
+  */
+ .macro call_c_function_arg func_name
+ 	stmfd   sp!, {r1-r12, lr}
+ 	mrs	r4, spsr
+ 	stmfd   sp!, {r4}
+ 	bl	\func_name
+ .endm
+
 /**
  * Secure vector table
  *
@@ -66,11 +97,18 @@ _secure_vector_table:
 	b	_low_level_abt			@ Data Abort exception handler
 	nop	  				@ Placeholder for address exception vector
 	b     	.				@ IRQ exception handler -not used
-	ldr   	pc, _fiq			@ FIQ exception handler
+	ldr    pc, _fiq			@ FIQ exception handler
 
 .globl sFIQ_handler
 _fiq:
-	.word 	sFIQ_handler
+  .word   sFIQ_handler
+  @ call_c_function_arg sFIQ_handler
+  @ exception_return_arg
+  @ bx lr
+  @ stmdb	sp!,{r0-r3,r12}		/* state save from compiled code */
+	@ bl 	sFIQ_handler
+  @ ldmia	sp!,{r0-r3,r12}		/* state restore from compiled code */
+	@ subs	pc, lr, #4			/* adjust return */
 
 _undefined_entry:
 	b	.	@ Stuck (FIXME)
