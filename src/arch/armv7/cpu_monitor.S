@@ -102,6 +102,7 @@
 	mrc     p15, 0, r0, c1, c1, 0	@ Read SCR
 	bic	r0, r0, #SCR_NS_BIT	@ Disable the NS bit
 	bic	r0, r0, #SCR_FIQ_BIT	@ Disable the route of FIQs in Monitor
+  bic r0, r0, #SCR_IRQ_BIT
 	mcr     p15, 0, r0, c1, c1, 0	@ Write SCR
 	pop 	{r0}
 .endm
@@ -203,6 +204,8 @@
 	cps #IRQ_MODE
 	mrs	 r1, spsr
 	stmia   r0!, {r1, r13, lr}
+  @ IRQ banked registers need to be preserved too
+	stmia r0!, {r8-r12}
 	cps #MONITOR_MODE
 .endm
 
@@ -246,6 +249,7 @@
 @ .endm
 
 .macro NSWORLD_CONTEXT_RESTORE
+  @ push {lr}
 	GET_NS_WORLD_CONTEXT lr
 	ldmia 	lr!, {r0-r12}
 	push    {r0,r1}
@@ -272,8 +276,10 @@
 	cps 	#IRQ_MODE
 	ldmia	r0!, {r1, sp, lr}
 	msr	spsr_cxsf, r1
+  ldmia r0!, {r8-r12}
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
+  @ pop {lr}
 .endm
 
 /**
@@ -369,6 +375,8 @@ _mon_smc_handler:
   ldr r3, =LTZVISOR_NS_WFI
   cmp r0, r3
   beq _ns_wfi
+  @ cmp r0, #0x30
+  @ beq _s_wfi
   @ mov r4, #911
   @ cmp r0, r4
   @ beq _NS_wfi
@@ -376,6 +384,9 @@ _mon_smc_handler:
   @ call_c_function_arg not_determined
   @ exception_return_arg
 	movs	pc, lr
+
+@ _s_wfi:
+@ wfi
 
 .globl _ns_request_aux_write
 _ns_request_aux_write:
@@ -389,6 +400,9 @@ _ns_request_ttbcr_write:
 
 .globl _secondary_wake_cpu1
 _secondary_wake_cpu1:
+  push {r0-r12,lr}
+  bl flush_icache_and_dcache
+  pop {r0-r12,lr}
   ldr r3, =0xfffffff0
   str r1, [r3]
   dmb
@@ -427,16 +441,20 @@ _ns_wfi:
   msr	 	spsr, r1
 
   cps #SUPERVISOR_MODE
+  mrs r1, cpsr
+  orr r1, r1, #0x80
+  msr cpsr_c, r1
   ldmfd   r0!, {r1, sp, lr}
   msr	 	spsr, r1
 
   cps #MONITOR_MODE
   mov sp, r0
   pop {r0-r12}
+
   push {r0-r12,lr}
   @ call_c_function_arg undef_yield
   @ exception_return_arg
-  bl undef_yield
+  @ bl undef_yield
   bl set_no_sched
   pop {r0-r12,lr}
 
@@ -556,6 +574,9 @@ _mon_irq_handler:
   mov r0, sp
 
   cps #SUPERVISOR_MODE
+  mrs r1, cpsr
+  orr r1, r1, #0x80
+  msr cpsr_c, r1
   mrs	 r1, spsr
   stmfd    r0!, {r1, sp, lr}
 
@@ -583,7 +604,7 @@ _mon_irq_handler:
   cps #MONITOR_MODE
   mov sp, r0
   push {r0-r12,lr}
-  bl redef_yield
+  @ bl redef_yield
   bl clear_no_sched
   @ call_c_function_arg redef_yield
   @ exception_return_arg

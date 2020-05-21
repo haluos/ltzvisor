@@ -29,11 +29,15 @@ void helloworld_cpu1 (void)
   printk("CPU1 awake\r\n");
   while(1)
   {
-    asm volatile("dsb");
-    asm volatile("dmb");
+    // asm volatile("dsb");
+    // asm volatile("dmb");
     while(!flag);
     // for (int i = 0; i < 100000000; i++);
-    // printk("CPU1: Hello World 0x%x\r\n", cnt);
+    printk("CPU1: Hello World 0x%x\r\n", cnt);
+    if(cnt == 2)
+    {
+      got_to_sleep();
+    }
     flag = 0;
     cnt++;
   }
@@ -50,18 +54,22 @@ int main (void)
   printk("\n****** NS World running on CPU0 ******\n");
   while(1)
   {
-    for (i = 0; i < 100000000; i++);
-    printk("NS Guest: Hello World %d %d\r\n", cnt, flag);
-    flag = 1;
-    cnt++;
-    // while(flag);
-    if(cnt == 5)
-    {
-      boot_CPU1();
-    }
-    if(cnt == 10)
+    if(cnt >= 10)
     {
       got_to_sleep();
+    }
+    else
+    {
+      for (i = 0; i < 100000000; i++);
+      printk("NS Guest: Hello World %d %d\r\n", cnt, flag);
+      flag = 1;
+      cnt++;
+      // while(flag);
+      if(cnt == 5)
+      {
+        boot_CPU1();
+        asm volatile("wfi");
+      }
     }
   }
   return 1;
@@ -77,7 +85,7 @@ void hw_init (void)
 	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,7);
   ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
-  ttc_request(TTC1, TTCx_2, 1000000);
+  ttc_request(TTC1, TTCx_2, 10000);
 	/** Start counting */
 	ttc_enable(TTC1, TTCx_2);
 }

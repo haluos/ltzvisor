@@ -213,6 +213,11 @@ __init_vmemory:
 	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
 	mcr	p15,0,r0,c1,c0,0
 
+	@ mrs	r0, cpsr			/* get the current PSR */
+	@ @ bic	r0, r0, #0x100			/* enable asynchronous abort exception */
+	@ bic	r0, r0, #0x80
+	@ msr	cpsr_c, r0
+
 
 	/** Handling VFP and NEON */
 __init_vfp:

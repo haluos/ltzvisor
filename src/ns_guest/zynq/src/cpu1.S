@@ -186,8 +186,9 @@ _cpu1_entry:
 	mcr	p15,0,r0,c1,c0,0
 
 	mrs	r0, cpsr			/* get the current PSR */
-	bic	r0, r0, #0x100			/* enable asynchronous abort exception */
-	msr	cpsr_xsf, r0
+	@ bic	r0, r0, #0x100			/* enable asynchronous abort exception */
+	bic	r0, r0, #0x80
+	msr	cpsr_cfxs, r0
 
 	.globl hellowolrd_cpu1
 	b	helloworld_cpu1				/* jump to C startup code */

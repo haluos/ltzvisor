@@ -216,6 +216,18 @@ void FIQInterrupt_CPU1(void)
 
 void IRQInterrupt_CPU1(void)
 {
+	uint32_t interrupt;
+	uint32_t temp;
+	temp = cpu_inter->ICCIAR;
+	interrupt = temp & GIC_ACK_INTID_MASK;
+	if(interrupt != SPURIOUS_INTERRUPT)
+	{
+		// printk("CPU1 Handler\r\n");
+	//	xil_printf("interrupt %d\r\n", interrupt);
+		if (fiq_handlers[interrupt])
+			fiq_handlers[interrupt]((void *) interrupt);
+		cpu_inter->ICCEOIR = temp;
+	}
 }
 
 

@@ -91,20 +91,20 @@ void set_initial_context(void)
  */
 uint32_t cpu1_board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
-	printk("CPU1 Board handler\n");
+	// printk("CPU1 Board handler\n");
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
-			printk("CPU1 Board read handler, register to read from: 0x%x\n", arg1);
+			// printk("CPU1 Board read handler, register to read from: 0x%x\n", arg1);
 			arg0 = read32((volatile void*)arg1);
 			break;
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
-			printk("CPU1 Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
+			// printk("CPU1 Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
 			write32( (volatile void*)arg1, arg2);
 			break;
 		}
 		case (-32):{
-			printk("CPU1 CP15 secure write\n");
+			// printk("CPU1 CP15 secure write\n");
 			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
 									 "mcr p15, 0, r0, c15, c0, 0\n");
@@ -126,4 +126,19 @@ void print_addr (uint32_t arg)
 void print_warning (void)
 {
 	printk("Undefined SMC argument\n");
+}
+
+void cpu1_abort_handler (void)
+{
+	printk("CPU1 Abort Handler\n");
+}
+
+void cpu1_prefetch_handler (void)
+{
+	printk("CPU1 Prefetch Handler\n");
+}
+
+void cpu1_fiq_handler (void)
+{
+	printk("CPU1 FIQ Handler\n");
 }

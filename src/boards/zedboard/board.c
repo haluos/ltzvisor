@@ -125,13 +125,13 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 	interrupt_critical_entry();
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
-			printk("Board read handler, register to read from: 0x%x\n", arg1);
+			// printk("Board read handler, register to read from: 0x%x\n", arg1);
 			arg0 = read32((volatile void*)arg1);
 			break;
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
 			write32( (volatile void*)arg1, arg2);
-			printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
+			// printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
 			// if(arg1 == 0xfffffff0)
 			// {
 			// 	printk("Issue SEV\n");
@@ -141,7 +141,7 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 			break;
 		}
 		case (-32):{
-			printk("Board CP15 write\n");
+			// printk("Board CP15 write\n");
 			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
 									 "mcr p15, 0, r0, c15, c0, 0\n");
