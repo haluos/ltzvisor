@@ -180,7 +180,7 @@ cpu1_monitor_initial_context_nsguest:
   mrc p15, 0, r2, c1, c1, 0
   bic r2, r2, #0x0000000E
   @ orr r2, r2, #0x00000100
-	orr r2, r2, #0x00000003
+	orr r2, r2, #0x00000001
   mcr p15, 0, r2, c1, c1, 0
 	isb
 	dsb
@@ -192,10 +192,6 @@ cpu1_monitor_initial_context_nsguest:
   mcr p15, 0, r2, c1, c0, 0
 	ldr r2, [r0, #_ASM_MON_SPSR_OFFSET]
 	msr spsr, r2
-	@ bl print_warning
-  /* Go to CPU1 NS World boot sequence */
-  @ ldr r2, [r0, #_ASM_MON_LR_OFFSET]
-  @ mov pc, r2
 	bx lr
 .endfunc
 
@@ -204,9 +200,6 @@ put_cpu1_back_to_sleep:
 	ldr r0, =0xfffffff0
 	ldr r1, =0
 	str r1, [r0]
-	bl flush_icache_and_dcache
-	@ dsb
-	@ isb
 	bl unlock_cpu0
 wait:
 	wfe
@@ -229,60 +222,31 @@ wait:
   mcr p15, 0, r2, c1, c0, 0
 	ldr r2, [r0, #_ASM_MON_SPSR_OFFSET]
 	msr spsr, r2
-	@ mrc p15, 0, r2, c1, c1, 0
-  @ orr r2, r2, #0x00000001
-  @ mcr p15, 0, r2, c1, c1, 0
-	mov r3, #0x113
-	mrs r4, cpsr
-	mvn r5, #0x1f
-	and r4, r4, r5
-	orr r4, r4, r3
-	msr cpsr, r4
 	movs pc, r8
 
 @ .align 8
 .globl _smc_handler
 	/** Monitor - SMC handler */
 _smc_handler:
-	@ bl print_warning
-	@ push {lr}
 	cmn	r0, #0
 	blt	cpu1_board_smc
-	@ push {r3}
 	ldr r3, =LTZVISOR_NS_WFI
 	cmp r0, r3
 	beq _cpu1_ns_wfi
-	@ pop {lr}
-	@ cpu1_call_c_function_arg print_warning
-	@ cpu1_exception_return_arg
 	movs pc, lr
-	@ bl print_warning
-	@ mov pc, lr
 
 .globl cpu1_board_smc
 cpu1_board_smc:
 	cpu1_call_c_function_arg cpu1_board_handler
 	cpu1_exception_return_arg
-	@ pop {lr}
-	mov pc, lr
+	movs pc, lr
 
 _cpu1_ns_wfi:
-	push {r3}
-	@ mrs r3, spsr
-	@ bic r3, #0x80
-	@ msr spsr_c, r3
 	mrs r3, cpsr
 	bic r3, #0x80
 	msr cpsr_c, r3
-	@ bl flush_icache_and_dcache
-	pop {r3}
-	@ push {r0}
-	@ GET_CPU1_NS_CONTEXT_ADDR r0
-	@ pop {r0}
-	CLEAR_SCR_NS
+	CLEAR_SCR_NS			@ Make sure that NS context variable is reachable (in Secure memory)
 	SAVE_CPU1_NS_CONTEXT
-	@ dsb
-	@ isb
 	SET_SCR_NS_WFI
 	dsb
 	isb
@@ -293,8 +257,6 @@ _cpu1_ns_wfi:
 _prefetch_handler:
 	push {r0-r12,lr}
 	bl cpu1_prefetch_handler
-	@ cpu1_call_c_function_arg print_warning
-	@ cpu1_exception_return_arg
 	pop {r0-r12,lr}
 	b .
 
@@ -302,36 +264,24 @@ _prefetch_handler:
 _abort_handler:
 	push {r0-r12,lr}
 	bl cpu1_abort_handler
-	@ cpu1_call_c_function_arg print_warning
-	@ cpu1_exception_return_arg
 	pop {r0-r12,lr}
 	b .
 
 .globl _irq_handler
 _irq_handler:
-	bl flush_icache_and_dcache
-	@ push {r0-r12, lr}
-	@ bl print_warning
-	@ cpu1_call_c_function_arg print_warning
-	@ cpu1_exception_return_arg
 	mrs r3, cpsr
 	orr r3, #0x80
 	msr cpsr_c, r3
-	@ pop {r0-r12, lr}
 	CLEAR_SCR_NS
 	GET_CPU1_NS_CONTEXT
 	SET_SCR_NS
-	@ pop {lr}
 	isb
 	dsb
 	movs pc, lr
-	@ subs pc, lr, #4
 
 .globl _fiq_handler
 _fiq_handler:
 	push {r0-r12,lr}
 	bl cpu1_fiq_handler
-	@ cpu1_call_c_function_arg print_warning
-	@ cpu1_exception_return_arg
 	pop {r0-r12,lr}
 	b .

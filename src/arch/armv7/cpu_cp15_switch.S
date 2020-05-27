@@ -127,8 +127,8 @@
 	ldr	r2, [r0], #4
 	mcr	p15, 0, r2, c1, c0, 0 /* SCTLR */
 	ldr	r2, [r0], #4
-	mrc	p15, 0, r3, c1, c0, 1
-	orr r2, r3, r2
+	@ mrc	p15, 0, r3, c1, c0, 1
+	@ orr r2, r3, r2
 	mcr	p15, 0, r2, c1, c0, 1 /* ACTLR */
 	ldr	r2, [r0], #4
 	mcr	p15, 0, r2, c2, c0, 0 /* TTBR0 */

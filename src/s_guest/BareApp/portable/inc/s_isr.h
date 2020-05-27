@@ -53,24 +53,13 @@ typedef void (*fiq_handler)(void);
 extern uint8_t ttc_flag;
 
 void sFIQ_handler() __attribute__ ((interrupt ("FIQ")));
-
-extern uint8_t get_sched_flag(void);
 void register_handler(uint32_t interrupt, fiq_handler handler);
-// if (!get_sched_flag()){
-// }
-//
-//
+
 #define YIELD() \
 do{ \
-		if(get_sched_flag()){\
-			while(!ttc_flag);\
-			ttc_flag = 0;\
-		}\
-		else{\
 			asm volatile(".arch_extension sec\n");\
 			asm volatile("ldr r0, =0x0ffffff1\n");\
 			asm volatile("smc #0");\
-		}\
 }while(0)
 
 /** Type definition of the interrupt handler */

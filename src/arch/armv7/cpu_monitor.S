@@ -341,7 +341,7 @@ __mon_prefetch_handler:
 __mon_abort_handler:
 	.word	mon_abort_handler
 __mon_irq_handler:
-	.word	_mon_irq_handler
+	.word	mon_irq_handler
 __mon_fiq_handler:
 	.word 	_mon_fiq_handler
 
@@ -363,40 +363,37 @@ _mon_smc_handler:
   /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
   beq _secondary_wake_cpu1
-  mov r3, #0x0101
-  movt r3, #0x0101
-  cmp r0, r3
-  beq _ns_request_aux_write
-  mov r3, #0xffff
-  movt r3, #0x3333
-  @ cmp r0, #LTZVISOR_NS_TTBCR_WRITE
-  cmp r0, r3
-  beq _ns_request_ttbcr_write
-  ldr r3, =LTZVISOR_NS_WFI
-  cmp r0, r3
-  beq _ns_wfi
-  @ cmp r0, #0x30
-  @ beq _s_wfi
-  @ mov r4, #911
-  @ cmp r0, r4
-  @ beq _NS_wfi
-  @ bl not_determined
-  @ call_c_function_arg not_determined
-  @ exception_return_arg
 	movs	pc, lr
 
-@ _s_wfi:
-@ wfi
+  /**
+   *
+   *
+   * @param
+   *
+   * @retval
+   */
+board_smc:
+	call_c_function_arg board_handler
+	exception_return_arg
+  @ movs pc, lr
 
-.globl _ns_request_aux_write
-_ns_request_aux_write:
-  mcr p15, 0, r1, c1, c0, 1
-  movs pc, lr
-
-.globl _ns_request_ttbcr_write
-_ns_request_ttbcr_write:
-  mcr	p15, 0, r1, c2, c0, 2
-  movs pc, lr
+/*
+    _wake_cpu1 is part of ZedBoard's LTZVisor SMP library code. It follows
+    ZedBoard's protocol of waking up CPU1:
+        1. Write address of LTZVisor CPU1 entry code to 0xFFFFFFF0
+        2. Issue SEV command - this triggers CPU1 jumping to address written in
+           0xfffffff0
+*/
+.globl _wake_cpu1
+_wake_cpu1:
+  ldr r0,=0xfffffff0    @ location to which code address needs to be written
+  ldr r1,=_cpu1_entry_address   @ fetch start address of code
+  str r1,[r0]   @ store start address to predefined location
+  bl flush_icache_and_dcache
+  dmb         @ wait till address is written to 0xfffffff0
+  sev         @ issue Send Event instruction
+  bl wait_till_cpu1_boots
+  b ltzvisor_kickoff    @ go back to NS World
 
 .globl _secondary_wake_cpu1
 _secondary_wake_cpu1:
@@ -409,59 +406,6 @@ _secondary_wake_cpu1:
   dsb
   isb
   sev
-  movs pc, lr
-
-.globl _ns_wfi
-_ns_wfi:
-  SCR_NS_CLEAR_WFI				@ Disable NS bit and route FIQs in mon
-
-  NSWORLD_CONTEXT_SAVE
-
-  mov r0, sp
-
-  cps #FIQ_MODE
-  ldmfd    r0!, {r1, sp, lr}
-  msr		spsr, r1
-  ldmfd 	r0!, {r8-r12}
-
-  cps #IRQ_MODE
-  ldmfd   r0!, {r1, sp, lr}
-  msr	 	spsr, r1
-
-  cps #UNDEFINED_MODE
-  ldmfd   r0!, {r1, sp, lr}
-  msr	 	spsr, r1
-
-  cps #ABORT_MODE
-  ldmfd   r0!, {r1, sp, lr}
-  msr	 	spsr, r1
-
-  cps #SYSTEM_MODE
-  ldmfd   r0!, {r1, sp, lr}
-  msr	 	spsr, r1
-
-  cps #SUPERVISOR_MODE
-  mrs r1, cpsr
-  orr r1, r1, #0x80
-  msr cpsr_c, r1
-  ldmfd   r0!, {r1, sp, lr}
-  msr	 	spsr, r1
-
-  cps #MONITOR_MODE
-  mov sp, r0
-  pop {r0-r12}
-
-  push {r0-r12,lr}
-  @ call_c_function_arg undef_yield
-  @ exception_return_arg
-  @ bl undef_yield
-  bl set_no_sched
-  pop {r0-r12,lr}
-
-  @ rfefd sp!
-  pop {r1, r2}
-  mov lr, r1
-  msr spsr, r2
   movs pc, lr
 
 
@@ -563,91 +507,6 @@ _mon_fiq_handler:
   msr spsr, r2
   movs pc, lr
 
-
-/*
-    IRQ Handler for SMP configuration
-*/
-.globl _mon_irq_handler
-_mon_irq_handler:
-  srsfd sp!, #MONITOR_MODE
-  push {r0-r12}
-  mov r0, sp
-
-  cps #SUPERVISOR_MODE
-  mrs r1, cpsr
-  orr r1, r1, #0x80
-  msr cpsr_c, r1
-  mrs	 r1, spsr
-  stmfd    r0!, {r1, sp, lr}
-
-  cps #SYSTEM_MODE
-  mrs	 r1, spsr
-  stmfd   r0!, {r1, sp, lr}
-
-  cps #ABORT_MODE
-  mrs	 r1, spsr
-  stmfd    r0!, {r1, sp, lr}
-
-  cps #UNDEFINED_MODE
-  mrs	 r1, spsr
-  stmfd    r0!, {r1, sp, lr}
-
-  cps #IRQ_MODE
-  mrs	 r1, spsr
-  stmfd    r0!, {r1, sp, lr}
-
-  cps #FIQ_MODE
-  stmfd r0!, {r8-r12}
-  mrs	 r1, spsr
-  stmfd    r0!, {r1, sp, lr}
-
-  cps #MONITOR_MODE
-  mov sp, r0
-  push {r0-r12,lr}
-  @ bl redef_yield
-  bl clear_no_sched
-  @ call_c_function_arg redef_yield
-  @ exception_return_arg
-  pop {r0-r12,lr}
-
-  NSWORLD_CONTEXT_RESTORE
-
-  /* Set NS bit and go NS world */
-  SCR_NS_SET
-  isb
-  dsb
-  movs    pc, lr
-
-/**
- *
- *
- * @param
- *
- * @retval
- */
-board_smc:
-	call_c_function_arg board_handler
-	exception_return_arg
-  movs pc, lr
-
-/*
-    _wake_cpu1 is part of ZedBoard's LTZVisor SMP library code. It follows
-    ZedBoard's protocol of waking up CPU1:
-        1. Write address of LTZVisor CPU1 entry code to 0xFFFFFFF0
-        2. Issue SEV command - this triggers CPU1 jumping to address written in
-           0xfffffff0
-*/
-.globl _wake_cpu1
-_wake_cpu1:
-  ldr r0,=0xfffffff0    @ location to which code address needs to be written
-  ldr r1,=_cpu1_entry_address   @ fetch start address of code
-  str r1,[r0]   @ store start address to predefined location
-  bl flush_icache_and_dcache
-  dmb         @ wait till address is written to 0xfffffff0
-  sev         @ issue Send Event instruction
-  bl wait_till_cpu1_boots
-  b ltzvisor_kickoff    @ go back to NS World
-
 /**
  * Monitor scheduler - schedule NS_guest
  *
@@ -678,6 +537,10 @@ _wake_cpu1:
 @ 	WORLD_CONTEXT_RESTORE
 @ 	/* Set NS bit and go NS world */
 @ 	SCR_NS_SET
+@   @ push {r0-r3, lr}
+@   @ bl cachel2_invalidate
+@   @ bl cachel2_clean
+@   @ pop {r0-r3, lr}
 @ 	isb
 @ 	dsb
 @ 	movs    pc, lr				@ Return from exception (MON -> NS_SVC)

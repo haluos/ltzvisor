@@ -84,8 +84,8 @@ uint32_t ltzvisor_hw_init(void){
 	interrupt_security_config(UART_1_INTERRUPT,Int_NS);
 	interrupt_security_config(TTC0_TTCx_2_INTERRUPT,Int_S);
 	interrupt_security_config(TTC1_TTCx_2_INTERRUPT,Int_NS);
-	interrupt_security_config(27, Int_NS);
-	interrupt_security_config(29, Int_NS);
+	interrupt_security_config(GLOBAL_TIMER_INTERRUPT, Int_NS);
+	interrupt_security_config(PRIVATE_TIMER_INTERRUPT, Int_NS);
 	for(int i = 0; i < 8; i++)
 	{
 		interrupt_security_config(i, Int_NS);

@@ -50,6 +50,8 @@
 #include <asm-offsets.h>
 #include <platform_asm.h>
 
+.set FPEXC_EN,		0x40000000
+
 .text
 .section .cpu1_mon_entry
 
@@ -60,13 +62,8 @@ __start_secure_core_cpu1:
 
 	/** Set CPU State */
 __setup_CPU1:
-	.global start_boot
-	bl start_boot
-	@ mrs r0, cpsr
-	@ bic r0, #0x80
-	@ bic r0, #0x40
-	@ msr cpsr, r0
-	@ bl print_addr
+	@ .global start_boot
+	@ bl start_boot
 
 	mcr	 15,0,r0,cr7,cr5,0		/* Invalidate Instruction cache */
 	mcr	 15,0,r0,cr7,cr5,6		/* Invalidate branch predictor array */
@@ -79,61 +76,39 @@ __setup_CPU1:
 
 	/* Set SCTLR */
 	mrc	p15, 0, r1, c1, c0, 0			@ Read SCTLR
-	@ mov r0, r1
-	@ bl print_addr
 	bic	r1, r1, #0x10000000			@ Clear TEX bit
 	bic	r1, r1, #0x00002000			@ Clear Vectors bit
-	@ bic r1, r1, #0x8000000
-	@ orr r1, r1, #0x400
 	mcr	p15, 0, r1, c1, c0, 0			@ Write SCTLR
 	/* Set NSACR */
 	mrc	p15, 0, r1, c1, c1, 2			@ Read NSACR
 	ldr	r2, =NSACR_REG_VAL
 	orr	r1, r1, r2				@ Mask r1 with r2
+	orr r1, r1, #(0x1<<16)
 	mcr	p15, 0, r1, c1, c1, 2			@ Write NSACR
 	isb
-	@ mrc	p15, 0, r0, c1, c1, 2
-	@ bl print_addr
 	/* Non-Route FIQs Monitor */
 	mrc	p15, 0, r1, c1, c1, 0			@ Read SCR
-	@ mov r0, r1
-	@ bl print_addr
 	bic  	r1, r1, #SCR_FIQ_BIT			@ Clear FIQ bit (disable route FIQs monitor)
-	@ orr r1, r1, #SCR_HCR_BIT
 	mcr	p15, 0, r1, c1, c1, 0			@ Write SCR
 	/* Set Auxiliary register reset value */
-	@ mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
-	@ ldr  	r0, =0x47				@ Clear registers
-	@ mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
-	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
-	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
-	mcr p15, 0, r1, c1, c0, 1
+	mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
+	ldr  	r0, =0x00				@ Clear registers
+	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
 
-	@ ldr r0, =0xF8F00000
-	@ ldr r1, [r0]
-	@ orr r1, r1, #0x1
-	@ str r1, [r0]
+	@ Set SCTLR on CPU1 with same values as in CPU0
+	mrc 	p15, 0, r1, c1, c0, 0			@ Read SCTLR register
+	orr 	r1, r1, #0x2
+	orr		r1, r1, #(0x1 << 11)
+	mcr 	p15, 0, r1, c1, c0, 0			@ Write SCTLR register
 
-	/** Set secure vector table (VBAR) */
-	ldr	r0, =_cpu1_secure_vector_table		@ Read the Secure Vector Table's Base Address
-	@ ldr	r0, =_secure_vector_table
-	@ ldr r1, =0x0
-	@ mcr	p15, 0, r1, c12, c0, 0
-	@ isb
-	mcr	p15, 0, r0, c12, c0, 0			@ Write VBAR
-	@ isb
-	@ dsb
-	@ mrc	p15, 0, r0, c12, c0, 0
-	@ bl print_addr
+	mrc p15, 0, r0, c1, c0, 2				@ Set CPACR with same value as on CPU0
+	orr r0, r0, #(0xf << 20)
+	mcr p15, 0, r0, c1, c0, 2
+	isb
 
 	/** Set monitor vector table (MVBAR) */
 	ldr	r0, =_cpu1_monitor_vector_table		@ Read the Monitor Vector Tables Base Address
-	@ bl print_addr
 	mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
-	@ isb
-	@ dsb
-	@ mrc	p15, 0, r0, c12, c0, 1
-	@ bl print_addr
 
 
 	/** Setup Stacks for all CPU modes */
@@ -177,51 +152,24 @@ __init_vmemory:
 	bic 	r1, r1, #SCTLR_ICACHE_BIT		@ Clear I bit (disable I-Cache)
 	mcr 	p15, 0, r1, c1, c0, 0			@ Write SCTLR register
 
-	bl		mmu_tlb_invalidate
-	bl		dCache_invalidate
-	bl		iCache_invalidate
-
-	@ /* Invalidate Instruction cache */
-	@ mov 	r1,#0
-	@ mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
+	/* Invalidate Instruction cache */
+	mov 	r1,#0
+	mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
 	@ /* Invalidate Data caches */
 	@ mov	r0, #1
 	@ bl	data_cache_clean_invalidate_all		@ Invalidate data cache
 	/* Invalidate Branch Predictor arrays */
 	mov 	r1,#0
 	mcr	p15, 0, r1, c7, c5, 6			@ Invalidate BP
-	@ /* Invalidate TLBs */
-	@ mov 	r1, #0x0
-	@ mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
-
-	ldr		r0, =s_main_page_table
-	bl		mmu_ttbr0_set
-
-	ldr		r0, =0x55555555
-	bl 		mmu_set_domain_access
-
-	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
-	orr r1, r1, #(0x1 << 0)			@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
-	mcr p15, 0, r1, c1, c0, 1
-
-	bl		iCache_enable
-	bl		dCache_enable
-
-	bl		mmu_enable
-
-	mrc	p15,0,r0,c1,c0,0		/* flow prediction enable */
-	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
-	mcr	p15,0,r0,c1,c0,0
-
-	@ mrs	r0, cpsr			/* get the current PSR */
-	@ @ bic	r0, r0, #0x100			/* enable asynchronous abort exception */
-	@ bic	r0, r0, #0x80
-	@ msr	cpsr_c, r0
-
+	/* Invalidate TLBs */
+	mov 	r1, #0x0
+	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
 
 	/** Handling VFP and NEON */
 __init_vfp:
-	/* FIX IT */
+	fmrx	r1, FPEXC			/* read the exception register */
+	orr	r1,r1, #FPEXC_EN		/* set VFP enable bit, leave the others in orig state */
+	fmxr	FPEXC, r1			/* write back the exception register */
 
 	/**  Call Main */
 __call_main:
@@ -229,15 +177,3 @@ __call_main:
 	bl	LTZVisor_CPU1_entry			@ Jump to LTZVisor entry function
 	/* This point should never be reached */
 	b	.
-
-@ .align 8
-.globl _cpu1_secure_vector_table
-_cpu1_secure_vector_table:
-	b	.
-	b	.
-	b	.
-	b .
-	b .
-	b	.
-	b .
-	b .

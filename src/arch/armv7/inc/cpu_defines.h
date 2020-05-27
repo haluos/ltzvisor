@@ -71,6 +71,7 @@
 #define  SCR_FIQ_BIT        	0x4
 #define  SCR_IRQ_BIT        	0x2
 #define  SCR_HCR_BIT		0x100
+#define  SCR_AW_BIT           0x20
 
 /** SCTLR Bits*/
 #define	SCTLR_MMU_BIT		0x1

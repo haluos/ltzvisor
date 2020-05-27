@@ -51,7 +51,6 @@
 /** Main is part of the secure VM */
 extern void main(void);
 
-uint8_t no_sched;
 volatile uint8_t sync_flag;
 
 void lock_cpu0 (void)
@@ -83,8 +82,6 @@ uint32_t ltzvisor_init(void){
 
 	uint32_t ret;
 
-	no_sched = 0;
-
 	/** Initialize LTZVisor-related hardware*/
 	ret = ltzvisor_hw_init();
 
@@ -104,6 +101,11 @@ void ltzvisor_kickoff(void){
 
 	/** Exit from Monitor mode */
 	LTZVISOR_MON_EXIT()
+
+	/** Kick off LTZVisor and start running Guests */
+	printk(" -> LTZVisor: kicking off ... \n\t", ARCH);
+	printk(" -> LTZVisor: starting S_Guest ... \n\t", ARCH);
+	printk("----------------------------------------------------------\n\n\t");
 
 	/** Secure guest entry point */
 	main();
@@ -156,11 +158,12 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* Clean CP15 registers */
 	memset(&NS_Guest.core.vcpu_regs_cp15,0,sizeof(struct cp15_regs));
 	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR = 0x00c50078;
+	NS_Guest.core.vcpu_regs_cp15.c1_SCTLR |= 0x1 << 10;
 	printk("      * NS_Guest CP15 registers - OK  \n\t");
 
 //	#ifdef CONFIG_CACHE_L2X0
-		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000045; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
-		// NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000047;
+		NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x000000047; /* L1 prefetch enable -bit2- + L2 Prefetch hint enable -bit1-*/
+		// NS_Guest.core.vcpu_regs_cp15.c1_ACTLR = 0x00000046;
 		// NS_Guest.core.vcpu_regs_cp15.c1_ACTLR |= 0x1 << 7;
 		// NS_Guest.core.vcpu_regs_cp15.c2_TTBCR = 0x00000c09;
 		printk("      * NS_Guest L2 Cache - OK  \n\t");
@@ -196,27 +199,4 @@ uint32_t ltzvisor_nsguest_restart( struct nsguest_conf_entry *g ){
 
 	/** TODO - Implement restart of NS_Guest */
 	while(1);
-}
-
-void not_determined (void)
-{
-	printk("SMC with undefined request\n");
-}
-
-void set_no_sched (void)
-{
-	// printk("No sched\n");
-	no_sched = 1;
-}
-
-void clear_no_sched (void)
-{
-	// printk("No sched\n");
-	no_sched = 0;
-}
-
-uint8_t get_sched_flag (void)
-{
-	// printk("Get flag\n");
-	return no_sched;
 }

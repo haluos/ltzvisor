@@ -61,7 +61,7 @@
 #define PLATFORM	"Zynq-7000"
 
 #define LTZVISOR_MON_EXIT() {\
-	asm volatile("msr cpsr_c,#(0x13 | 0x00 | 0x00)");\
+	asm volatile("msr cpsr_c,#(0x13 | 0x00 | 0x80)");\
 	asm volatile("ldr r1,=_supervisor_stack");\
 	asm volatile("add r1, r1, r0, lsl #12");\
 	asm volatile("add sp, r1, #4096");\

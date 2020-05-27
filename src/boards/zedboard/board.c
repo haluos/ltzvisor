@@ -84,16 +84,22 @@ uint32_t board_init(void){
 	write32( (void *)SECURITY4_QSPI, 0x1);
 	/* APB slave security (NS) */
 	write32( (void *) SECURITY6_APBSL, 0x00007fff);
-	// /* DMA slave security (S) */
+
+	write32( (void *)SECURITY7_SMC, 0x1);
+	/* DMA slave security (S) */
+	write32( (void *)DMAC_RST_CTRL, 1);
 	write32( (void *)TZ_DMA_NS, 0x1);
 	write32( (void *)TZ_DMA_IRQ_NS, 0x0000ffff);
 	write32( (void *)TZ_DMA_PERIPH_NS, 0xf);
 	write32( (void *)DMAC_RST_CTRL, 0);
-	write32( (void *)DMAC_RST_CTRL, 1);
 	/* Ethernet security */
 	write32( (void *)TZ_GEM, 0x3);
 	write32( (void *)SLCR_BASE + 0x61c, 0);
 	write32( (void *)SLCR_BASE + 0x600, 0xC);
+
+	write32( (void *)TZ_USB, 0x3);
+
+	write32( (void *)TZ_SDIO, 0x1);
 	/* FPGA AFI AXI ports TrustZone */
 	write32( (void *)SECURITY_APB, 0x3F);
 	write32( (void *)TZ_FPGA_M, 0x3);
@@ -122,7 +128,7 @@ uint32_t board_init(void){
  */
 uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
-	interrupt_critical_entry();
+	// printk("CPU0 Board handler\n");
 	switch(arg0) {
 		case (LTZVISOR_READ_SYSCALL):{
 			// printk("Board read handler, register to read from: 0x%x\n", arg1);
@@ -131,27 +137,24 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 		}
 		case (LTZVISOR_WRITE_SYSCALL):{
 			write32( (volatile void*)arg1, arg2);
+			asm volatile("isb\n"
+										"dsb");
 			// printk("Board write handler, register to write to: 0x%x, value: 0x%x\n", arg1, read32((volatile void*)arg1));
-			// if(arg1 == 0xfffffff0)
-			// {
-			// 	printk("Issue SEV\n");
-			// 	asm volatile("sev");
-			// 	asm volatile("dmb");
-			// }
 			break;
 		}
 		case (-32):{
 			// printk("Board CP15 write\n");
-			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
+			asm volatile("mrc p15, 0, r1, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
-									 "mcr p15, 0, r0, c15, c0, 0\n");
+									 "mcr p15, 0, r1, c15, c0, 0\n");
+			asm volatile("isb\n"
+											"dsb");
 			break;
 		}
 		default:
 
 			break;
 	}
-	interrupt_critical_exit();
 
 		return arg0;
 }

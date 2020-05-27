@@ -18,7 +18,7 @@ void print_addr (uint32_t arg)
 
 void start_cpu1_ns (void)
 {
-  printk("CPU1 NS boot start\r\n");
+  printk("CPU1 NS World boot start\r\n");
   flag = 1;
 }
 
@@ -26,7 +26,7 @@ void helloworld_cpu1 (void)
 {
   booted = 1;
   uint32_t cnt = 0;
-  printk("CPU1 awake\r\n");
+  printk("\n****** NS World running on CPU1 ******\n");
   while(1)
   {
     // asm volatile("dsb");

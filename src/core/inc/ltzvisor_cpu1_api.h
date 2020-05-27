@@ -17,6 +17,7 @@
 
 #include "ltzvisor.h"
 #include "string.h"
+#include "cpu_vcpu.h"
 
 /*
   @function_name:   ltzvisor_cpu1_nsguest_create

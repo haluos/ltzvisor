@@ -50,6 +50,8 @@
 #include <asm-offsets.h>
 #include <platform_asm.h>
 
+.set FPEXC_EN,		0x40000000
+
 .text
 
 .globl _reset_handler
@@ -73,24 +75,16 @@ __setup_CPU:
 	mrc	p15, 0, r1, c1, c1, 2			@ Read NSACR
 	ldr	r2, =NSACR_REG_VAL
 	orr	r1, r1, r2				@ Mask r1 with r2
+	orr r1, r1, #(0x1<<16)
 	mcr	p15, 0, r1, c1, c1, 2			@ Write NSACR
 	/* Non-Route FIQs Monitor */
 	mrc	p15, 0, r1, c1, c1, 0			@ Read SCR
 	bic  	r1, r1, #SCR_FIQ_BIT			@ Clear FIQ bit (disable route FIQs monitor)
-	@ orr r1, r1, #SCR_HCR_BIT
 	mcr	p15, 0, r1, c1, c1, 0			@ Write SCR
 	/* Set Auxiliary register reset value */
-	@ mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
-	@ ldr  	r0, =0x00				@ Clear registers
-	@ mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
-	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
-	orr r1, r1, #AUXREG_SMP				@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
-	mcr p15, 0, r1, c1, c0, 1
-
-	ldr r0, =0xF8F00000
-	ldr r1, [r0]
-	orr r1, r1, #0x1
-	str r1, [r0]
+	mrc	p15, 0, r0, c1, c0, 1			@ Read ACTLR
+	ldr  	r0, =0x00				@ Clear registers
+	mcr	p15, 0, r0, c1, c0, 1			@ Write ACTLR
 
 	/** Set secure vector table (VBAR) */
 	ldr	r0, =_secure_vector_table		@ Read the Secure Vector Table's Base Address
@@ -144,57 +138,24 @@ __init_vmemory:
 	bic 	r1, r1, #SCTLR_ICACHE_BIT		@ Clear I bit (disable I-Cache)
 	mcr 	p15, 0, r1, c1, c0, 0			@ Write SCTLR register
 
-	@ bl cachel2_init
-	@ bl cachel2_disable
-	@ mov		r0, #0
-	@ mov		r1, #0xF0
-	@ bl		cachel2_lockdown
-	@ mov		r0, #1
-	@ mov		r1, #0x0F
-	@ bl		cachel2_lockdown
-
-	bl		mmu_tlb_invalidate
-	bl		dCache_invalidate
-	bl		iCache_invalidate
-	@ bl cachel2_invalidate
-
-	@ /* Invalidate Instruction cache */
-	@ mov 	r1,#0
-	@ mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
+	/* Invalidate Instruction cache */
+	mov 	r1,#0
+	mcr 	p15, 0, r1, c7, c5, 0			@ Instruction Cache Invalidate All
 	@ /* Invalidate Data caches */
 	@ mov	r0, #1
 	@ bl	data_cache_clean_invalidate_all		@ Invalidate data cache
 	/* Invalidate Branch Predictor arrays */
 	mov 	r1,#0
 	mcr	p15, 0, r1, c7, c5, 6			@ Invalidate BP
-	@ /* Invalidate TLBs */
-	@ mov 	r1, #0x0
-	@ mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
-
-	ldr		r0, =s_main_page_table
-	bl		mmu_ttbr0_set
-
-	ldr		r0, =0x55555555
-	bl 		mmu_set_domain_access
-
-	mrc p15, 0, r1, c1, c0, 1			@ Read Auxiliary Control Register
-	orr r1, r1, #0x1			@ Set CPU0 for SMP mode (cache coherency and chache and MMU broadcast)
-	mcr p15, 0, r1, c1, c0, 1
-
-	bl		iCache_enable
-	bl		dCache_enable
-
-	@ bl	cachel2_enable
-
-	bl		mmu_enable
-
-	mrc	p15,0,r0,c1,c0,0		/* flow prediction enable */
-	orr	r0, r0, #(0x01 << 11)		/* #0x8000 */
-	mcr	p15,0,r0,c1,c0,0
+	/* Invalidate TLBs */
+	mov 	r1, #0x0
+	mcr 	p15, 0, r1, c8, c3, 0			@ Invalidate entire unified TLB Inner Shareable
 
 	/** Handling VFP and NEON */
 __init_vfp:
-	/* FIX IT */
+	fmrx	r1, FPEXC			/* read the exception register */
+	orr	r1,r1, #FPEXC_EN		/* set VFP enable bit, leave the others in orig state */
+	fmxr	FPEXC, r1			/* write back the exception register */
 
 
 	/** Initializing C environment */

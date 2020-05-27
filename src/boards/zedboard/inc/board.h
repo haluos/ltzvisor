@@ -94,6 +94,10 @@
 
 #define PL310_BASE  0xF8F02000
 
+#define			GLOBAL_TIMER_INTERRUPT					27
+#define			PRIVATE_TIMER_INTERRUPT					29
+#define	  	PRIVATE_WDT_INTERRUPT						30
+
 /**
  * TrustZone-specific initializations
  *
