@@ -4,8 +4,12 @@
 \usepackage{tabularx}
 \usepackage{float}
 \usepackage{pdfpages}
+\usepackage{dirtree}
+\usepackage{listings}
 
 \begin{document}
+
+\lstset{language=c}
 
 \renewcommand{\labelitemi}{$\bullet$}
 \renewcommand{\labelitemii}{$-$}
@@ -55,15 +59,15 @@ LTZVisora za obje jezgre ZedBoarda kako bi se maksimalno iskoristile mogućnosti
 
 \chapter{Arhitektura Cortex-A9 procesora}
 APU (engl. \textit{Application Processing Unit}) Zynq-7000 platforme može sadržavati jednu ili dvije jezgre, odnosno jedan
-ili dva Cortex-A9 procesora \cite{zynq_trm}. ZedBoard sadrži dva Cortex-A9 procesora s koprocesorskom podrškom u višejezgrenoj
-konfiguraciji i \textit{little-endian} arhitekturi. Dva CPU-a dijele \textit{cache} memoriju druge razine,
+ili dva Cortex-A9 procesora \cite{zynq_trm}. ZedBoard sadrži dva Cortex-A9 procesora \textit{little-endian} arhitekture s
+koprocesorskom podrškom u višejezgrenoj konfiguraciji. Dva CPU-a dijele \textit{cache} memoriju druge razine,
 odnosno L2 \textit{cache} memoriju, od 512~kB.
 Oba procesora su visokih performansi i niske potrošnje. Za razliku od L2 \textit{cache} memorije, L1 \textit{cache}
 memorija nije dijeljena između procesora te svaki procesor implementira odvojenu podatkovnu i instrukcijsku
 L1 \textit{cache} memoriju od 32~kB. Platforma ima potpunu podršku sustava virtualne memorije ARMv7 arhitekture kojoj
 pripadaju procesori ZedBoard platforme. Procesori podržavaju 32-bitne ARM i Thumb instrukcijske setove te 16-bitne
 Thumb instrukcije i 8-bitne Java bajt kodove. Prisutna je i SCU (engl. \textit{Snoop Control Unit}) koja je nužna za održavanje
-koherencije između L1 \textit{cache} memorije između dva procesora. Komunikacija između PL-a i APU je ostvarena
+koherencije za L1 \textit{cache} memoriju između dva procesora. Komunikacija između PL-a i APU je ostvarena
 pomoću ACP (engl. \textit{Accelerator Coherency Port}). Ispitivanje i kontrola procesora se odvija pomoću DAP-a
 (engl. \textit{Debug Access Port}). Procesori podržavaju različite načine radova, uključujući \textit{supervisor},
 sustavski (engl. \textit{system}) i korisnički (engl. \textit{user}) način rada što omogućava različite razine
@@ -98,13 +102,13 @@ koje su opisane tablicom~\ref{boot_stages}.
     Radi se o BootROM kodu koji se izvodi na primarnom procesoru CPU0. BootROM kod izvodi traženje valjanog
     BootROM zaglavlja koji se nalazi u \textit{flash} memoriji uređaja s kojeg se pokreće sustav. Iz navedenog
     zaglavlja se određuje daljnji tok pokretanja sustava i prijelaz u Razinu 1. Nakon pokretanja hardvera, oba
-    procesora izvode isti BootROM kod koji se nalazi na adresi 0x00000000 koji služi za određivanje vlastitog
-    CPU identiteta. Daljnje izvođenje BootROM koda se izvodi na primarnom CPU0 procesoru, dok sekundarni CPU1
-    počinje izvoditi WFE (engl. \textit{Wait For Event}) instrukciju.\\
+    procesora izvode isti BootROM kod koji se nalazi na adresi 0x00000000 i služi za određivanje vlastitog
+    CPU identiteta. Daljnje izvođenje BootROM koda se izvodi na primarnom, CPU0, procesoru, dok se sekundarni, CPU1,
+    stavlja u WFE (engl. \textit{Wait For Event}) stanje.\\
     \hline
     Razina 1 & Odnosi se na prvostupanjski pokretač sustava ili FSBL (engl. \textit{First Stage Bootloader}) koji
     je zadužen za inicijaliziranje PS konfiguracije~\cite{zynq_swdg}. Uz inicijaliziranje, zadužen je i za konfiguriranje PL-a
-    platforme s \textit{bitstream} datotekom, ako postoji. Sljedeći korak ove razine je učitavanje SSBL-a (engl.
+    platforme s \textit{bitstream} datotekom (ako postoji). Sljedeći korak ove razine je učitavanje SSBL-a (engl.
     \textit{Second Stage Bootloader}) ili korisničke aplikacije, nakon čega slijedi i predavanje kontrole SSBL-u
     ili aplikaciji.\\
     \hline
@@ -138,7 +142,7 @@ Encryption Standard}) i HMAC (\textit{Key-hash message authentication code}) jed
 šalje u AES i HMAC te se dekriptirani FSBL vraća u PS i kopira u \textit{on-chip} RAM (OCM). Nakon toga, PS može sigurno
 dizajnirati PL slanjem kriptiranog PL \textit{bitstreama} u AES/HMAC jedinice nakon čega se dekriptirani
 \textit{bitstream} primjenjuje na PL.
-Prilikom pokretanja sustava s SD kartice, ako autentifikacija FSBL-a ne prođe, uređaj ide u sigurnosno zaključavanje
+Prilikom pokretanja sustava s SD kartice, ako autentifikacija FSBL-a~ne prođe, uređaj ide u sigurnosno zaključavanje
 ili u stanje greške. Kako je sigurno pokretanje sustava izvedeno u PL-u, BootROM mora pričekati da se PL-u dovede napajanje
 prija slanja FSBL-a u PL. Nakon što se FSBL uspješno autentificira, FSBL kreće s izvođenjem. Ako je FSBL kriptiran,
 preporučuje se da se i ostali podaci kriptiraju. Slike za pokretanje sustava se kriptiraju pomoću Bootgen alata kojeg nudi
@@ -185,7 +189,7 @@ Obrada prekida se odvija sljedećim redosljedom:
   \item{GIC određuje prekide koji su omogućeni}
   \item{GIC određuje ciljani procesor ili procesore za sve prekide koji čekaju na obradu}
   \item{Distributer prosljeđuje prekid najvišeg prioriteta odgovarajućem CPU sučelju}
-  \item{CPU sučelje odlučuje je li potrebno generirati zahtjev za obradu prekida procesora i ako treba, generirati ga}
+  \item{CPU sučelje odlučuje je li potrebno generirati zahtjev za obradu prekida procesoru i ako treba, generirati ga}
   \item{Procesor priznaje prekid, na što GIC vraća ID prekida}
   \item{Nakon obrade, procesor signalizira kraj prekida GIC-u}
 \end{enumerate}
@@ -248,6 +252,14 @@ Prilikom pristupa koprocesorskim registrima, potrebno je specificirati:
   \item{ARM-ov registar opće namjene čiji će se sadržaj kopirati u koprocesorski registar ili u koji će biti pohranjen
   sadržaj koprocesorskog registra}
 \end{itemize}
+Neki od vrlo važnih koprocesorskih registara koprocesora CP15 su: SCTLR (engl. \textit{System Control Register}), ACTLR
+(engl. \textit{Auxiliary Control Register}), SACR (engl. \textit{Secure Access Control Register}), NSACR (engl. \textit{Non-
+Secure Access Control Register}) i CPACR (engl. \textit{Coprocessor Access Control Register}). Programiranje SCTLR i ACTLR
+registara je neizbježno te su njihove namjene opisane u nastavku. SCTLR registar je zadužen za globalno
+omogućavanje/onemogućavanje instrukcijskog i podatkovnog \textit{cachea}, MMU jedinice i predviđanja grananja. Uz to, sadrži
+i mogućnost podešavanja određenih karakteristika tablica prekidnih vektora, FIQ prekida, \textit{cache} memorije i MMU jedinice.
+ACTLR registar je većinom zadužen za konfiguriranje \textit{cache} memorije. Ostali navedeni registri su detaljnije opisani u
+kasnijim poglavljima.
 
 \section{MMU (engl. \textit{Memory Management Unit})}
 MMU jedinica pruža zaštitu memorije i adresna prevođenja. Stranice za tablice za prevođenje mogu imati veličine od 4~kB,
@@ -271,7 +283,7 @@ Kao što je već rečeno, ZedBoard implementira Cortex-A9 procesor s dvije jezgr
 platformu moguće razviti aplikacije s različitim konfiguracijama obzirom na broj jezgri koje su potrebne
 u sustavu. Moguće je implementirati:
 \begin{itemize}
-  \item{aplikaciju namijenjenu jednoj jezgri procesora (CPU0),}
+  \item{aplikaciju namijenjenu jednoj jezgri (CPU0),}
   \item{dvije aplikacije, svaka namijenjena jednoj jezgri i}
   \item{aplikaciju namijenjena objema jezgrama u sustavu.}
 \end{itemize}
@@ -290,10 +302,10 @@ na lokaciji 0xFFFFFFF0. Jedan od načina na koji se može probuditi sekundarna j
 koja se izvršava na CPU0 upiše adresu na kojoj se nalazi aplikacija za CPU1 na memorijsku lokaciju
 0xFFFFFFF0 te izvrši SEV (engl. \textit{send event}) instrukciju koja rezultira buđenjem CPU1.
 Komunikaciju između dvije jezgre je moguće ostvariti pomoću prekida između procesora
-(\textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka. Prekidi između procesora
+(engl. \textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka. Prekidi između procesora
 na ovoj platformi se implementiraju pomoću softverski generiranih prekida (SGI). Za bolje razumijevanje
 višejezgrenih konfiguracija, u nastavku su dani jednostavni primjeri razvoja aplikacije za dvije različite
-konfiguracije. Obje aplikacije su razvijene pomoću lanca alata arm-none-eabi i Xilinx SDK 2019 (engl.
+konfiguracije. Obje aplikacije su razvijene pomoću skupa alata arm-none-eabi i Xilinx SDK 2019 (engl.
 \textit{Software Development Kit}) uz zadanu konfiguraciju hardvera (bez potrebe za generiranjem
 novog dizajna hardvera). Za potrebe generiranja datoteke za pokretanje sustava korišten je već gotov FSBL projekt
 kojeg nudi XSDK koji ima mogućnost učitavanja više izvornih datoteka odjednom. Datoteka za pokretanje sustava je
@@ -331,14 +343,15 @@ GIC-a što bi moglo rezultirati gubitkom postavki prekida koje su postavljene pr
 prekršilo jedno svojstvo AMP aplikacija koje se odnosi na to da je samo jedan procesor zadužen za inicijalizaciju upravitelja
 prekidima, u ovom slučaju GIC distributera. CPU sučelje GIC-a se normalno inicijalizira na oba procesora, bez ograničenja.
 Obzirom da su za razvoj AMP aplikacije potrebna dva projekta, potrebne su i dvije skripte za memorijsko povezivanje što
-znači da svaki procesor mora imati svoje upravljačke programe za uređaje (\textit{device drivers}) koje treba koristiti.
+znači da svaki procesor mora imati svoje upravljačke programe za uređaje (engl. \textit{device drivers}) koje treba koristiti.
 Ako se za primjer uzme funkcija \textit{print}, koja se koristi za ispis preko serije korištenjem UART-a (engl. \textit{Universal
 Asynchronous Receiver Transmitter}), implementirana procesorom CPU0, jasno je da CPU1 neće moći pozvati tu istu funkciju
 jer funkcija nije vidljiva u memorijskom prostoru CPU1 aplikacije. Da bi CPU1 mogao koristiti istu \textit{print} funkciju,
 CPU1 treba implementirati funkcionalnost te funkcije kako bi skripta za memorijsko povezivanje mogla locirati navedenu
 funkciju. Iz ovog se vidi da nije praktično koristiti isti uređaj na oba procesora te se zbog toga većina uređaja dodjeljuje
 određenom procesoru. Iako se UART može dijeliti između procesora, neke periferije, kao što su to brojila, se ne mogu.
-Za razliku od CPU0, CPU1 mora eksplicitno omogućiti prekide u kontrolnom registru procesora CPSR. Prekidi za CPU0 su
+Za razliku od CPU0, CPU1 mora eksplicitno omogućiti prekide u kontrolnom registru procesora CPSR (engl. \textit{Current
+Program Status Register}). Prekidi za CPU0 su
 automatski omogućeni FSBL-om. Podrazumijeva se da CPU0 aplikacija mora sadržavati dio koda koji služi za buđenje CPU1
 čime započinje pokretanje sustava na CPU1. Isto tako, podrazumijeva se i da se adresa od koje kreće CPU1 aplikacija
 ispravno podesi u skripti za memorijsko povezivanje CPU1 aplikacije. Nakon što su željene aplikacije razvijene, moguće
@@ -377,7 +390,7 @@ Opisana konfiguracija prikazana je slikom \ref{smp}.
 Prilikom razvoja SMP aplikacije u XSDK, potrebno je stvoriti jedan projekt koji je namijenjen primarnom procesoru, CPU0.
 Pošto se sustav CPU0 procesora pokreće prvi, CPU0 je zadužen za inicijalizaciju i pokretanje sustava na CPU1. Iz navedenog
 se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je boot.S skripta
-koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva posebni projekt za CPU1, potrebno je modificirati
+koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva poseban projekt za CPU1, potrebno je modificirati
 skriptu za pokretanje sustava na CPU1 na način da se izbaci dio s inicijalizacijom L2 \textit{cache} memorije (kod AMP
 aplikacije, to je ostvareno pomoću indikatora \textit{USE\_AMP}). Također, potrebno je promijeniti aplikaciju na koju se skače
 nakon inicijalizacije CPU1 procesora (postaviti skok na željenu CPU1 aplikaciju u skripti za pokretanje sustava).
@@ -418,7 +431,7 @@ upiše adresa koja je jednaka početnoj adresi CPU1 sekcije. Tok programa od pok
 Potreba za sigurnošću ugradbenih računala sve više raste zbog rastuće vrijednosti podataka pohranjenih na njima kao
 što su to bankovni računi ili sinkronizirane \textit{e-mail} adrese \cite{tz_wp}. Povećanjem vrijednosti podataka pohranjenih na
 uređaje povećava vjerojatnost napada na uređaj. Cilj \textit{TrustZone} ekstenzije je pružiti robusno sigurnosno okruženje
-uređajima bogatih operacijskih mogućnosti integrirajući zaštitne mjere u ARM-ov procesor, sabirnički sustav i periferalni
+uređajima bogatih operacijskih mogućnosti, integrirajući zaštitne mjere u ARM-ov procesor, sabirnički sustav i periferijski
 sustav. Kako bi se odredile mjere zaštite, potrebno je odrediti napade od kojih se želi zaštititi, odnosno koji resursi
 moraju biti zaštićeni.
 
@@ -436,7 +449,7 @@ podatkovne memorije. Primjer industrije koja nije otvorenog sustava je automobil
 novčane štete zbog napada na ugradbena računala. Sigurnosne značajke potrebne kod takvih ugradbenih sustava su autentičnost
 nadogradnje ugrađenog softvera i osiguranje da se ispitivanje sustava ne može zlonamjerno iskoristiti.
 Takve značajke se mogu implementirati pomoću \textit{TrustZone} ekstenzije. Prilikom dizajna sigurnosnog rješenja, proizvođač
-mora izmjeriti omjer cijena koje moraju uložiti u dizajn i štete koju bi mogli imati zbog napada. Zbog niže kompleksnosti
+mora izmjeriti omjer cijena koje mora uložiti u dizajn i štete koju bi mogao imati zbog napada. Zbog niže kompleksnosti
 izvedbe \textit{TrustZone} ekstenzije, ARM ima i niže troškove proizvodnje ekstenzije što ide u prilog proizvođačima
 uređaja.
 
@@ -634,14 +647,120 @@ Jedna od zadaća monitora virtualnih strojeva je konfiguriranje memorije, prekid
 \section{Raspoređivanje Sigurnog i Nesigurnog svijeta}
 Dodatna zadaća monitora virtualnih strojeva, a veže se uz raspoređivanje Sigurnog i Nesigurnog gosta, je upravljanje s
 VMCB (engl. \textit{Virtual Machine Control Block}) blokovima koji su zaduženi za pohranjivanje stanja virtualnih strojeva.
+VMCB blok nesigurnog gosta sastoji se od 13 registara opće namjene (R0~-~-R12) i SP (engl. \textit{Stack Pointer}), LR
+(engl. \textit{Link Register}) i SPSR (engl. \textit{Saved Processor State Register}) za \textit{supervisor}, sustavski,
+\textit{abort} i \textit{undefined} način rada. Registre koji su vezani za FIQ i IRQ nije potrebno posebno spremati jer su
+uzajamno isključivi za Sigurni i Nesigurni virtualni stroj (FIQ je korišten samo u Sigurnom svijetu, a IRQ u Nesigurnom).
+Sigurni VMCB se sastoji od 13 registara opće namjene (R0~-~R12) i SP, LR i SPSR za \textit{supervisor} način rada procesora.
+Kao što se vidi, kontekst Sigurnog gosta je znatno manji od Nesigurnog gosta te je razlog tome da se maksimalno smanji
+latencija kod pojave FIQ prekida za vrijeme izvođenja Nesigurnog gosta. Većina koprocesorskih registara ima Sigurne i Nesigurne
+kopije registara te ih nije potrebno spremati kao kontekst virtualnog gosta. Iznimke koprocesorskih registara su SCTLR i
+ACTLR, gdje SCTLR sadrži određene bitove koji su zajednički Sigurnom i Nesigurnom svijetu, a ACTLR opcionalno sadrži jedan
+bit koji ima Sigurnu i Nesigurnu kopiju, a ostali bitovi su zajednički Sigurnom i Nesigurnom svijetu. LTZVisor se mora pobrinuti
+da SCTLR i ACTLR sadrže ispravne vrijednosti prije pokretanja Nesigurnog gosta, inače se Nesigurni gost neće pokrenuti.\\
+Zamjena konteksta je izvedena na slijedeći način:
+\begin{itemize}
+  \item{iz Sigurnog u Nesigurni svijet}
+      \begin{enumerate}
+        \item{Kontekst Sigurnog gosta se sprema na stog nadglednog načina rada procesora}
+        \item{Dohvaća se adresa varijable u Sigurnoj memoriji u kojoj je pohranjen kontekst Nesigurnog gosta}
+        \item{Kontekst Nesigurnog gosta iz dohvaćene varijable se obnavlja (kopira se u odgovarajuće fizičke registre)}
+        \item{Postavlja se SCR NS bit i predaje kontrola Nesigurnom gostu}
+      \end{enumerate}
+  \item{iz Nesigurnog u Sigurni svijet}
+      \begin{enumerate}
+        \item{Briše se SCR NS bit i dohvaća se adresa varijable koja sadrži kontekst Nesigurnog gosta}
+        \item{Trenutačne vrijednosti iz registara se spremaju u varijablu konteksta Nesigurnog gosta}
+        \item{Obnavlja se kontekst Sigurnog gosta (vrijednosti se uzimaju iz stoga nadglednog načina i spremaju u odgovarajuće
+        registre)}
+        \item{Predaje se kontrola Sigurnom gostu}
+      \end{enumerate}
+\end{itemize}
+LTZVisor implementira asimetrični ili neaktivni (engl. \textit{idle}) raspoređivač zadataka koji osigurava izvođenje Nesigurnog
+gosta samo za vrijeme neaktivnosti Sigurnog gosta. Sigurni gost se može smatrati kao zadatak višeg prioriteta što znači
+da može istisnuti Nesigurnog gosta. Istiskivanje Nesigurnog gosta se okida pojavom FIQ prekida čime započinje proces zamjene
+konteksta. Kad je Sigurni gost gotov s poslom koji ima za obaviti, daje zahtjev LTZVisoru za zamjenu konteksta, odnosno predaje
+kontrolu Nesigurnom gostu.
 
 \section{Memorijski podsustav LTZVisora}
+Memorijska virtualizacija omogućena hardverom je ostvarena MMU jedinicom koja ima adresno prevođenje u dvije razine. MMU je
+zadužena za povezivanje gost virtualne s gost fizičkom adresom i gost fizičke s domaćin (monitor virtualnih strojeva) fizičkom
+adresom. Opisana MMU je temelj virtualizacije koja omogućava izvođenje nemodificiranih OS-a i izolaciju između njih. ZedBoard
+implementira MMU s jednom razinom adresnih prevođenja što onemogućava hardversku memorijsku virtualizaciju na način koji je
+opisan. Ključnu ulogu u memorijskoj virtualizaciji na ZedBoardu ima \textit{TrustZone} jedinica TZASC koja omogućava dijeljenje
+memorije u različite segmente. Navedena jedinica omogućava konfiguriranje sigurnosnog stanja memorijskih segmenata platforme
+što omogućava izolaciju između Sigurnog i Nesigurnog svijeta. Konfiguracija memorijskih segmenata je moguća s određenom
+granulacijom, za ZedBoard je to 64~MB, pomoću SLCR (engl. \textit{System Level Control Register}) registra koji je dostupan
+samo u Sigurnom svijetu. Kako je MMU svjesna sigurnosnih ekstenzija (postoji i Sigurna i Nesigurna tablica za prevođenje),
+nije potrebno kopirati sadržaj tablice prilikom zamjene konteksta, što daje uštedu u vremenu prilikom zamjene konteksta.
+Kao i MMU, \textit{cache} također implementira istu razinu izolacije koja je osigurana hardverom što za zamjenu konteksta
+znači da nema potrebe za pražnjenjem \textit{cache} memorije prilikom svake zamjene konteksta. Nesigurni svijet nema dozvoljen
+pristup L2 \textit{cache} memoriji te se Sigurni svijet mora pobrinuti za omogućavanje L2 \textit{cache} memorije. Održavanje
+(onesposobljavanje i čišćenje) L2 \textit{cache} memorije je moguće i u Nesigurnom svijetu. \\
+Prilikom pokretanja LTZVisora, uređaji se konfiguriraju i dodjeljuju Sigurnom ili Nesigurnom svijetu. Takvo rukovanje uređajima
+osigurava izolaciju na razini uređaja (uređaji se ne bi smjeli dijeliti između dva svijeta). Nesigurni gost ne može pristupiti
+Sigurnim uređajima te se sigurnost uređaja može konfigurirati samo u Sigurnom svijetu.
+
 \section{Prekidni podsustav LTZVisora}
-\section{Razvoj koda za Nesigurni gost virtualni stroj}
+Kao što ARM preporučuje, izabran je dizajn prekidnog sustava takav da FIQ pripada Sigurnom, a IRQ Nesigurnom gostu. Označavanje
+FIQ prekida kao Sigurni prekid se ostvaruje postavljanjem odgovarajućeg bita u kontrolnom registru GIC-ovog CPU sučelja.
+Ako se FIQ pojavi prilikom izvođenja Sigurnog gosta, nema potrebe za intervencijom LTZVisora te je FIQ odmah obrađen u
+Sigurnom gostu. Ako se pojavi IRQ zahtjev prilikom izvođenja Sigurnog gosta, IRQ će biti obrađen tek kada Sigurni gost prepusti
+kontrolu Nesigurnom gostu, odnosno ne utječe na tok programa Sigurnog gosta. IRQ je obrađen odmah po početku izvođenja
+Nesigurnog gosta. Pojava FIQ za vrijeme izvođenja Nesigurnog gosta, kao što je već rečeno, okida zamjenu konteksta i prijelaz
+u Sigurni svijet gdje je FIQ obrađen. Pojava IRQ za vrijeme izvođenja Nesigurnog gosta prati standardni proces obrade prekida
+u Nesigurnom gostu. Kod virtualizacije se razlikuju dvije razine vremenskog praćenja, gdje se jedna razina odnosi na monitor
+virtualnih strojeva, a druga na virtualne strojeve. Monitor virtualnih strojeva može pružati dvije vrste praćenja vremena
+virtualnim strojevima: virtualno ili stvarno vrijeme. Virtualno vrijeme je način praćenja vremena koje se pauzira tokom
+neaktivnosti virtualnog stroja te ponovno aktivira prilikom njegovog izvođenja. Stvarno vrijeme prati tok vremena i kad je
+vritualni stroj neaktivan. LTZVisor implementira stvarno vrijeme koje je osigurano Sigurnim TTC0 (engl. \textit{Triple Timer
+Counter}) i Nesigurnim TTC1 te je LTZVisor konfiguriran tako da Sigurni gost ne propusti nijedan \textit{tick}.\\
+Komunikacija je implementirana na asinkroni način koji se sastoji od podatkovnog puta (dijeljeni blok memorije koji je
+konfiguriran kao Nesiguran) i puta događaja koji je generiran pomoću SGI namijenjenim LTZVisoru. Komunikacija je temeljena
+na zahtjevima Virtualnih strojeva prema LTZVisoru pomoću SMC instrukcije. Svaki zahtjev se sprema u FIFO (engl. \textit{First
+In First Out}) spremnik te LTZVisor prilikom zamjene konteksta generira SGI odgovarajućem gostu. Prednost takve komunikacije
+je da je pouzdana zato što je upravljana monitorom virtualnih strojeva.
 
-\chapter{Postupak prilagođenja LTZVisora za AMP}
+\section{Programska podrška}
+Izvorni kod LTZVisora može se pronaći na stranicama GitHuba. Repozitorij sadrži sveukupno četiri direktorija: \textit{bin},
+\textit{bootloader}, \textit{Documentation} i \textit{src}.
+% \dirtree{%
+% .1 src.
+% .2 arch.
+% .3 armv7.
+% .4 Cortex-A9.
+% .2 boards.
+% .3 zc702.
+% .3 zedboard.
+% .3 zybo.
+% .2 core.
+% .2 drivers.
+% .3 common.
+% .3 zynq.
+% .2 lib.
+% .2 ns\_guest.
+% .3 zynq.
+% .2 s\_guest.
+% .3 BareApp.
+% .4 portable.
+% }
 
-\chapter{Postupak prilagođenja LTZVisora za SMP}
+
+\chapter{Operacijski sustav Linux}
+\section{Komponente operacijskog sustava Linux}
+\subsection{\textit{Device Tree}}
+\subsection{Datotečni podsustav}
+\subsection{Jezgra}
+\section{\textit{PetaLinux}}
+\section{Prilagođenje Linuxa kao Nesigurnog gosta LTZVisora}
+
+\chapter{LTZVisor za višejezgrene procesore}
+\section{Prilagođenja LTZVisora za AMP}
+
+\section{Prilagođenja LTZVisora za SMP}
+\subsection{Arhitektura SMP LTZVisora}
+\subsection{Promjene u nadglednom načinu rada procesora}
+\subsection{Promjene u Nesigurnom gostu}
 
 \chapter{Zaključak}
 Zaključak.
