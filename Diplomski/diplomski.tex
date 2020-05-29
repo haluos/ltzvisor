@@ -4,12 +4,15 @@
 \usepackage{tabularx}
 \usepackage{float}
 \usepackage{pdfpages}
-\usepackage{dirtree}
+% \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{trees}
 
 \begin{document}
 
-\lstset{language=c}
+\tikzstyle{every node}=[anchor=west]
+\lstset{language=c, xleftmargin=.1\textwidth, xrightmargin=.1\textwidth}
 
 \renewcommand{\labelitemi}{$\bullet$}
 \renewcommand{\labelitemii}{$-$}
@@ -625,7 +628,9 @@ prezentirati mogućnosti koje nosi \textit{TrustZone} ekstenzija. LTZVisor je da
 ekstenzije koja je sada dostupna i u novoj ARMv8-M arhitekturi koja će nesumnjivo biti sve više dostupna u industriji te
 će pružati slične mogućnosti. Iskorištenje \textit{TrustZone} ekstenzije omogućava korištenje platforme kao dvostruki virtualni
 sustav, odnosno sustav s dva gost virtualna stroja: Sigurni gost i Nesigurni gost. Svaki od gost virtualnih strojeva može
-implementirati svoj OS (operacijski sustav). Opisani sustav prikazan je slikom \ref{ltzvisor}.
+implementirati svoj OS (operacijski sustav) te se preporučuje implementirati RTOS (engl. \textit{Real-Time OS}) kao
+Sigurnog gosta, a GPOS (engl. \textit{General-Purpose OS}) kao Nesigurnog gosta.
+Opisani sustav prikazan je slikom \ref{ltzvisor}.
 \begin{figure}[H]
   \centering
 	\includegraphics[width=300pt]{ltzvisor.png}%
@@ -722,45 +727,212 @@ In First Out}) spremnik te LTZVisor prilikom zamjene konteksta generira SGI odgo
 je da je pouzdana zato što je upravljana monitorom virtualnih strojeva.
 
 \section{Programska podrška}
-Izvorni kod LTZVisora može se pronaći na stranicama GitHuba. Repozitorij sadrži sveukupno četiri direktorija: \textit{bin},
-\textit{bootloader}, \textit{Documentation} i \textit{src}.
-% \dirtree{%
-% .1 src.
-% .2 arch.
-% .3 armv7.
-% .4 Cortex-A9.
-% .2 boards.
-% .3 zc702.
-% .3 zedboard.
-% .3 zybo.
-% .2 core.
-% .2 drivers.
-% .3 common.
-% .3 zynq.
-% .2 lib.
-% .2 ns\_guest.
-% .3 zynq.
-% .2 s\_guest.
-% .3 BareApp.
-% .4 portable.
-% }
+Izvorni kod LTZVisora može se pronaći na stranicama \textit{GitHuba}. Repozitorij sadrži sveukupno četiri direktorija:
+\textit{bin}, \textit{bootloader}, \textit{Documentation} i \textit{src}. Direktorij \textit{src} sadrži sav izvorni kod te
+je struktura navedenog direktorija prikazana slikom \ref{srcdir}. Zbog preglednosti, u svakom krajnjem direktoriju je
+izostavljen \textit{inc} direktorij koji sadrži odgovarajuća C zaglavlja.
+\textit{arch} direktorij sadrži većinu ključnih dijelova potrebnih za pokretanje cjelokupnog sustava. Većina koda sadržanog u
+ovom direktoriju napisana je u asembleru. U direktoriju se nalazi \textit{cpu\_entry.S} datoteka koja sadrži početnu
+inicijalizaciju CPU0 procesora. Inicijalizacija se sastoji od podešavanja koprocesorskih registara, stoga Sigurnog gosta,
+stoga nadglednog načina rada procesora, tablice prekidnih vektora Sigurnog gosta i nadglednog načina rada te konfigurira
+\textit{cache} i MMU koji su nisu omogućeni. Ključni dio za funkcioniranje sustava s dva svijeta je u podešavanju NSACR, SCR
+i MVBAR (engl. \textit{Monitor Vector Base Address Register}) registara, gdje NSACR definira dozvole pristupa Nesigurnom svijetu
+određenim procesorskim resursima. U MVBAR se sprema početna adresa tablice prekidnih vektora nadglednog načina rada procesora
+koja je ključna za funkcioniranje raspoređivača sustava. Uz to, u direktoriju je sadržan i asemblerski kod koji je namijenjen
+zamjeni konteksta.
 
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[%
+    grow via three points={one child at (0.5,-0.7) and %
+    two children at (0.5,-0.7) and (0.5,-1.4)},%
+    edge from parent path={(\tikzparentnode.south)%
+    |- (\tikzchildnode.west)}]
+  \node {src}
+      child { node {arch}
+        child {node {armv7}
+        child {node {Cortex-A9}}}}
+      child [missing] {}
+      child [missing] {}
+      child { node {boards}
+        child {node {zc702}}
+        child {node {zedboard}}
+        child {node {zybo}}}
+      child [missing] {}
+      child [missing] {}
+      child [missing] {}
+      child { node {core}}
+      child {node {drivers}
+        child { node {common}}
+        child {node {zynq}}}
+      child [missing] {}
+      child [missing] {}
+      child {node {lib}}
+      child {node {ns\_guest}
+        child {node {zynq}}}
+      child [missing] {}
+      child { node {s\_guest}
+        child {node {BareApp}
+          child {node {portable}}}};
+  \end{tikzpicture}
+  \caption{Struktura direktorija izvršnog koda LTZVisora}
+  \label{srcdir}
+\end{figure}
+
+Direktorij \textit{boards} sadrži skriptu za memorijsko povezivanje i kod koji je specifičan sad određenu platformu te služi
+podešavanju sigurnosti uređaja (npr. TTC, UART, globalno brojilo), SLCR registra (podešavanje sigurnosti memorijskih
+segmenata, sigurnosti DMA, \textit{Etherneta}, OCM...) i upravljačke programe uređaja koji se koriste (TTC i UART). Isto tako,
+sadrži i inicijalizaciju GIC-a. Slijedeći direktorij, \textit{core}, sadrži jezgru LTZVisora koja je zadužena za postavljanje
+početnog konteksta Nesigurnog gosta i predavanje kontrole Sigurnom gostu. \textit{drivers} direktorij sadrži upravljački
+program GIC-a, a \textit{lib} funkcije za rukovanje znakovnim nizovima i pristup registrima. Slika Nesigurnog gosta se gradi
+odvojeno od Sigurnog gosta i LTZVisora, koji se izgrađuju zajedno, te direktorij \textit{ns\_guest} sadrži kod za uključivanje
+slike Nesigurnog gosta u sliku cjelokupnog sustava i atribute potrebne za pokretanje Nesigurnog gosta. Zadnji,
+\textit{s\_guest}, direktorij sadrži kod Sigurnog gosta i tablicu prekidnih vektora Sigurnog gosta.
 
 \chapter{Operacijski sustav Linux}
+Linux je operacijski sustav otvorenog koda te je prvenstveno namijenjen stolnim računalima (spada u GPOS).
+Otvorenost koda omogućila je prilagođenje Linuxa za ugradbena računala.
+Rastom mogućnosti procesora za ugradbena računala, sve je veća i potražnja za operacijskim sustavom Linux za ugradbena
+računala. Linux je obično tražen zbog već gotove podrške za sučelja koja su potrebna u aplikaciji koja se razvija, npr.
+mrežna podrška. Važne komponente Linuxa su jezgra, datotečni podsustav i \textit{Device Tree} koji su opisani u nastavku
+ovog poglavlja. Kod ugradbenih računala, datotečni podsustav i jezgra operacijskog sustava su komprimirani.
+Kako bi se Linux mogao pokrenuti, nužno je imati program pokretač (npr. U-Boot) koji će pripremiti platformu za izvođenje
+Linuxa. Priprema platforme sastoji se od:
+\begin{itemize}
+  \item{inicijalizacije memorijskog sustava i periferija}
+  \item{učitavanja slike Linuxa u RAM memoriju}
+  \item{predaje ulaznih argumenata Linuxu}
+  \item{pripremanja serijske konzole za jezgru (ovaj korak je izborni, ako se postave odgovarajući parametri za automatsko
+  pokretanje jezgre OS-a)}
+  \item{predaje kontrole jezgri OS-a}
+\end{itemize}
+Neposredno prije nego što program pokretač skoči na početnu instrukciju jezgre Linuxa, pokretač
+pripremi tri parametra koja su nužna za pokretanje Linuxa. Parametri se prenose preko registara opće namjene R0-R2, gdje
+R0 mora sadržavati 0, R1 tip platforme (jedinstveni identifikator platforme) i R2 početnu adresu \textit{Device Tree} binarne
+datoteke.
+
 \section{Komponente operacijskog sustava Linux}
+Kao što je već spomenuto, Linux za ugradbena računala sadrži tri glavne komponente sustava: datotečni podsustav, \textit{Device
+Tree} i jezgru operacijskog sustava. Svaka od tih komponenata može biti izgrađena raznim alatima, u ovom radu je izabran
+Xilinxov alat \textit{PetaLinux} koji ima mogućnost izgradnje svih komponenata odjednom. Svaka od komponenata je detaljnije
+opisana u nastavku.
+
 \subsection{\textit{Device Tree}}
+\textit{Device Tree} je podatkovna struktura koja opisuje konfiguraciju hardvera kojeg će Linux koristiti. Sadrži sve potrebne
+informacije o procesorima u sustavu, veličini memorije i konfiguraciji prekida i periferija. Struktura se upisuje u datoteku
+ekstenzije \textit{.dts} ili \textit{.dtsi}, gdje je \textit{.dts} konačna datoteka koja može uključivati dodatne informacije
+sadržane u \textit{.dtsi} datotekama \cite{xlnx}. Ako datoteke \textit{.dts} i \textit{.dtsi} sadrže informacije o istim komponentama,
+u konačnici se uzima podatak iz \textit{.dts} datoteke. \textit{Device Tree} je važan jer opisuje hardver na način koji je
+razumljiv Linuxu, a uz to, omogućuje Linuxu da nema fiksnu konfiguraciju hardvera \cite{plnx}. Svaki upravitelj uređajima ili modul
+u \textit{Device Tree} strukturi je opisan čvorom koji sadrži sve postavke uređaja. Obzirom na vrstu upravitelja, upravitelj
+može imati čvorove djece i čvor roditelja. Korjenski čvor je roditelj svim ostalim čvorovima te se sastoji od:
+\begin{itemize}
+  \item{čvora koji sadrži informacije o procesorima platforme}
+  \item{čvor koji sadrži informacije o memoriji}
+  \item{izborni čvor koji može sadržavati konfiguracijske podatke (parametre jezgre, lokaciju datotečnog podsustava...)}
+  \item{čvor koji označava istoznačnice (alijase)}
+  \item{čvorove koji sadrže informacije sabirnica platforme}
+\end{itemize}
+Sintaksa \textit{Device Tree} strukture prikazana je slikom \ref{devtree_sintax}.
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    node@address{
+      property_name = "property_value";
+      byte_property_name = [hex1 hex2 hex3 hex4];
+      child_node@address{
+        reference = <&reference_node>
+      };
+    };
+  \end{lstlisting}
+  \caption{Sintaksa \textit{Device Tree} strukture}
+  \label{devtree_sintax}
+\end{figure}
+
+Binarni ekvivalent, potreban za konačnu sliku sustava, \textit{.dts} datoteke je \textit{.dtb} koja se dobije DTC (engl.
+\textit{Device Tree Compiler}) alatom.
+
 \subsection{Datotečni podsustav}
+Linux je operacijski sustav koji sve upravljačke programe uređaja drži u obliku datoteka, stoga je potrebno imati datotečni
+podsustav (korjenski datotečni podsustav), kako bi Linux ispravno funkcionirao. Datotečna struktura odgovara strukturi
+datotečnog sustava Linuxa za stolna računala, ali uz znatno manje elemenata koji se mogu i dodatno smanjiti pomoću alata
+za izgradnju datotečnog podsustava (npr. \textit{BusyBox} kojeg koristi \textit{PetaLinux}). Datotečni podsustav je obično
+pohranjen u stalnu memoriju, ali postoji mogućnost i za pohranu u RAM memoriju.
+Postoje različiti tipovi datotečnih podsustava, a ovo su neki od njih:
+\begin{itemize}
+  \item{\textit{initramfs} - datotečni podsustav koji ima mogućnost pisanja u datotečni podsustav, ali promjene nisu stalne,
+  tj. gube se nakon gubitka napajanja. Izvorno mjesto ovakvog datotečnog podsustava je RAM.}
+  \item{\textit{initrd} - datotečni sustav koji je prethodio \textit{initramfsu} i vrlo sličnih mogućnosti. Također se nalazi
+  u RAM-u.}
+  \item{\textit{jffs2} - montira se u \textit{flash} memoriju, gdje se jedna particija \textit{flasha} obavezno mora zvati
+  \textit{jffs2} te se treba pobrinuti da particija ima dovoljno memorije za datotečni podsustav.}
+  \item{NFS (engl. \textit{Network File System}) - datotečni sustav se montira preko mreže te ciljana platforma i sustav
+  domaćin dijele isti datotečni podsustav.}
+  \item{SD datotečni podsustav - sustav koji je posebno izgrađen za SD karticu.}
+\end{itemize}
+Novije verzije jezgre podržavaju komprimirane \textit{cpio} arhive te je iz tog razloga moguće ručno ispuniti datotečni
+podsustav sa željenim sadržajem uz pomoć \textit{cpio} alata na Linuxu. Takve arhive se komprimiraju za Linux algoritmom
+koji se može izabrati u izborniku alata kojim je datotečni podsustav građen.
+Sadržaj datotečnog podsustava se najčešće odnosi na:
+\begin{itemize}
+  \item{sustavske biblioteke}
+  \item{aplikacije}
+  \item{alate i različite usluge (komandni sustav, \textit{web} pretraživači...)}
+\end{itemize}
+
 \subsection{Jezgra}
+Izgradnje jezgre se sastoji od dva sustava:
+\begin{itemize}
+  \item{sustav koji je neovisan o arhitekturi za koju se jezgra gradi (raspoređivač procesa, sučelje sustavskih poziva,
+  upravljački programi koji su neovisni o arhitekturi i mrežni podsustav)}
+  \item{sustav koji se tiče hardvera platforme za koju se jezgra gradi (inicijalizacija platforme, uređaji vezani uz odabranu
+  platformu, itd.)}
+\end{itemize}
+Jezgra se poziva pomoću programa pokretača koji skače na prvu instrukciju jezgre operacijskog sustava te prvo što jezgra radi je
+provjera ulaznih argumenata. Ako su ulazni argumenti valjani, jezgra počinje izvršavati početni program koji se odnosi na
+dekomprimiranje jezgre. Nakon što je dekomprimiranje gotovo, kreće se na inicijalizaciju sustava. Sekvenca inicijalizacije
+koju izvršava jezgra:
+\begin{enumerate}
+  \item{Onemogućavaju se IRQ i FIQ, inicijalizira se \textit{tick} sustava, memorijski sustav, podsustavi ovisni o arhitekturi,
+  uz koje se u obzir uzimaju ulazni argumenti koje je predao program pokretač}
+  \item{Konfigurira se stog i raspoređivač zadataka}
+  \item{Alociraju se stranice i podešavaju određena memorijska područja}
+  \item{Podešavaju se prekidi, iznimke i GIC}
+  \item{Brojilo korišteno kao \textit{tick} se podešava i omogućuju se prekidi te se izvodi dodatna inicijalizacija memorije i
+  kalibriranje takta jezgre}
+  \item{Podešava se datotečni podsustav i inicijaliziraju se procesi, izvršavaju se \textit{daemon} programi koji su zaduženi
+  za stvaranje niti (engl. \textit{thread}) jezgre}
+  \item{Jezgra se otključava i raspoređivač se pokreće}
+  \item{Inicijaliziraju se razni uređaji i mreža}
+\end{enumerate}
+Važno je napomenuti da prije predaje kontrole jezgri operacijskog sustava, MMU i podatkovna \textit{cache} memorija moraju biti
+onemogućeni te početno stanje jezgre mora biti u \textit{supervisor} načinu rada uz IRQ i FIQ maskirane (onemogućene). Ako
+jezgra nije primila valjane ulazne argumente, izvršavanje koda jezgre se prekida uz serijski ispis odgovarajuće poruke.
+
 \section{\textit{PetaLinux}}
 \section{Prilagođenje Linuxa kao Nesigurnog gosta LTZVisora}
+\subsection{Stvaranje cjelokupne slike Linuxa}
+\subsection{Izmjene u jezgri operacijskog sustava}
+\subsection{Izmjene u LTZVisoru}
+
+\chapter{Operacijski sustav za rad u stvarnom vremenu (RTOS)}
+\section{FreeRTOS}
+\subsection{Programska podrška za Zynq-7000}
+\subsection{Prilagodba FreeRTOS-a kao Sigurnog gosta LTZVisora}
 
 \chapter{LTZVisor za višejezgrene procesore}
 \section{Prilagođenja LTZVisora za AMP}
-
+\subsection{Arhitektura AMP LTZVisora}
+\subsection{Nadgledni način rada CPU0}
+\subsection{Nadgledni način rada CPU1}
 \section{Prilagođenja LTZVisora za SMP}
 \subsection{Arhitektura SMP LTZVisora}
 \subsection{Promjene u nadglednom načinu rada procesora}
-\subsection{Promjene u Nesigurnom gostu}
+\subsection{Promjene u Nesigurnom \textit{bare-metal} gostu}
+\subsection{Promjene u SMP Linux Nesigurnom gostu}
+
+\chapter{Testiranje SMP LTZVisor rješenja}
 
 \chapter{Zaključak}
 Zaključak.
