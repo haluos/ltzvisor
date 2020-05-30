@@ -842,7 +842,7 @@ Sintaksa \textit{Device Tree} strukture prikazana je slikom \ref{devtree_sintax}
       property_name = "property_value";
       byte_property_name = [hex1 hex2 hex3 hex4];
       child_node@address{
-        reference = <&reference_node>
+        reference = <&reference_node>;
       };
     };
   \end{lstlisting}
@@ -911,8 +911,90 @@ onemogućeni te početno stanje jezgre mora biti u \textit{supervisor} načinu r
 jezgra nije primila valjane ulazne argumente, izvršavanje koda jezgre se prekida uz serijski ispis odgovarajuće poruke.
 
 \section{\textit{PetaLinux}}
+\textit{PetaLinux} je skup alata koji olakšavaju izgradnju slike Linuxa. Sadržava DTC alat za prevođenje \textit{Device Tree}
+strukture, za izgradnju datotečnog podsustava koristi \textit{BusyBox} te jezgru Xilinxovog Linuxa preuzima s \textit{GitHuba}.
+\textit{PetaLinux} ima više verzija koje su dostupne za instalaciju, a u ovom radu se je koristio \textit{PetaLinux} 2019.1 koji
+koristi verziju Linuxa 4.19. Pomoću \textit{PetaLinuxa} sučelja moguće je konfigurirati jezgru preko izbornika koji se poziva
+naredbom \textit{petalinux-config -c kernel}. Iz sučelja je moguće dodati ili ukloniti razne upravljačke programe uređaja,
+module ili mogućnosti jezgre. Kako \textit{PetaLinux} koristi Xilinxov Linux, izbornik sadrži mogućnosti dodavanja raznih
+upravljačkih programa napisanih posebno za Xilinxove platforme, kao što je to ZedBoard. Za konfiguriranje datotečnog podsustava,
+koristi se poseban izbornik koji se pokreće naredbom \textit{petalinux-config -c rootfs} koji također ima mogućnost uklanjanja
+i dodavanja raznih komponenti datotečnog podsustava te ima i mogućnost dodavanja korisničkih aplikacija u datotečni  podsustav.
+\textit{Device Tree} Linuxa se konfigurira pomoću datoteke koja je predviđena za dodavanje korisničkih informacija koje se tiču
+hardvera. Opće postavke cjelokupne slike sustava mogu se postaviti pomoću općenitog izbornika koji se poziva naredbom
+\textit{petalinux-config}. Početni sadržaj ovog izbornika je prikazan slikom \ref{peta_menu}.
+\begin{figure}[H]
+  \centering
+	\includegraphics[width=300pt]{peta_menu.png}%
+	\caption{Izbornik \textit{petalinux-config} naredbe}
+	\label{peta_menu}%
+\end{figure}
+Pomoću prikazanog izbornika
+moguće je odabrati razne općenite postavke slika koje se generiraju naredbom \textit{petalinux-build}. Najvažnije postavke
+se odnose na početnu adresu na kojoj će se nalaziti slika jezgre u memoriji i cjelokupna memorija koja je dostupna Linuxu.
+Uz to, ovim izbornikom je moguće odabrati željenu vrstu datotečnog podsustava (gdje su ponuđene vrste koje su navedene u
+prethodnim poglavljima). Navedenim izbornikom se mogu upravljati i nekim postavkama \textit{Device Tree} strukture. Velik dio
+postavki se odnosi na upute U-Bootu kako pronaći i pokrenuti jezgru operacijskog sustava. Vrlo korisni dio za početnike je
+izbor \textit{Help} koji daje detaljniji opis ponuđenih komponenti te daje upute nesigurnom korisniku može li ukloniti
+određene komponente iz Linuxa. Još jedna korisna postavka koju nudi \textit{PetaLinux} je mogućnost stavljanja eksternog
+izvora Linuxovog koda što je posebno važno kod aplikacija koje zahtijevaju izmjenu izvornog koda jezgre.\\
+Uz instalacijski paket \textit{PetaLinuxa}, preuzmu se i razni predlošci koji olakšavaju stvaranje inicijalnog
+\textit{PetaLinux} projekta za odgovarajuću platformu s inicijalnim postavkama koje su valjane za odabranu platformu. Nakon
+izgradnje sustava, slika jezgre Linuxa za Zynq-7000 platforme je naziva \textit{zImage} te je slika komprimirana. Ako se
+za datotečni podsustav odabere \textit{initramfs}, komprimirana slika datotečnog podsustava je automatski sadržana u
+\textit{zImage} slici. Binarni oblik \textit{Device Tree} strukture je generiran u datoteku naziva \textit{system.dtb}.
+
 \section{Prilagođenje Linuxa kao Nesigurnog gosta LTZVisora}
+Preporuka ARM-a je da složeniji operacijski sustavi budu namijenjeni Nesigurnom svijetu, jer je kod sustava s većom
+količinom koda veća vjerojatnost pronalaženja prolaza do probijanja sigurnosti. Zbog toga razloga, autori LTZVisora također
+preporučuju implementaciju GPOS-a kao Nesigurnog gosta. Prilagođenje kompleksnog sustava kao što je to Linux za Nesigurni
+svijet \textit{TrustZone} platforme je posao koji zahtjeva vrlo dobro poznavanje arhitekture jezgre operacijskog sustava, kao
+i detaljno poznavanje platforme za koju se Linux prilagođava. Pristup prilagođenju može biti sljedeći: ako se Linux priprema
+za Nesigurni svijet, ključno je omogućiti konfiguriranje jezgre koje zahtjeva pristup sigurnoj memoriji, odnosno registrima
+kojima može pristupiti samo Sigurni svijet. Ovakav pristup, odmah u početku, uklanja potrebu za detaljnim poznavanjem
+dijela jezgre operacijskog sustava koji je neovisan o arhitekturi platforme što znatno smanjuje vrijeme prilagodbe jezgre
+Nesigurnom svijetu. Uz takav pristup, jasno je i da se \textit{Device Tree} mora promijeniti. Prilagođenje Linuxa se sastoji
+i od pripreme LTZVisora za Linux te su postupci prilagodbe dani u nastavku.
+
 \subsection{Stvaranje cjelokupne slike Linuxa}
+Arhitektura LTZVisora zahtjeva jednu izvršnu datoteku Nesigurnog gosta, dok se Linux sastoji od više slika sustava (datotečnog
+podsustava, \textit{Device Tree} strukture i jezgre). Uz to, Linux zahtjeva i program pokretač koji će pripremiti jezgru za
+početak izvršavanja. Jasno je da je potrebno sve slike sustava Linux i program pokretač povezati u jednu izvršnu datoteku
+koju će LTZVisor kasnije učitati u RAM. Jedan od intuitivnih načina na koji to postići je pomoću skripte za memorijsko
+povezivanje u kojoj su naznačene adrese za svaku komponentu operacijskog sustava Linux. U ovom radu se je iskoristila mogućnost
+koju nudi \textit{PetaLinux}, a tiče se vrste datotečnog podsustava. Kao vrsta datotečnog podsustava odabrao se
+\textit{initramfs} zbog mogućnosti da je takav datotečni podsustav odmah uključen u sliku jezgre Linuxa što doprinosi smanjenju
+otiska cjelokupne slike Linuxa. Kada bi se koristio drugi datotečni podsustav, u skriptu za memorijsko povezivanje bilo bi
+potrebno dodati poseban adresni prostor koji sadrži datotečni podsustav koji najvjerojatnije ne bi bio u potpunosti popunjen.
+Sve što je potrebno u skripti za memorijsko povezivanje je adresa na kojoj se sprema \textit{Device Tree}, adresa minimalnog
+koda koji predaje parametre jezgri Linuxa i adresu na kojoj se nalazi jezgra. Adrese na kojima su smještene komponente Linuxa
+su prikazane tablicom \ref{adr_space}.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ | p{3cm} | p{6cm} |}
+    \hline
+    \textbf{Adresa} & \textbf{Slika}\\
+    \hline
+    0x2000000 & \textit{Device Tree}\\
+    \hline
+    0x2007000 & Program pokretač\\
+    \hline
+    0x2008000 & Jezgra i datotečni podsustav  Linuxa\\
+    \hline
+  \end{tabular}
+  \caption{Adresni prostor komponenata Linuxa}
+  \label{adr_space}
+\end{table}
+Program pokretač se sastoji od jedne funkcije koja predaje potrebne parametre jezgri Linuxa i skače na početnu adresu jezgre.
+Početna funkcija jezgre se može identificirati pomoću alata \textit{arm-none-eabi-objdump} koja ima mogućnost iz binarne
+datoteke ispisati niz asemblerskih instrukcija ili simbola koje sadrži izvršna datoteka. Najjednostavnije je iskoristiti
+navedeni alat za ispis tablice simbola sadržanih u izvršnoj datoteci. Ispisom simbola vidi se da se početna točka jezgre
+Linuxa naziva \textit{\_binary\_images\_linux\_zImage\_start} koja se može iskoristiti kao funkcija s tri ulazna argumenta.
+Ulazni argumenti su redom: R0, R1 i R2, gdje R0 sadrži 0, R1 jedinstveni identifikator ZedBoarda koji je 3378 i početna adresa
+\textit{Device Tree} strukture koja je definirana u skripti za memorijsko povezivanje (0x2000000). Prije nego se sve slike
+povežu u konačnu sliku, potrebno je konvertirati sliku jezgre i \textit{Device Tree} u binarne datoteke pomoću alata
+\textit{arm-none-eabi-objcpy}. Nakon toga, slike se mogu povezati u jednu koja se može iskoristiti za LTZVisor.
+
 \subsection{Izmjene u jezgri operacijskog sustava}
 \subsection{Izmjene u LTZVisoru}
 
@@ -932,7 +1014,7 @@ jezgra nije primila valjane ulazne argumente, izvršavanje koda jezgre se prekid
 \subsection{Promjene u Nesigurnom \textit{bare-metal} gostu}
 \subsection{Promjene u SMP Linux Nesigurnom gostu}
 
-\chapter{Testiranje SMP LTZVisor rješenja}
+\chapter{Testiranje LTZVisora za višejezgrene procesore}
 
 \chapter{Zaključak}
 Zaključak.
