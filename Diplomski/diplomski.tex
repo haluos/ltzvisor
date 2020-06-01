@@ -12,7 +12,7 @@
 \begin{document}
 
 \tikzstyle{every node}=[anchor=west]
-\lstset{language=c, xleftmargin=.1\textwidth, xrightmargin=.1\textwidth}
+\lstset{language=c, xrightmargin=0.001\textwidth}
 
 \renewcommand{\labelitemi}{$\bullet$}
 \renewcommand{\labelitemii}{$-$}
@@ -837,6 +837,7 @@ Sintaksa \textit{Device Tree} strukture prikazana je slikom \ref{devtree_sintax}
 
 \begin{figure}[H]
   \centering
+  \lstset{xleftmargin=.1\textwidth}
   \begin{lstlisting}
     node@address{
       property_name = "property_value";
@@ -995,8 +996,182 @@ Ulazni argumenti su redom: R0, R1 i R2, gdje R0 sadrži 0, R1 jedinstveni identi
 povežu u konačnu sliku, potrebno je konvertirati sliku jezgre i \textit{Device Tree} u binarne datoteke pomoću alata
 \textit{arm-none-eabi-objcpy}. Nakon toga, slike se mogu povezati u jednu koja se može iskoristiti za LTZVisor.
 
-\subsection{Izmjene u jezgri operacijskog sustava}
+\subsection{Izmjene operacijskog sustava Linux}
+Kao što je već napomenuto, prilikom prilagođenja Linuxa za izvršavanje u Nesigurnom svijetu treba voditi posebnu brigu o
+pristupu Linuxa hardveru. Da bi uopće imalo smisla tražiti dijelove izvornog koda koji bi mogli biti problematični za
+Nesigurni svijet, jasno je da programer mora biti vrlo dobro upoznat arhitekturom \textit{TrustZone} ekstenzije, kao i
+platforme za koju se Linux prilagođava. Iako to nije nužno, poželjno je da je programer upoznat s arhitekturom operacijskog
+sustava kojeg prilagođava. Poznavanje arhitekture operacijskog sustava znatno olakšava lociranje nastalih problema, ali se
+oni mogu otkriti i praćenjem toka programa od zadnjeg ispisa kojeg je dao Linux.
+
+\subsubsection{Izmjene \textit{Device Tree} strukture}
+Prije svega, \textit{Device Tree} mora biti ispravan. U \textit{Device Tree} strukturi se nalazi čvor koji sadrži informaciju
+o memorijskim segmentima i njihovim veličinama koje Linux može koristiti. Navedeni čvor mora sadržavati ispravne informacije
+o memoriji kako bi Linux mogao povezati fizičke i virtualne adrese bez generiranja pogreške. Opis memorijskog čvora korišten
+u ovom projektu dan je slikom \ref{mem_node}. Polje čvora \textit{reg} opisuje lokaciju i veličinu RAM-a dodijeljenu Linuxu.
+\begin{figure}[H]
+  \lstset{xleftmargin=.1\textwidth}
+  \begin{lstlisting}
+    memory {
+      device_type = "memory";
+      reg = <0x00000000 0x1bdfffff>;
+    };
+  \end{lstlisting}
+  \caption{Memorijski \textit{Device Tree} čvor}
+  \label{mem_node}
+\end{figure}
+Kada bi memorijski čvor ostao kako \textit{PetaLinux} ima izvorno postavljeno (veličina memorijskog prostora od 0x2000000),
+tada bi se pojavila pogreška prilikom rane inicijalizacije jezgre i izvođenje Linuxa bi bilo zaustavljeno.
+Ostali čvorovi moraju sadržavati
+točne informacije o uređajima koje Linux koristi te se u strukturi moraju nalaziti uređaji koje Linux koristi (primjer takvog
+uređaja je globalno brojilo koji služi kao \textit{tick} OS-a). Uređaji koje Linux koristi, u \textit{Device Tree} strukturi moraju sadržavati informaciju da
+je uređaj dostupan što se postiže dodavanjem \textit{status = "okay";} u čvor uređaja. Primjer ispravno konfiguriranog čvora
+globalnog brojila prikazan je slikom \ref{glob_timer}. Polje \textit{compatible} služi kao uputa Linuxu da pronađe odgovarajući
+upravljački program za čvor. Slično kao kod memorijskog čvora, polje \textit{reg} opisuje baznu adresu globalnog brojila i
+veličinu registarskog područja brojila. Svaki čvor mora sadržavati i informacije o prekidima te se one opisuju svojstvima
+čvora \textit{interrupts} i \textit{interrupt-parent}. Tip prekida opisan je prvim poljem svojstva \textit{interrupts} (0 za
+SPI, 1 za PPI), drugo polje predstavlja prekidni broj i treće polje opisuje osjetljivost prekida i koji procesorima je prekid
+namijenjen. Upravitelj prekidom dan je \textit{interrupt-parent} svojstvom koji sadrži referencu na drugi čvor u \textit{Device
+Tree} strukturi koji opisuje GIC. Opis izvora takta za uređaj, dan je \textit{clocks} svojstvom uređaja koji sadrži referencu
+na signal takta koji je opisan u SLCR čvoru.
+\begin{figure}[H]
+  \lstset{xleftmargin=.1\textwidth}
+  \begin{lstlisting}
+    global_timer: timer@f8f00200 {
+      compatible = "arm,cortex-a9-global-timer";
+      reg = <0xf8f00200 0x20>;
+      interrupts = <1 11 0x301>;
+      interrupt-parent = <&intc>;
+      status = "okay";
+      clocks = <&clkc 4>;
+    };
+  \end{lstlisting}
+  \caption{Konfiguracijski čvor globalnog brojila}
+  \label{glob_timer}
+\end{figure}
+Kod generiranja \textit{Device Tree} strukture, \textit{PetaLinux} automatski opiše sve resurse platforme za koju se
+\textit{Device Tree} generira. Poželjno je iz generirane \textit{Device Tree} strukture izbaciti sve resurse koji se koriste
+kao sigurni uređaji (npr. TTC0) ili barem postaviti njihovo stanje u \textit{status = "disabled";} koje onemogućava korištenje
+resursa.
+
+\subsubsection{Izmjene jezgre Linuxa}
+Dobra početna točka kod izmjene jezgre je u direktoriju odgovarajuće arhitekture izvornog koda Linuxa. U slučaju ZedBoard
+platforme, radi se o \textit{arch/arm/mach-zynq} direktoriju koji sadrži kod za inicijalizaciju platforme potrebnu za
+pokretanje Linuxa. Ako se pogleda sadržaj navedenog direktorija, vidi se \textit{slcr.c} datoteka za koju je jasno da su
+potrebne promjene (SLCR je dostupan samo Sigurnom svijetu, a nužan je za npr. podešavanje signala takta za razne uređaje).
+Funkcije za pristup SLCR registru, originalno su implementirane kako je prikazano slikom \ref{slcr_orig}.
+\begin{figure}[H]
+  \begin{lstlisting}
+    static int zynq_slcr_write(u32 val, u32 offset)
+    {
+      return regmap_write(zynq_slcr_regmap, offset, val);
+    }
+
+    static int zynq_slcr_read(u32 *val, u32 offset)
+    {
+    	return regmap_read(zynq_slcr_regmap, offset, val);
+    }
+  \end{lstlisting}
+  \caption{Pristup Linuxa SLCR-u}
+  \label{slcr_orig}
+\end{figure}
+Funkcije \textit{regmap\_write} i \textit{regmap\_read} kao ulazni argument primaju virtualnu adresu koja je povezana s fizičkom
+baznom adresom SLCR registra te se kasnije prevodi u fizičku adresu. Pozivanje ovih funkcija izaziva \textit{external abort}
+zbog pristupanja sigurnoj memoriji. Kako bi se ove funkcije uspješno izvele, potrebno je implementirati funkcije za pristup
+SLCR registru koji će biti izveden intervencijom LTZVisora. LTZVisor već implementira sustavske pozive koji se mogu iskoristiti
+kao zahtjev Nesigurnog gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom
+\ref{slcr_secure}.
+\begin{figure}[H]
+  \lstset{breaklines=true}
+  \begin{lstlisting}
+    static int zynq_slcr_write(u32 val, u32 offset)
+    {
+      secure_write(val, zynq_slcr_base + offset);
+      return 0;
+    }
+
+    static int zynq_slcr_read(u32 *val, u32 offset)
+    {
+    	*val = secure_read(zynq_slcr_base + offset);
+    	return 0;
+    }
+  \end{lstlisting}
+  \caption{Implementirane funkcije za pristup SLCR-u}
+  \label{slcr_secure}
+\end{figure}
+Za razliku od izvornih funkcija implementiranih za pristup SLCR-u, funkcije \textit{secure\_write} i \textit{secure\_read} kao
+ulazni argument primaju fizičku adresu registra kojem se pristupa. Varijabla \textit{zynq\_slcr\_base} je globalna, te Linux
+prilikom inicijalizacije u nju spremi virtualnu adresu SLCR registra te je potrebno izmijeniti taj dio koda tako da se u
+varijabli nalazi fizička adresa. Izmjenu je potrebno napraviti u istoj datoteci u funkciji za odgovarajuću inicijalizaciju.
+Navedene funkcije su implementirane pomoću SMC instrukcije te predavanjem potrebnih parametara (adrese i vrijednosti) LTZVisoru.
+U svakoj od funkcija sa slike \ref{slcr_secure} je dodana instrukcija \textit{return 0;} jer funkcije trebaju vratiti 0 za
+uspješan pristup SLCR-u, a manje od 0 ako je pristup bio neuspješan te je ovdje pretpostavljeno da će pristup biti uspješan.
+Za stvarnu informaciju o uspješnosti pristupa trebalo bi promijeniti implementaciju sustavskih poziva u LTZVisoru.
+Uz pristup SLCR-u, Linux pristupa i jednom od koprocesorskih registara koji je zadužen za upravljanje snagom u koji se može
+upisivati samo u Sigurnom svijetu. Za uspješno konfiguriranje registra za upravljanje snagom također je implementirana posebna
+funkcija koja pomoću SMC instrukcije od LTZVisora zahtjeva siguran upis u registar. ACTLR je također registar koji je dostupan
+samo Sigurnom svijetu, ali nema potrebe za implementacijom posebnog poziva LTZVisoru za upis u ACTLR jer su Linuxovi upisi u
+registar zadovoljeni postavljanjem početnog konteksta Nesigurnog gosta.
+Uz promjene u izvornom kodu jezgre Linuxa, potrebno je i isključiti VFP (engl. \textit{Vector Floating Point}) podršku da se
+izbjegne \textit{undefined} iznimka na početku izvođenja \textit{init} skripte datotečnog podsustava. VFP se može isključiti
+pomoću izbornika koji se pokreće naredbom \textit{petalinux-config -c kernel}.\\
+Navedene promjene su minimalne za uspješno pokretanje operacijskog sustava Linux kao Nesigurnog gosta LTZVisora. Iako se Linux
+uspješno pokreće nakon navedenih promjena, u ispisu kojeg Linux daje vide se neke dodatne pogreške koje se javljaju tokom
+inicijalizacije. Pogreške se mogu vidjeti u isječku ispisa na slici \ref{plnx_errors}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=400pt]{error_output.png}
+  \caption{Pogreške prilikom pokretanja Linuxa}
+  \label{plnx_errors}
+\end{figure}
+Pogreška koja se odnosi na DMAC (\textit{DMA Controller}) se javlja zbog netočnog opisa DMA upravitelja u \textit{Device
+Tree} strukturi. Naime, \textit{PetaLinux} prilikom generiranja \textit{Device Tree} strukture pretpostavlja Sigurno stanje i
+time automatski opisuje DMAC koji pripada Sigurnom svijetu (Zynq-7000 platforme imaju poseban DMAC za Sigurni i poseban za
+Nesigurni svijet čije se adrese razlikuju). Da se ukloni takva pogreška, potrebno je u \textit{Device Tree} umjesto DMAC
+Sigurnog svijeta, opisati DMAC Nesigurnog svijeta (prvenstveno se odnosi na promjenu bazne adrese upravitelja).
+Adresa DMA upravitelja Nesigurnog svijeta je 0xf8004000.
+Slijedeća pogreška koja se može pojaviti je vezana uz OCM te se javlja u slučaju da je \textit{zynq\_slcr\_read} neispravno
+implementiran (treba imati na umu da funkcija vraća pročitanu vrijednost preko ulaznog argumenta, a ne kao povratnu vrijednost
+funkcije).
+
 \subsection{Izmjene u LTZVisoru}
+Uz izmjene Linuxa, potrebne su i izmjene u LTZVisoru koje se odnose na pripremu hardverskih resursa za korištenje u Nesigurnom
+svijetu i dodavanje sustavskog poziva za upis u koprocesorski registar za kontroliranje snage. Promjene koje su potrebne se
+implementiraju u \textit{boards/zedboard} direktoriju izvornog koda LTZVisora. U \textit{board.c} datoteci se nalazi funkcija
+zadužena za inicijalizaciju cjelokupnog \textit{TrustZone} sustava (podešavanje sigurnosti odgovarajućih uređaja i određivanje
+koji memorijski segmenti pripadaju Sigurnom, a koji Nesigurnom svijetu). Navedena inicijalizacija platforme se odnosi na
+konfiguriranje odgovarajućih SLCR registara. Funkcija zadužena za inicijalizaciju se zove \textit{board\_init} te minimalna
+promjena u ovoj funkciji obuhvaća dopuštanje Linuxu da koristi globalno brojilo koje je nužno za uspješno pokretanje Linuxa.
+Dopuštanje korištenja globalnog brojila sastoji se od upisa u dva registra SACR (engl. \textit{Secure Access Control Register})
+i NSACR (engl. \textit{Non-Secure Access Control Register}) koji služe za konfiguraciju dozvole pristupa Nesigurnog svijeta
+privatnom i globalnom brojilu.\\
+Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje DMA upravitelja da će se koristiti u Nesigurnom
+svijetu. Prilikom podešavanja DMA upravitelja, nužno je da se DMA upravitelj drži u \textit{resetu}. Nakon što je DMA upravitelj
+podešen, mora se pustiti iz \textit{reseta}. Opisane promjene prikazane su slikom \ref{tz_init}.
+Kao što je prikazano, prije upisa u SLCR registre potrebno ga je prije svega otključati te po završetku pristupa zaključati.
+Uz navedene promjene, potrebno je i označiti prekid globalnog brojila kao IRQ, odnosno kao prekid Nesigurnog svijeta što se
+dodaje u \textit{ltzvisor\_hw.c} datoteku.
+\begin{figure}[H]
+  \lstset{breaklines=true, xleftmargin=.05\textwidth}
+  \begin{lstlisting}
+    uint32_t board_init(void){
+      write32( (void *)SLCR_UNLOCK, SLCR_UNLOCK_KEY);
+      ...
+      write32( (void *)DMAC_RST_CTRL, 1);
+      write32( (void *)TZ_DMA_NS, 0x1);
+      write32( (void *)TZ_DMA_IRQ_NS, 0x0000ffff);
+      write32( (void *)TZ_DMA_PERIPH_NS, 0xf);
+      write32( (void *)DMAC_RST_CTRL, 0);
+      ...
+      write32( (void *)SCU_SAC, 0xf);
+      write32( (void *)SCU_NSAC, 0xfff);
+      ...
+      write32( (void *)SLCR_LOCK, SLCR_LOCK_KEY);
+    }
+  \end{lstlisting}
+  \caption{Funkcija inicijalizacije \textit{TrustZone} platforme}
+  \label{tz_init}
+\end{figure}
 
 \chapter{Operacijski sustav za rad u stvarnom vremenu (RTOS)}
 \section{FreeRTOS}
