@@ -499,12 +499,16 @@ _mon_fiq_handler:
 
 	cps #MONITOR_MODE
 	mov sp, r0
+  pop {r0, r1}
+  mov lr, r1
+  msr spsr, r0
+  @ push {r0-r12,lr}
+  @ mov r0, lr
+  @ bl print_warning
+  @ pop {r0-r12,lr}
 	pop {r0-r12}
 
 	@ rfefd sp!
-  pop {r1, r2}
-  mov lr, r1
-  msr spsr, r2
   movs pc, lr
 
 /**
@@ -548,8 +552,12 @@ _mon_fiq_handler:
 .globl _mon_scheduler
 _mon_scheduler:
 
-	srsfd sp!, #MONITOR_MODE
+	@ srsfd sp!, #MONITOR_MODE
 	push {r0-r12}
+  mrs r1, spsr
+  @ push {lr, r1}
+  stmfd	sp, {r1,lr}
+  sub 	sp, sp, #(2*4)
 	mov r0, sp
 
 	cps #SUPERVISOR_MODE

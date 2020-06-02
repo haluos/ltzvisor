@@ -1179,11 +1179,19 @@ dodaje u \textit{ltzvisor\_hw.c} datoteku.
 \subsection{Prilagodba FreeRTOS-a kao Sigurnog gosta LTZVisora}
 
 \chapter{LTZVisor za višejezgrene procesore}
-\section{Prilagođenja LTZVisora za AMP}
+\section{Prilagođenje LTZVisora za AMP}
 \subsection{Arhitektura AMP LTZVisora}
 \subsection{Nadgledni način rada CPU0}
 \subsection{Nadgledni način rada CPU1}
-\section{Prilagođenja LTZVisora za SMP}
+\section{Prilagođenje LTZVisora za SMP}
+Kao što je već opisano u prethodnim poglavljima, SMP može predstavljati veliko poboljšanje cjelokupne procesorske efikasnosti.
+Iako je to za većinu slučajeva točno, postoji i određeni tip aplikacija kojima SMP nije dobar izbor. Primjer jedne takve
+aplikacije je aplikacija koja u svakom trenutku izvršava samo jedan proces što znači da je uvijek samo jedan procesor aktivan.
+Aplikacije koje imaju koristi od SMP konfiguracije su one koje implementiraju npr. određene vrste obrade signala koje
+zahtijevaju veliku procesorsku moć. Ovo poglavlje predstavlja SMP LTZVisor koji se može iskoristiti kod potrebe za navedenim
+tipom aplikacija te predstavlja sasvim novu inačicu LTZVisora čija je implementacija bila u planu od trenutka kada je LTZVisor
+razvijen.
+
 \subsection{Arhitektura SMP LTZVisora}
 \subsection{Promjene u nadglednom načinu rada procesora}
 \subsection{Promjene u Nesigurnom \textit{bare-metal} gostu}
@@ -1204,7 +1212,7 @@ Sažetak na hrvatskom jeziku.
 \end{sazetak}
 
 % TODO: Navedite naslov na engleskom jeziku.
-\engtitle{Title}
+\engtitle{Extending LTZVisor to multicore}
 \begin{abstract}
 Abstract.
 

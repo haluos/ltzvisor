@@ -94,6 +94,7 @@ s_guest-object-mks=$(shell if [ -d $(s_guest_dir) ]; then find $(s_guest_dir) -i
 ifeq ($(S_GUEST), BARE_METAL)
 	export bm_core_dir=$(s_guest_dir)/BareApp
 	export bm_core_port_dir=$(bm_core_dir)/portable
+	export bm_freertos_dir=$(bm_core_dir)/freertos
 	# Setup list of objects for compilation
 	bm_core-mks=$(shell if [ -d $(bm_core_dir) ]; then find $(bm_core_dir) -iname "objects.mk" | sort -r; fi)
 	bm_core_port-mks=$(shell if [ -d $(bm_core_port_dir) ]; then find $(bm_core_port_dir) -iname "objects.mk" | sort -r; fi)
@@ -140,6 +141,7 @@ objs-y+=$(foreach obj,$(ns_guest-objs-y),$(src_dir)/ns_guest/$(obj))
 ifeq ($(S_GUEST), BARE_METAL)
 	bm_guest-objs-y=$(foreach obj,$(s_guest-objs-y),$(bm_core_dir)/$(obj))
 	bm_guest-objs-y+=$(foreach obj,$(s_guest_port-objs-y),$(bm_core_port_dir)/$(obj))
+	bm_guest-objs-y+=$(foreach obj,$(s_guest_freertos-objs-y),$(bm_freertos_dir)/$(obj))
 endif
 ifeq ($(S_GUEST), FREERTOS)
 	objs-y+=$(foreach obj,$(s_guest-objs-y),$(src_dir)/s_guest/$(obj))
@@ -166,6 +168,8 @@ cppflags+=-I$(src_dir)/ns_guest/inc
 # Setup S_Guest compilation environment
 ifeq ($(S_GUEST), BARE_METAL)
 	cppflags+=-I $(bm_core_port_dir)/inc
+	cppflags+=-I$(bm_freertos_dir)/inc
+	cppflags+=-I$(bm_freertos_dir)/xil_include
 endif
 ifeq ($(S_GUEST), FREERTOS)
 	cppflags+=-I $(freertos_core_dir)/inc

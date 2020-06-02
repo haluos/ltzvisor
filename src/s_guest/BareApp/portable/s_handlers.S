@@ -92,7 +92,7 @@
 _secure_vector_table:
 	b	.				@ Reset exception handler
 	b	 _undefined_entry		@ Undefined exception handler
-	b	.				@ SVC exception handler
+	ldr pc, _svc				@ SVC exception handler
 	b	_prefetch_entry			@ Prefetch Abort exception handler
 	b	_low_level_abt			@ Data Abort exception handler
 	nop	  				@ Placeholder for address exception vector
@@ -101,7 +101,8 @@ _secure_vector_table:
 
 .globl sFIQ_handler
 _fiq:
-  .word   sFIQ_handler
+  .word sFIQ_handler
+  @ .word   FreeRTOS_IRQ_Handler
   @ call_c_function_arg sFIQ_handler
   @ exception_return_arg
   @ bx lr
@@ -109,6 +110,9 @@ _fiq:
 	@ bl 	sFIQ_handler
   @ ldmia	sp!,{r0-r3,r12}		/* state restore from compiled code */
 	@ subs	pc, lr, #4			/* adjust return */
+
+_svc:
+  .word   FreeRTOS_SWI_Handler
 
 _undefined_entry:
 	b	.	@ Stuck (FIXME)

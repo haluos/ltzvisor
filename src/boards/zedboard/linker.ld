@@ -56,7 +56,7 @@ SECTIONS
 		_heap = .;
 		HeapBase = .;
 		PROVIDE(_heap_start = .);
-		. += 0x2000;
+		. += 0x8000;
 		PROVIDE(_heap_end = .);
 		HeapLimit = .;
 	}  > DDR_S

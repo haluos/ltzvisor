@@ -46,8 +46,22 @@
 
 #include<hw_zynq.h>
 #include<printk.h>
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "task.h"
 
 void led_blink( void * pvParameters );
+
+void vApplicationIdleHook( void )
+{
+	// printk("yield\n");
+	YIELD();
+}
+
+void print_warning(uint32_t arg)
+{
+	printk("Arg 0x%x\n", arg);
+}
 
 int main() {
 
@@ -61,6 +75,9 @@ int main() {
 
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
+	// printk("led blink addr: 0x%x\n", &vApplicationIdleHook);
+	// xTaskCreate( led_blink, "task", 1024, NULL, 1, NULL );
+	// vTaskStartScheduler();
 
 	/* This point will never be reached */
 	for( ;; );
@@ -83,7 +100,9 @@ void led_blink( void * parameters ){
 	for( ;; ){
 		toggle ^=0xF;
 		*ptr = toggle;
-		// printk("call yield\n");
 		YIELD();
+		// printk("call yield\n");
+		// vTaskDelay( 1000 / portTICK_RATE_MS);
+		// printk("after delay\n");
 	}
 }
