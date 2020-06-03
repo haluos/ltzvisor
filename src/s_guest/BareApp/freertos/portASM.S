@@ -51,6 +51,10 @@
 	.global FreeRTOS_SWI_Handler
 	.global vPortRestoreTaskContext
 
+.macro portGET_S_CONTEXT reg
+	ldr \reg, =s_context
+.endm
+
 
 
 
@@ -58,13 +62,14 @@
 
 	/* Save the LR and SPSR onto the system mode stack before switching to
 	system mode to save the remaining system mode registers. */
-	mrs r2, spsr
-	stmfd	sp, {r2,lr}
-  sub 	sp, sp, #(2*4)
 
-	@ SRSDB	sp!, #SYS_MODE
+	SRSDB	sp!, #SYS_MODE
 	CPS		#SYS_MODE
 	PUSH	{R0-R12, R14}
+	@ push {lr}
+	@ portGET_S_CONTEXT lr
+	@ stmia lr!, {r0-r12}
+	@ pop {lr}
 
 	/* Push the critical nesting count. */
 	LDR		R2, ulCriticalNestingConst
@@ -101,10 +106,6 @@
 	LDR		R0, pxCurrentTCBConst
 	LDR		R1, [R0]
 	LDR		SP, [R1]
-	push {r0-r12,lr}
-	mov r0, r1
-	bl print_warning
-	pop {r0-r12,lr}
 
 	/* Is there a floating point context to restore?  If the restored
 	ulPortTaskHasFPUContext is zero then no. */
@@ -136,16 +137,16 @@
 	/* Restore all system mode registers other than the SP (which is already
 	being used). */
 	POP		{R0-R12, R14}
+	@ push {lr}
+	@ portGET_S_CONTEXT lr
+	@ ldmia lr!, {r0-r12}
+	@ pop {lr}
+	pop {r0,r1}
+	msr spsr, r1
+	movs pc, r0
 
 	/* Return to the task code, loading CPSR on the way. */
 	RFEIA	sp!
-	@ pop {r1, lr}
-  @ mov lr, r1
-  @ msr cpsr, r1
-	@ pop {r1, r2}
-  @ mov lr, r1
-  @ msr cpsr, r2
-  @ movs pc, lr
 
 	.endm
 
@@ -155,7 +156,7 @@
 /******************************************************************************
  * SVC handler is used to start the scheduler.
  *****************************************************************************/
-.align 4
+.align 8
 .type FreeRTOS_SWI_Handler, %function
 FreeRTOS_SWI_Handler:
 	/* Save the context of the current task and select a new task to run. */
@@ -174,7 +175,7 @@ vPortRestoreTaskContext:
 	CPS		#SYS_MODE
 	portRESTORE_CONTEXT
 
-.align 4
+.align 8
 .type FreeRTOS_IRQ_Handler, %function
 FreeRTOS_IRQ_Handler:
 	/* Return to the interrupted instruction. */
@@ -303,7 +304,7 @@ switch_before_exit:
  * called vApplicationIRQHandler().
  *****************************************************************************/
 
-.align 4
+.align 8
 .weak vApplicationIRQHandler
 .type vApplicationIRQHandler, %function
 vApplicationIRQHandler:

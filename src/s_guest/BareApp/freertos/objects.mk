@@ -1,5 +1,5 @@
 s_guest_freertos-objs-y = event_groups.o
-s_guest_freertos-objs-y += heap_4.o
+s_guest_freertos-objs-y += heap_2.o
 s_guest_freertos-objs-y += list.o
 s_guest_freertos-objs-y += port.o
 s_guest_freertos-objs-y += portASM.o

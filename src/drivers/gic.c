@@ -255,7 +255,7 @@ uint32_t interrupt_interface_init(void){
 	cpu_inter->ICCPMR = 0x000000F0;
 
 	/** All priority bits are compared for pre-emption */
-	cpu_inter->ICCBPR = 0x00000003;
+	cpu_inter->ICCBPR = 0x00000002;
 
 	/** Clear any pending interrupts */
 	for( ; ; ){

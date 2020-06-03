@@ -120,6 +120,7 @@ koje su opisane tablicom~\ref{boot_stages}.
     \hline
   \end{tabular}
 \end{table}
+\newpage
 Korisnička aplikacija mora sadržavati postupak CPU inicijalizacije, koji je sljedeći:
 \begin{enumerate}
   \item{Upisati adresu tablice prekidnih vektora u odgovarajući registar}
@@ -131,7 +132,7 @@ Korisnička aplikacija mora sadržavati postupak CPU inicijalizacije, koji je sl
   \item{Postaviti MMU bit u kontrolnom registru sustava}
   \item{Inicijalizirati i omogućiti L2 \textit{cahce} memoriju}
   \item{Omogućiti L1 \textit{cache} memoriju u kontrolnom registru sustava}
-  \item{Skočiti na početak korisničke aplikacije}
+  \item{Skočiti na početak korisničke aplikacije.}
 \end{enumerate}
 
 \subsection{Sigurno pokretanje sustava}
@@ -174,7 +175,7 @@ procesora. Uz implementaciju sigurnosnih ekstenzija GIC-a, uvodi se funkcionalno
   \item{signaliziranje prekida Grupe~0 ciljanom procesoru pomoću IRQ ili FIQ}
   \item{signaliziranje prekida Grupe~1 ciljanom procesoru samo pomoću IRQ}
   \item{jedinstvenu obradu prioriteta prekida Grupe~0 i Grupe~1}
-  \item{izborno zaključavanje konfiguriranja nekih prekida Grupe~0}
+  \item{izborno zaključavanje konfiguriranja nekih prekida Grupe~0.}
 \end{itemize}
 Kod višeprocesorskih sustava, GIC implementira dva modela obrade prekida u slučaju da je prekid namijenjen više
 ili svim procesorima u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi prekid, ali se GIC pobrine da samo
@@ -185,7 +186,7 @@ prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za sv
 broj. GIC se može podijeliti na dvije logičke cjeline:
 \begin{itemize}
   \item{jedan blok distributera}
-  \item{jedan ili više blokova CPU sučelja}
+  \item{jedan ili više blokova CPU sučelja.}
 \end{itemize}
 Obrada prekida se odvija sljedećim redosljedom:
 \begin{enumerate}
@@ -194,7 +195,7 @@ Obrada prekida se odvija sljedećim redosljedom:
   \item{Distributer prosljeđuje prekid najvišeg prioriteta odgovarajućem CPU sučelju}
   \item{CPU sučelje odlučuje je li potrebno generirati zahtjev za obradu prekida procesoru i ako treba, generirati ga}
   \item{Procesor priznaje prekid, na što GIC vraća ID prekida}
-  \item{Nakon obrade, procesor signalizira kraj prekida GIC-u}
+  \item{Nakon obrade, procesor signalizira kraj prekida GIC-u.}
 \end{enumerate}
 
 \subsubsection{Distributer}
@@ -211,7 +212,7 @@ sustavu prosljeđuje prekid najvišeg prioriteta. Distributer pruža sljedeće m
     \item{osjetljivost na brid}
   \end{enumerate}
   \item{konfiguriranje prekida kao Grupa~0 ili Grupa~1}
-  \item{prosljeđivanje SGI-a jednom ili više procesora}
+  \item{prosljeđivanje SGI-a jednom ili više procesora.}
 \end{itemize}
 Vidljivost stanja svakog prekida (neaktivan, aktivan, čeka na obradu) je omogućena čitanjem odgovarajućih registara.
 Distributer sadrži i registre za postavljanje i brisanje stanja za čekanje na obradu perifernih prekida. Prekidi koji
@@ -230,7 +231,7 @@ Acknowledge Register}). Mogućnosti CPU sučelja su sljedeće:
   \item{označavanje kraja obrade prekida}
   \item{postavljanje maskiranja prekidnog prioriteta}
   \item{definiranje postupka istiskivanja za procesor}
-  \item{određivanje najvišeg prioriteta prekida koji čeka na obradu}
+  \item{određivanje najvišeg prioriteta prekida koji čeka na obradu.}
 \end{itemize}
 
 \section{Koprocesorska podrška}
@@ -243,7 +244,7 @@ CP0~-~CP15 \cite{arch_man}. Posebne namjene koprocesora su:
   bajt kodova}
   \item{CP10 i CP11: zajedno podržavaju \textit{floating-point} operacije i operacije s vektorima}
   \item{CP8, CP9, CP12 i CP13: rezervirani}
-  \item{CP0~-~CP7: sadrže informacije specifične za proizvođače}
+  \item{CP0~-~CP7: sadrže informacije specifične za proizvođače.}
 \end{itemize}
 Svi registri su duljine 32 bita. Pristup koprocesorskim registrima se izvodi pomoću MCR i MRC instrukcija, gdje je MCR
 instrukcija za pisanje u koprocesorski registar, a MRC instrukcija za čitanje iz koprocesorskog registra.
@@ -253,7 +254,7 @@ Prilikom pristupa koprocesorskim registrima, potrebno je specificirati:
   \item{dva koprocesorska registra CRn i CRm, gdje je CRn primarni registar}
   \item{dva koprocesorska operacijska koda}
   \item{ARM-ov registar opće namjene čiji će se sadržaj kopirati u koprocesorski registar ili u koji će biti pohranjen
-  sadržaj koprocesorskog registra}
+  sadržaj koprocesorskog registra.}
 \end{itemize}
 Neki od vrlo važnih koprocesorskih registara koprocesora CP15 su: SCTLR (engl. \textit{System Control Register}), ACTLR
 (engl. \textit{Auxiliary Control Register}), SACR (engl. \textit{Secure Access Control Register}), NSACR (engl. \textit{Non-
@@ -276,7 +277,7 @@ virtualni memorijski prostor. MMU sadrži dvije glavne komponente ključne za os
 \begin{itemize}
   \item{pretraživač tablica koji automatski dohvaća točan ulaz tablice za prevođenje za zahtjevano prevođenje}
   \item{spremnici za prevođenje koji pohranjuju nedavno korištene ulaze za prevođenje i ponašaju se slično kao \textit{cache}
-  memorija za tablice za prevođenje}
+  memorija za tablice za prevođenje.}
 \end{itemize}
 Svaka virtualna adresa odgovara točno jednom ulazu u tablicu za prevođenje. Tablice za prevođenje, uz ulaze virtualne memorije,
 sadrže i dozvole pristupa i atribute memorije za odgovarajuće stranice.
@@ -324,7 +325,7 @@ operacijska sustava. Karakteristike AMP konfiguracije su sljedeće:
 \begin{itemize}
   \item{većina uređaja mora biti posvećena određenom procesoru}
   \item{upravitelj prekidima je dijeljen između procesora}
-  \item{samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima}
+  \item{samo jedan procesor je zadužen za inicijalizaciju upravitelja prekidima.}
 \end{itemize}
 FSBL je zadužen za učitavanje obje aplikacije u memoriju. Opisana konfiguracija je prikazana slikom \ref{amp}.
 
@@ -352,7 +353,7 @@ Asynchronous Receiver Transmitter}), implementirana procesorom CPU0, jasno je da
 jer funkcija nije vidljiva u memorijskom prostoru CPU1 aplikacije. Da bi CPU1 mogao koristiti istu \textit{print} funkciju,
 CPU1 treba implementirati funkcionalnost te funkcije kako bi skripta za memorijsko povezivanje mogla locirati navedenu
 funkciju. Iz ovog se vidi da nije praktično koristiti isti uređaj na oba procesora te se zbog toga većina uređaja dodjeljuje
-određenom procesoru. Iako se UART može dijeliti između procesora, neke periferije, kao što su to brojila, se ne mogu.
+određenom procesoru. Iako se UART može dijeliti između procesora, neke periferije, kao što su to brojila, se ne mogu dijeliti.
 Za razliku od CPU0, CPU1 mora eksplicitno omogućiti prekide u kontrolnom registru procesora CPSR (engl. \textit{Current
 Program Status Register}). Prekidi za CPU0 su
 automatski omogućeni FSBL-om. Podrazumijeva se da CPU0 aplikacija mora sadržavati dio koda koji služi za buđenje CPU1
@@ -392,7 +393,7 @@ Opisana konfiguracija prikazana je slikom \ref{smp}.
 \subsection{Razvoj SMP aplikacije}
 Prilikom razvoja SMP aplikacije u XSDK, potrebno je stvoriti jedan projekt koji je namijenjen primarnom procesoru, CPU0.
 Pošto se sustav CPU0 procesora pokreće prvi, CPU0 je zadužen za inicijalizaciju i pokretanje sustava na CPU1. Iz navedenog
-se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je boot.S skripta
+se vidi da se u projekt treba dodati skripta za pokretanje sustava na CPU1. Za te potrebe, duplicirala se je \textit{boot.S} skripta
 koju nudi Xilinxova biblioteka. Kako razvoj SMP aplikacije ne zahtjeva poseban projekt za CPU1, potrebno je modificirati
 skriptu za pokretanje sustava na CPU1 na način da se izbaci dio s inicijalizacijom L2 \textit{cache} memorije (kod AMP
 aplikacije, to je ostvareno pomoću indikatora \textit{USE\_AMP}). Također, potrebno je promijeniti aplikaciju na koju se skače
@@ -406,14 +407,14 @@ aplikacija CPU1 procesora. Da bi se ostvario potrebni odmak, poduzeti su sljede�
   \item{U skriptu za memorijsko povezivanje, dodana je nova sekcija koje će sadržavati sav CPU1 kod (ili minimalno asemblerski
   kod tablice prekidnih vektora CPU1)}
   \item{U asemblerski kod tablice prekidnih vektora CPU1, dodana je direktiva .org 0 koja osigurava da se kod smjesti na
-  početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije)}
+  početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije).}
 \end{enumerate}
 Važno je napomenuti i da CPU1 treba imati poseban stog namijenjen CPU1 procesoru te je stog potrebno dodati u skriptu za
 memorijsko povezivanje. Uz to, u skriptu za pokretanje je potrebno navesti odgovarajući stog CPU1 procesora.
 Nakon navedenih promjena, projekt je spreman za implementaciju aplikacije. Pošto se radi o SMP konfiguraciji, razvija se
 samo jedna aplikacija koja sadrži dva zadatka koji se konkurentno izvode (jedan na CPU0, a drugi na CPU1). Također, sve
 funkcije dostupne jednom procesoru su dostupne i drugom procesoru jer dijele jedan memorijski prostor (jedna skripta za
-memorijsko povezivanje). Jedna ključna stavka kod razvoja SMP aplikacije je da ako oba procesora u aplikaciji pristupaju
+memorijsko povezivanje). Jedna od ključnih stavki kod razvoja SMP aplikacije je da ako oba procesora u aplikaciji pristupaju
 istom resursu, za ispravno funkcioniranje je potrebno implementirati sinkronizacijski mehanizam. Sinkronizacijski mehanizam
 osigurava da jednom resursu ne pristupaju oba procesora u istom trenutku. Primjer jednostavnog sinkronizacijskog mehanizma
 iskorištenog u razvoju SMP aplikacije je korištenje jedne memorijske lokacije koja služi za indikaciju je li resurs slobodan.
@@ -477,25 +478,25 @@ Općeniti problem sigurnosnih mehanizama je da štite samo određene resurse. Ka
 platforme koji se koriste za zaštitu ključeva. Takvi blokovi gube svoju glavnu funkciju ako nisu zaštićeni i dekriptirani
 podaci izvan kriptografičkih blokova. Ideja \textit{TrustZone} ekstenzije je dati mogućnost zaštite cjelokupnog hardverskog
 prostora. Ekstenzija pruža konfigurabilni sustav kojeg dizajner može konfigurirati na način koji je specifičan za željenu
-aplikaciju. AMBA3 AXI sabirnički protokol omogućava \textit{TrustZoneov} koncept dva svijeta: Sigurnog (\textit{Secure}) i
-Nesigurnog ili Normalnog (\textit{Non-Secure}) svijeta. Smještanje osjetljivih resursa u Sigurni svijet štiti uređaj i od napada
+aplikaciju. AMBA3 AXI sabirnički protokol omogućava \textit{TrustZoneov} koncept dva svijeta: \textit{Sigurnog} (\textit{Secure}) i
+\textit{Nesigurnog} ili \textit{Normalnog} (\textit{Non-Secure}) svijeta. Smještanje osjetljivih resursa u \textit{Sigurni} svijet štiti uređaj i od napada
 od kojih se je teško obraniti, kao što je to unošenje lozinke putem tipkovnice ili dodirnog zaslona.
 Kako bi takva konfiguracija bila moguća, \textit{TrustZone} sadrži tri ključne komponente:
 \begin{itemize}
   \item{TZPC (\textit{TrustZone Protection Controller}) - omogućava dinamičku izmjenu sigurnosnog stanja prilikom izvođenja
   programa}
-  \item{TZASC (\textit{TrustZone Address Space Controller}) - omogućava podjelu memorije na Sigurne i Nesigurne segmente}
-  \item{TZMA (\textit{TrustZone Memory Adapter}) - omogućava označavanje segmenata statičke memorije kao Sigurna memorija}
+  \item{TZASC (\textit{TrustZone Address Space Controller}) - omogućava podjelu memorije na \textit{Sigurne} i \textit{Nesigurne} segmente}
+  \item{TZMA (\textit{TrustZone Memory Adapter}) - omogućava označavanje segmenata statičke memorije kao Sigurna memorija.}
 \end{itemize}
 Ekstenzija samog procesora
-omogućava efektivno izvođenje koda Normalnog i Sigurnog svijeta pomoću metode vremenskog dijeljenja (\textit{time-sliced
-fashion}). Ključna mogućnost ekstenzije je kontroliranje pristupa ispitivanja Sigurnog softvera. Promjena uvedena u AMBA3
+omogućava efektivno izvođenje koda \textit{Normalnog} i \textit{Sigurnog} svijeta pomoću metode vremenskog dijeljenja (\textit{time-sliced
+fashion}). Ključna mogućnost ekstenzije je kontroliranje pristupa ispitivanja \textit{Sigurnog} softvera. Promjena uvedena u AMBA3
 AXI sabirnicu je dodavanje 33. NS (\textit{Non-Secure}) bita prilikom čitanja i pisanja. Dodatni bit indicira s kojeg
-svijeta dolazi zahtjev za razmjenu podataka te onemogućava pristup Nesigurnog svijeta Sigurnom. Sigurnost periferija je
+svijeta dolazi zahtjev za razmjenu podataka te onemogućava pristup \textit{Nesigurnog} svijeta \textit{Sigurnom}. Sigurnost periferija je
 izvedena pomoću AXI-APB mosta, gdje je APB (engl. \textit{Advanced Peripheral Bus}) sabirnica na koju su spojene
 periferije. APB ne implementira dodatni bit kao AXI sabirnice te je stoga AXI-APB most zadužen za provjeru valjanosti
 zahtjeva. Takvo svojstvo omogućuje osiguravanje tipkovnice za potrebe unosa lozinke. Ekstenzija procesora uvodi dvije virtualne
-jezgre za svaki procesor, gdje je jedna virtualna jezgra zadužena za Sigurni, a druga za Nesigurni svijet kako je prikazano na
+jezgre za svaki procesor, gdje je jedna virtualna jezgra zadužena za \textit{Sigurni}, a druga za \textit{Nesigurni} svijet kako je prikazano na
 slici \ref{vcpu}. Na slici, oznaka VCPU označuje virtualni CPU.
 \begin{figure}[H]
   \centering
@@ -504,8 +505,8 @@ slici \ref{vcpu}. Na slici, oznaka VCPU označuje virtualni CPU.
 	\label{vcpu}%
 \end{figure}
 Uz promjenu na
-sabirnici, \textit{TrustZone} uvodi i novi način rada procesora: nadgledni (\textit{monitor mode}) uz dva stanja: Sigurno
-i Nesigurno stanje. Nadgledni način rada je uvijek u Sigurnom stanju.\\
+sabirnici, \textit{TrustZone} uvodi i novi način rada procesora: nadgledni (\textit{monitor mode}) uz dva stanja: \textit{Sigurno}
+i \textit{Nesigurno} stanje. Nadgledni način rada je uvijek u \textit{Sigurnom} stanju.\\
 Koncept dva svijeta se može gledati kao dva zadatka u operacijskom sustavu, gdje je softver koji se izvodi
 u nadglednom načinu rada zadužen za zamjenu konteksta između dvije virtualne jezgre. Pokretanje cjelokupnog sustava s dva
 svijeta prikazano je slikom~\ref{tz_boot}.
@@ -515,49 +516,49 @@ svijeta prikazano je slikom~\ref{tz_boot}.
 	\caption{Pokretanje \textit{TrustZone} sustava}
 	\label{tz_boot}%
 \end{figure}
-Sigurno pokretanje sustava dodaje kriptografičke provjere za svaku razinu pokretanja Sigurnog svijeta.
-Prijelazi iz Nesigurnog stanja u nadgledni
+Sigurno pokretanje sustava dodaje kriptografičke provjere za svaku razinu pokretanja \textit{Sigurnog} svijeta.
+Prijelazi iz \textit{Nesigurnog} stanja u nadgledni
 način rada se izvode pomoću SMC (engl. \textit{Secure Monitor Call}) instrukcije ili konfiguracijom IRQ kao okidač za ulaz
 u nadgledni način rada. Identifikacija svijeta u kojem se softver izvodi se nalazi u NS bitu SCR (\textit{Secure
-Configuration Register}) registra CP15 koprocesora. Samo Sigurni softver može upravljati NS bitom SCR registra. Postavljanjem
-NS bita u jedinicu se okida zamjena konteksta iz Sigurnog svijeta u Nesigurni svijet. \textit{TrustZone} predstavlja i
+Configuration Register}) registra CP15 koprocesora. Samo \textit{Sigurni} softver može upravljati NS bitom SCR registra. Postavljanjem
+NS bita u jedinicu se okida zamjena konteksta iz \textit{Sigurnog} svijeta u \textit{Nesigurni} svijet. \textit{TrustZone} predstavlja i
 virtualnu MMU jedinicu, gdje je jedna virtualna MMU jedinica zadužena za jedan virtualni procesor. Opisnik tablice za prevođenje
-sadrži NS polje koje dozvoljava Sigurnom softveru pristupanje Sigurnoj i Nesigurnoj tablici, a onemogućava pristup Sigurnoj
-tablici od strane Nesigurnog softvera. Uz MMU, L1 \textit{cache} memorija se također dijeli na Sigurnu i Nesigurnu.\\
-Softver nadglednog načina rada je zadužen za prijelaz između Sigurnog i Nesigurnog stanja te osigurava spremanje konteksta
+sadrži NS polje koje dozvoljava \textit{Sigurnom} softveru pristupanje \textit{Sigurnoj} i \textit{Nesigurnoj} tablici, a onemogućava pristup \textit{Sigurnoj}
+tablici od strane \textit{Nesigurnog} softvera. Uz MMU, L1 \textit{cache} memorija se također dijeli na \textit{Sigurnu} i \textit{Nesigurnu}.\\
+Softver nadglednog načina rada je zadužen za prijelaz između \textit{Sigurnog} i \textit{Nesigurnog} stanja te osigurava spremanje konteksta
 svijeta iz kojeg prelazi i točnog povratka konteksta svijeta u koji se vraća. Za jednostavnost implementacije, preporučuje
-se isključivanje prekida prilikom izvođenja nadglednog softvera. Sigurno stanje registara treba pospremiti u Sigurnu memoriju
-gdje Nesigurni svijet ne može pristupiti Sigurnom kontekstu. Implementacija \textit{yield} funkcije se izvodi pomoću SMC
+se isključivanje prekida prilikom izvođenja nadglednog softvera. Sigurno stanje registara treba pospremiti u \textit{Sigurnu} memoriju
+gdje \textit{Nesigurni} svijet ne može pristupiti \textit{Sigurnom} kontekstu. Implementacija \textit{yield} funkcije se izvodi pomoću SMC
 instrukcije koja može nositi i korisnu informaciju te u tom slučaju nadgledni način rada ne radi potpunu zamjenu konteksta.
-Za smanjenje vremena zamjene konteksta, Sigurni softver može ograničiti Nesigurni pristup koprocesorskom sučelju te ako se
+Za smanjenje vremena zamjene konteksta, \textit{Sigurni} softver može ograničiti \textit{Nesigurni} pristup koprocesorskom sučelju te ako se
 izabere takva konfiguracija, nadgledni način rada izvodi lijenu zamjenu konteksta.
 
 \subsection{Utjecaj sigurnosnih ekstenzija na prekidni sustav}
-GIC je svjestan sigurnosnih ekstenzija i daje mogućnost konfiguriranja Sigurnih i Nesigurnih prekida. Kod prekidnog sustava,
+GIC je svjestan sigurnosnih ekstenzija i daje mogućnost konfiguriranja \textit{Sigurnih} i \textit{Nesigurnih} prekida. Kod prekidnog sustava,
 ARM preporučuje korištenje IRQ kao Nesigurne prekide, a FIQ kao Sigurne prekide što je konfigurabilno u GIC-ovim registrima.
-Ako se koristi takav model, preporučeno je da se prilikom prijelaza u Nesigurni svijet SCR registar podesi tako da se izbriše
-IRQ bit, a postavi FIQ bit. Kod prijelaza u Sigurni svijet preporučeno je podesiti SCR registar tako da se postavi IRQ bit, a
+Ako se koristi takav model, preporučeno je da se prilikom prijelaza u \textit{Nesigurni} svijet SCR registar podesi tako da se izbriše
+IRQ bit, a postavi FIQ bit. Kod prijelaza u \textit{Sigurni} svijet preporučeno je podesiti SCR registar tako da se postavi IRQ bit, a
 izbriše FIQ bit.
 Sigurnosne ekstenzije omogućuju tri vrste tablica prekidnih vektora:
 \begin{itemize}
-  \item{za Sigurni svijet}
-  \item{za Nesigurni svijet}
-  \item{za nadgledni način rada}
+  \item{za \textit{Sigurni} svijet}
+  \item{za \textit{Nesigurni} svijet}
+  \item{za nadgledni način rada.}
 \end{itemize}
 Memorijsko mapiranje spomenutih tablica prekidnih vektora dano je tablicom \ref{vector_table}.
 \begin{table}[H]
   \centering
   \caption{Tablice prekidnih vektora}
   \label{vector_table}
-  \begin{tabular}{|| p{2cm} | p{4cm} | p{4cm} | p{4cm} ||}
+  \begin{tabular}{|| p{2cm} | p{3cm} | p{3cm} | p{3cm} ||}
     \hline
-    \textbf{Memorijski odmak} & \textbf{Nesigurna tablica} & \textbf{Sigurna tablica} & \textbf{Nadgledna tablica} \\
+    \textbf{Memorijski odmak} & \textbf{\textit{Nesigurna} tablica} & \textbf{\textit{Sigurna} tablica} & \textbf{Nadgledna tablica} \\
     \hline\hline
     0x00 & Ne koristi se & \textit{Reset} & Ne koristi se\\
     \hline
     0x04 & Nedefinirana instrukcija & Nedefinirana instrukcija & Ne koristi se\\
     \hline
-    0x08 & Poziv \textit{supervisoru} & Poziv \textit{supervisoru} & Sigurni poziv nadgledniku (SMC)\\
+    0x08 & Poziv \textit{supervisoru} & Poziv \textit{supervisoru} & \textit{Sigurni} poziv nadgledniku (SMC)\\
     \hline
     0x0C & \textit{Prefetch abort} & \textit{Prefetch abort} & \textit{Prefetch abort}\\
     \hline
@@ -571,26 +572,26 @@ Memorijsko mapiranje spomenutih tablica prekidnih vektora dano je tablicom \ref{
     \hline
   \end{tabular}
 \end{table}
-Bazna adresa Sigurne tablice prekidnih vektora može biti 0x0 ili 0xFFFF0000, dok se ostale adrese određuju softverski.
-Nesigurni prekidi nemaju mogućnost konfiguriranja Sigurnih prekida te je opredjeljenje prekida kao Sigurni ili Nesigurni
-moguće samo u Sigurnom softveru. Sigurni softver može osigurati da su svi Sigurni prekidi većeg prioriteta od Nesigurnih.
-To je moguće jer prioritetni registar prekida u Sigurnom stanju ima implementirano 5 bitova, dok u Nesigurnom stanju ima
+Bazna adresa \textit{Sigurne} tablice prekidnih vektora može biti 0x0 ili 0xFFFF0000, dok se ostale adrese određuju softverski.
+\textit{Nesigurni} prekidi nemaju mogućnost konfiguriranja \textit{Sigurnih} prekida te je opredjeljenje prekida kao \textit{Sigurni} ili \textit{Nesigurni}
+moguće samo u \textit{Sigurnom} softveru. \textit{Sigurni} softver može osigurati da su svi \textit{Sigurni} prekidi većeg prioriteta od \textit{Nesigurnih}.
+To je moguće jer prioritetni registar prekida u \textit{Sigurnom} stanju ima implementirano 5 bitova, dok u \textit{Nesigurnom} stanju ima
 implementirano 4~bita.
-Prekid Grupe 0 GIC-a se označava kao Sigurni prekid, a prekid Grupe 1 kao Nesigurni prekid. Pristup GIC-ovim registrima uz
+Prekid Grupe 0 GIC-a se označava kao \textit{Sigurni} prekid, a prekid Grupe 1 kao \textit{Nesigurni} prekid. Pristup GIC-ovim registrima uz
 sigurnosne ekstenzije imaju sljedeće značajke:
 \begin{itemize}
-  \item{Nesigurno čitanje polja registra koje sadrži informaciju o Sigurnom prekidu vraća 0}
-  \item{GIC ignorira svako Nesigurno pisanje u polje registra koje drži informaciju o Sigurnom prekidu}
-  \item{Sigurni softver posebno određuje koji prekidi će se koristiti kao Sigurni, a koji kao Nesigurni}
-  \item{Nesigurni prekid signalizira IRQ zahtjev ciljanom procesoru}
-  \item{Sigurni softver signalizira IRQ ili FIQ zahtjev ciljanom CPU-u}
-  \item{Sigurni softver može upravljati prekidnim izvorima bez interferencije Nesigurnog softvera}
-  \item{Sigurni softver se može koristiti i kao softver koji nije svjestan sigurnosnih ekstenzija}
+  \item{\textit{Nesigurno} čitanje polja registra koje sadrži informaciju o \textit{Sigurnom} prekidu vraća 0}
+  \item{GIC ignorira svako \textit{Nesigurno} pisanje u polje registra koje drži informaciju o \textit{Sigurnom} prekidu}
+  \item{\textit{Sigurni} softver posebno određuje koji prekidi će se koristiti kao \textit{Sigurni}, a koji kao \textit{Nesigurni}}
+  \item{\textit{Nesigurni} prekid signalizira IRQ zahtjev ciljanom procesoru}
+  \item{\textit{Sigurni} softver signalizira IRQ ili FIQ zahtjev ciljanom CPU-u}
+  \item{\textit{Sigurni} softver može upravljati prekidnim izvorima bez interferencije \textit{Nesigurnog} softvera}
+  \item{\textit{Sigurni} softver se može koristiti i kao softver koji nije svjestan sigurnosnih ekstenzija.}
 \end{itemize}
 ARM preporučuje korištenje prekida kao komunikaciju između procesora u sljedećoj konfiguraciji:
 \begin{itemize}
-  \item{Nesigurni prekidi: prekidi s prekidnim brojevima od 0-7}
-  \item{Sigurni prekidi: prekidi s prekidnim brojevima od 8-15}
+  \item{\textit{Nesigurni} prekidi: prekidi s prekidnim brojevima od 0-7}
+  \item{\textit{Sigurni} prekidi: prekidi s prekidnim brojevima od 8-15.}
 \end{itemize}
 
 \subsection{Višejezgrene konfiguracije \textit{TrustZone} ekstenzije}
@@ -598,20 +599,20 @@ Jedan fizički procesor i njegova dva virtualna procesora čine jednu grupu proc
 korištenje u AMP ili SMP modelu. Kod SMP modela, korištenje L1 \textit{cache} memorije na oba procesora je koherentno što
 je omogućeno SCU jedinicom. Prilikom razvoja AMP aplikacije, mora se ručno voditi briga o koherenciji (prazniti \textit{cache}
 gdje je potrebno). Prijelaz između svjetova na jednom procesoru je neovisan o drugim procesorima. Za povećanje sigurnosti
-prilikom implementacije Sigurnog softvera u višeprocesorskim sustavima, preporučuje se da Sigurni softver ne iskorištava
-mogućnosti više procesora, iako Nesigurni softver možda i iskorištava. Razlog tome je kompleksnost implementacije što povlači
-veću vjerojatnost pogreške, odnosno sustav postaje ranjiviji. Ako Sigurni softver ne koristi višeprocesorske mogućnosti,
-a Nesigurni koristi potrebno je implementirati sinkronizaciju komunikacije između SMP Nesigurnog softvera i Sigurnog softvera.
+prilikom implementacije \textit{Sigurnog} softvera u višeprocesorskim sustavima, preporučuje se da \textit{Sigurni} softver ne iskorištava
+mogućnosti više procesora, iako \textit{Nesigurni} softver možda i iskorištava. Razlog tome je kompleksnost implementacije što povlači
+veću vjerojatnost pogreške, odnosno sustav postaje ranjiviji. Ako \textit{Sigurni} softver ne koristi višeprocesorske mogućnosti,
+a \textit{Nesigurni} koristi potrebno je implementirati sinkronizaciju komunikacije između SMP \textit{Nesigurnog} softvera i \textit{Sigurnog} softvera.
 Obzirom na SMP, moguće je ostvariti dva modela:
 \begin{enumerate}
-  \item{Sigurni softver implementiran na jednom procesoru, a Nesigurni na oba (konfiguracija s 4 procesora u sustavu prikazana
+  \item{\textit{Sigurni} softver implementiran na jednom procesoru, a \textit{Nesigurni} na oba (konfiguracija s 4 procesora u sustavu prikazana
   je na slici \ref{smp_tz})}
-  \item{Sigurni softver mijenja procesor na kojem je aktivan, a Nesigurni koristi oba procesora}
+  \item{\textit{Sigurni} softver mijenja procesor na kojem je aktivan, a \textit{Nesigurni} koristi oba procesora.}
 \end{enumerate}
-Prednost prvog modela je jednostavnost prosljeđivanja prekida Sigurnom softveru, a nedostatak što raspoređivač zadataka
-Nesigurnog softvera postaje neefikasan zbog dodjeljivanja procesorskog vremena Sigurnom softveru. Prednost drugog modela je
-što rješava problem s raspoređivačom zadataka Nesigurnog softvera, ali prosljeđivanje prekida Sigurnom softveru postaje
-kompleksno. Softver nadglednog načina rada se mora pobrinuti da Nesigurni softver procesora kojeg ne koristi i Sigurni softver
+Prednost prvog modela je jednostavnost prosljeđivanja prekida \textit{Sigurnom} softveru, a nedostatak što raspoređivač zadataka
+\textit{Nesigurnog} softvera postaje neefikasan zbog dodjeljivanja procesorskog vremena \textit{Sigurnom} softveru. Prednost drugog modela je
+što rješava problem s raspoređivačom zadataka \textit{Nesigurnog} softvera, ali prosljeđivanje prekida \textit{Sigurnom} softveru postaje
+kompleksno. Softver nadglednog načina rada se mora pobrinuti da \textit{Nesigurni} softver procesora kojeg ne koristi i \textit{Sigurni} softver
 ne zatraži zahtjev za zamjenu konteksta. Kad bi zahtjevi bili omogućeni, sustavu bi se povećala ranjivost.
 \begin{figure}[H]
   \centering
@@ -627,9 +628,9 @@ Ideja LTZVisora je iskoristiti \textit{TrustZone} ekstenziju kao hardversku podr
 prezentirati mogućnosti koje nosi \textit{TrustZone} ekstenzija. LTZVisor je dao dobar uvid u mogućnosti \textit{TrustZone}
 ekstenzije koja je sada dostupna i u novoj ARMv8-M arhitekturi koja će nesumnjivo biti sve više dostupna u industriji te
 će pružati slične mogućnosti. Iskorištenje \textit{TrustZone} ekstenzije omogućava korištenje platforme kao dvostruki virtualni
-sustav, odnosno sustav s dva gost virtualna stroja: Sigurni gost i Nesigurni gost. Svaki od gost virtualnih strojeva može
+sustav, odnosno sustav s dva gost virtualna stroja: \textit{Sigurni} gost i \textit{Nesigurni} gost. Svaki od gost virtualnih strojeva može
 implementirati svoj OS (operacijski sustav) te se preporučuje implementirati RTOS (engl. \textit{Real-Time OS}) kao
-Sigurnog gosta, a GPOS (engl. \textit{General-Purpose OS}) kao Nesigurnog gosta.
+\textit{Sigurnog} gosta, a GPOS (engl. \textit{General-Purpose OS}) kao \textit{Nesigurnog} gosta.
 Opisani sustav prikazan je slikom \ref{ltzvisor}.
 \begin{figure}[H]
   \centering
@@ -640,52 +641,52 @@ Opisani sustav prikazan je slikom \ref{ltzvisor}.
 Na slici \ref{ltzvisor} se raspoznaju tri glavne komponente, a to su:
 \begin{itemize}
   \item{monitor virtualnih strojeva koji se izvodi u najprivilegiranijem načinu rada procesora (nadglednom načinu rada)}
-  \item{Sigurni gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada Sigurnog svijeta}
-  \item{Nesigurni gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada Nesigurnog svijeta}
+  \item{\textit{Sigurni} gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada \textit{Sigurnog} svijeta}
+  \item{\textit{Nesigurni} gost virtualni stroj koji se izvodi u \textit{supervisor} načinu rada \textit{Nesigurnog} svijeta.}
 \end{itemize}
-Iako se i Sigurni i Nesigurni gost virtualni strojevi izvode u \textit{supervisor} načinu rada, nisu jednako privilegirani
-(Nesigurni gost nema pristup jednakim resursima kao i Sigurni, dok Sigurni ima pristup većini resursa). Obzirom da
-Sigurni gost može upravljati resursima Nesigurnog gosta, Sigurni gost je svjestan virtualizacije. Pokušaj pristupa Nesigurnog
-gosta Sigurnom resursu izaziva iznimku monitoru virtualnih strojeva.
+Iako se i \textit{Sigurni} i \textit{Nesigurni} gost virtualni strojevi izvode u \textit{supervisor} načinu rada, nisu jednako privilegirani
+(\textit{Nesigurni} gost nema pristup jednakim resursima kao i \textit{Sigurni}, dok \textit{Sigurni} ima pristup većini resursa). Obzirom da
+\textit{Sigurni} gost može upravljati resursima \textit{Nesigurnog} gosta, \textit{Sigurni} gost je svjestan virtualizacije. Pokušaj pristupa \textit{Nesigurnog}
+gosta \textit{Sigurnom} resursu izaziva iznimku monitoru virtualnih strojeva.
 Jedna od zadaća monitora virtualnih strojeva je konfiguriranje memorije, prekida i uređaja za gost virtualne strojeve.
 
-\section{Raspoređivanje Sigurnog i Nesigurnog svijeta}
-Dodatna zadaća monitora virtualnih strojeva, a veže se uz raspoređivanje Sigurnog i Nesigurnog gosta, je upravljanje s
+\section{Raspoređivanje \textit{Sigurnog} i \textit{Nesigurnog} svijeta}
+Dodatna zadaća monitora virtualnih strojeva, a veže se uz raspoređivanje \textit{Sigurnog} i \textit{Nesigurnog} gosta, je upravljanje s
 VMCB (engl. \textit{Virtual Machine Control Block}) blokovima koji su zaduženi za pohranjivanje stanja virtualnih strojeva.
-VMCB blok nesigurnog gosta sastoji se od 13 registara opće namjene (R0~-~-R12) i SP (engl. \textit{Stack Pointer}), LR
+VMCB blok \textit{Nesigurnog} gosta sastoji se od 13 registara opće namjene (R0~-~-R12) i SP (engl. \textit{Stack Pointer}), LR
 (engl. \textit{Link Register}) i SPSR (engl. \textit{Saved Processor State Register}) za \textit{supervisor}, sustavski,
 \textit{abort} i \textit{undefined} način rada. Registre koji su vezani za FIQ i IRQ nije potrebno posebno spremati jer su
-uzajamno isključivi za Sigurni i Nesigurni virtualni stroj (FIQ je korišten samo u Sigurnom svijetu, a IRQ u Nesigurnom).
-Sigurni VMCB se sastoji od 13 registara opće namjene (R0~-~R12) i SP, LR i SPSR za \textit{supervisor} način rada procesora.
-Kao što se vidi, kontekst Sigurnog gosta je znatno manji od Nesigurnog gosta te je razlog tome da se maksimalno smanji
-latencija kod pojave FIQ prekida za vrijeme izvođenja Nesigurnog gosta. Većina koprocesorskih registara ima Sigurne i Nesigurne
+uzajamno isključivi za \textit{Sigurni} i \textit{Nesigurni} virtualni stroj (FIQ je korišten samo u \textit{Sigurnom} svijetu, a IRQ u \textit{Nesigurnom}).
+\textit{Sigurni} VMCB se sastoji od 13 registara opće namjene (R0~-~R12) i SP, LR i SPSR za \textit{supervisor} način rada procesora.
+Kao što se vidi, kontekst \textit{Sigurnog} gosta je znatno manji od \textit{Nesigurnog} gosta te je razlog tome da se maksimalno smanji
+latencija kod pojave FIQ prekida za vrijeme izvođenja \textit{Nesigurnog} gosta. Većina koprocesorskih registara ima \textit{Sigurne} i \textit{Nesigurne}
 kopije registara te ih nije potrebno spremati kao kontekst virtualnog gosta. Iznimke koprocesorskih registara su SCTLR i
-ACTLR, gdje SCTLR sadrži određene bitove koji su zajednički Sigurnom i Nesigurnom svijetu, a ACTLR opcionalno sadrži jedan
-bit koji ima Sigurnu i Nesigurnu kopiju, a ostali bitovi su zajednički Sigurnom i Nesigurnom svijetu. LTZVisor se mora pobrinuti
-da SCTLR i ACTLR sadrže ispravne vrijednosti prije pokretanja Nesigurnog gosta, inače se Nesigurni gost neće pokrenuti.\\
+ACTLR, gdje SCTLR sadrži određene bitove koji su zajednički \textit{Sigurnom} i \textit{Nesigurnom} svijetu, a ACTLR opcionalno sadrži jedan
+bit koji ima \textit{Sigurnu} i \textit{Nesigurnu} kopiju, a ostali bitovi su zajednički \textit{Sigurnom} i \textit{Nesigurnom} svijetu. LTZVisor se mora pobrinuti
+da SCTLR i ACTLR sadrže ispravne vrijednosti prije pokretanja \textit{Nesigurnog} gosta, inače se \textit{Nesigurni} gost neće pokrenuti.\\
 Zamjena konteksta je izvedena na slijedeći način:
 \begin{itemize}
-  \item{iz Sigurnog u Nesigurni svijet}
+  \item{iz \textit{Sigurnog} u \textit{Nesigurni} svijet}
       \begin{enumerate}
-        \item{Kontekst Sigurnog gosta se sprema na stog nadglednog načina rada procesora}
-        \item{Dohvaća se adresa varijable u Sigurnoj memoriji u kojoj je pohranjen kontekst Nesigurnog gosta}
-        \item{Kontekst Nesigurnog gosta iz dohvaćene varijable se obnavlja (kopira se u odgovarajuće fizičke registre)}
-        \item{Postavlja se SCR NS bit i predaje kontrola Nesigurnom gostu}
+        \item{Kontekst \textit{Sigurnog} gosta se sprema na stog nadglednog načina rada procesora}
+        \item{Dohvaća se adresa varijable u \textit{Sigurnoj} memoriji u kojoj je pohranjen kontekst \textit{Nesigurnog} gosta}
+        \item{Kontekst \textit{Nesigurnog} gosta iz dohvaćene varijable se obnavlja (kopira se u odgovarajuće fizičke registre)}
+        \item{Postavlja se SCR NS bit i predaje kontrola \textit{Nesigurnom} gostu}
       \end{enumerate}
-  \item{iz Nesigurnog u Sigurni svijet}
+  \item{iz \textit{Nesigurnog} u \textit{Sigurni} svijet}
       \begin{enumerate}
-        \item{Briše se SCR NS bit i dohvaća se adresa varijable koja sadrži kontekst Nesigurnog gosta}
-        \item{Trenutačne vrijednosti iz registara se spremaju u varijablu konteksta Nesigurnog gosta}
-        \item{Obnavlja se kontekst Sigurnog gosta (vrijednosti se uzimaju iz stoga nadglednog načina i spremaju u odgovarajuće
+        \item{Briše se SCR NS bit i dohvaća se adresa varijable koja sadrži kontekst \textit{Nesigurnog} gosta}
+        \item{Trenutačne vrijednosti iz registara se spremaju u varijablu konteksta \textit{Nesigurnog} gosta}
+        \item{Obnavlja se kontekst \textit{Sigurnog} gosta (vrijednosti se uzimaju iz stoga nadglednog načina i spremaju u odgovarajuće
         registre)}
-        \item{Predaje se kontrola Sigurnom gostu}
+        \item{Predaje se kontrola \textit{Sigurnom} gostu.}
       \end{enumerate}
 \end{itemize}
-LTZVisor implementira asimetrični ili neaktivni (engl. \textit{idle}) raspoređivač zadataka koji osigurava izvođenje Nesigurnog
-gosta samo za vrijeme neaktivnosti Sigurnog gosta. Sigurni gost se može smatrati kao zadatak višeg prioriteta što znači
-da može istisnuti Nesigurnog gosta. Istiskivanje Nesigurnog gosta se okida pojavom FIQ prekida čime započinje proces zamjene
-konteksta. Kad je Sigurni gost gotov s poslom koji ima za obaviti, daje zahtjev LTZVisoru za zamjenu konteksta, odnosno predaje
-kontrolu Nesigurnom gostu.
+LTZVisor implementira asimetrični ili neaktivni (engl. \textit{idle}) raspoređivač zadataka koji osigurava izvođenje \textit{Nesigurnog}
+gosta samo za vrijeme neaktivnosti \textit{Sigurnog} gosta. \textit{Sigurni} gost se može smatrati kao zadatak višeg prioriteta što znači
+da može istisnuti \textit{Nesigurnog} gosta. Istiskivanje \textit{Nesigurnog} gosta se okida pojavom FIQ prekida čime započinje proces zamjene
+konteksta. Kad je \textit{Sigurni} gost gotov s poslom koji ima za obaviti, daje zahtjev LTZVisoru za zamjenu konteksta, odnosno predaje
+kontrolu \textit{Nesigurnom} gostu.
 
 \section{Memorijski podsustav LTZVisora}
 Memorijska virtualizacija omogućena hardverom je ostvarena MMU jedinicom koja ima adresno prevođenje u dvije razine. MMU je
@@ -694,34 +695,34 @@ adresom. Opisana MMU je temelj virtualizacije koja omogućava izvođenje nemodif
 implementira MMU s jednom razinom adresnih prevođenja što onemogućava hardversku memorijsku virtualizaciju na način koji je
 opisan. Ključnu ulogu u memorijskoj virtualizaciji na ZedBoardu ima \textit{TrustZone} jedinica TZASC koja omogućava dijeljenje
 memorije u različite segmente. Navedena jedinica omogućava konfiguriranje sigurnosnog stanja memorijskih segmenata platforme
-što omogućava izolaciju između Sigurnog i Nesigurnog svijeta. Konfiguracija memorijskih segmenata je moguća s određenom
+što omogućava izolaciju između \textit{Sigurnog} i \textit{Nesigurnog} svijeta. Konfiguracija memorijskih segmenata je moguća s određenom
 granulacijom, za ZedBoard je to 64~MB, pomoću SLCR (engl. \textit{System Level Control Register}) registra koji je dostupan
-samo u Sigurnom svijetu. Kako je MMU svjesna sigurnosnih ekstenzija (postoji i Sigurna i Nesigurna tablica za prevođenje),
+samo u \textit{Sigurnom} svijetu. Kako je MMU svjesna sigurnosnih ekstenzija (postoji i \textit{Sigurna} i \textit{Nesigurna} tablica za prevođenje),
 nije potrebno kopirati sadržaj tablice prilikom zamjene konteksta, što daje uštedu u vremenu prilikom zamjene konteksta.
 Kao i MMU, \textit{cache} također implementira istu razinu izolacije koja je osigurana hardverom što za zamjenu konteksta
-znači da nema potrebe za pražnjenjem \textit{cache} memorije prilikom svake zamjene konteksta. Nesigurni svijet nema dozvoljen
-pristup L2 \textit{cache} memoriji te se Sigurni svijet mora pobrinuti za omogućavanje L2 \textit{cache} memorije. Održavanje
-(onesposobljavanje i čišćenje) L2 \textit{cache} memorije je moguće i u Nesigurnom svijetu. \\
-Prilikom pokretanja LTZVisora, uređaji se konfiguriraju i dodjeljuju Sigurnom ili Nesigurnom svijetu. Takvo rukovanje uređajima
-osigurava izolaciju na razini uređaja (uređaji se ne bi smjeli dijeliti između dva svijeta). Nesigurni gost ne može pristupiti
-Sigurnim uređajima te se sigurnost uređaja može konfigurirati samo u Sigurnom svijetu.
+znači da nema potrebe za pražnjenjem \textit{cache} memorije prilikom svake zamjene konteksta. \textit{Nesigurni} svijet nema dozvoljen
+pristup L2 \textit{cache} memoriji te se \textit{Sigurni} svijet mora pobrinuti za omogućavanje L2 \textit{cache} memorije. Održavanje
+(onesposobljavanje i čišćenje) L2 \textit{cache} memorije je moguće i u \textit{Nesigurnom} svijetu. \\
+Prilikom pokretanja LTZVisora, uređaji se konfiguriraju i dodjeljuju \textit{Sigurnom} ili \textit{Nesigurnom} svijetu. Takvo rukovanje uređajima
+osigurava izolaciju na razini uređaja (uređaji se ne bi smjeli dijeliti između dva svijeta). \textit{Nesigurni} gost ne može pristupiti
+\textit{Sigurni}m uređajima te se sigurnost uređaja može konfigurirati samo u \textit{Sigurnom} svijetu.
 
 \section{Prekidni podsustav LTZVisora}
-Kao što ARM preporučuje, izabran je dizajn prekidnog sustava takav da FIQ pripada Sigurnom, a IRQ Nesigurnom gostu. Označavanje
-FIQ prekida kao Sigurni prekid se ostvaruje postavljanjem odgovarajućeg bita u kontrolnom registru GIC-ovog CPU sučelja.
-Ako se FIQ pojavi prilikom izvođenja Sigurnog gosta, nema potrebe za intervencijom LTZVisora te je FIQ odmah obrađen u
-Sigurnom gostu. Ako se pojavi IRQ zahtjev prilikom izvođenja Sigurnog gosta, IRQ će biti obrađen tek kada Sigurni gost prepusti
-kontrolu Nesigurnom gostu, odnosno ne utječe na tok programa Sigurnog gosta. IRQ je obrađen odmah po početku izvođenja
-Nesigurnog gosta. Pojava FIQ za vrijeme izvođenja Nesigurnog gosta, kao što je već rečeno, okida zamjenu konteksta i prijelaz
-u Sigurni svijet gdje je FIQ obrađen. Pojava IRQ za vrijeme izvođenja Nesigurnog gosta prati standardni proces obrade prekida
-u Nesigurnom gostu. Kod virtualizacije se razlikuju dvije razine vremenskog praćenja, gdje se jedna razina odnosi na monitor
+Kao što ARM preporučuje, izabran je dizajn prekidnog sustava takav da FIQ pripada \textit{Sigurnom}, a IRQ \textit{Nesigurnom} gostu. Označavanje
+FIQ prekida kao \textit{Sigurni} prekid se ostvaruje postavljanjem odgovarajućeg bita u kontrolnom registru GIC-ovog CPU sučelja.
+Ako se FIQ pojavi prilikom izvođenja \textit{Sigurnog} gosta, nema potrebe za intervencijom LTZVisora te je FIQ odmah obrađen u
+\textit{Sigurnom} gostu. Ako se pojavi IRQ zahtjev prilikom izvođenja \textit{Sigurnog} gosta, IRQ će biti obrađen tek kada \textit{Sigurni} gost prepusti
+kontrolu \textit{Nesigurnom} gostu, odnosno ne utječe na tok programa \textit{Sigurnog} gosta. IRQ je obrađen odmah po početku izvođenja
+\textit{Nesigurnog} gosta. Pojava FIQ za vrijeme izvođenja \textit{Nesigurnog} gosta, kao što je već rečeno, okida zamjenu konteksta i prijelaz
+u \textit{Sigurni} svijet gdje je FIQ obrađen. Pojava IRQ za vrijeme izvođenja \textit{Nesigurnog} gosta prati standardni proces obrade prekida
+u \textit{Nesigurnom} gostu. Kod virtualizacije se razlikuju dvije razine vremenskog praćenja, gdje se jedna razina odnosi na monitor
 virtualnih strojeva, a druga na virtualne strojeve. Monitor virtualnih strojeva može pružati dvije vrste praćenja vremena
 virtualnim strojevima: virtualno ili stvarno vrijeme. Virtualno vrijeme je način praćenja vremena koje se pauzira tokom
 neaktivnosti virtualnog stroja te ponovno aktivira prilikom njegovog izvođenja. Stvarno vrijeme prati tok vremena i kad je
-vritualni stroj neaktivan. LTZVisor implementira stvarno vrijeme koje je osigurano Sigurnim TTC0 (engl. \textit{Triple Timer
-Counter}) i Nesigurnim TTC1 te je LTZVisor konfiguriran tako da Sigurni gost ne propusti nijedan \textit{tick}.\\
+vritualni stroj neaktivan. LTZVisor implementira stvarno vrijeme koje je osigurano \textit{Sigurnim} TTC0 (engl. \textit{Triple Timer
+Counter}) i \textit{Nesigurnim} TTC1 te je LTZVisor konfiguriran tako da \textit{Sigurni} gost ne propusti nijedan \textit{tick}.\\
 Komunikacija je implementirana na asinkroni način koji se sastoji od podatkovnog puta (dijeljeni blok memorije koji je
-konfiguriran kao Nesiguran) i puta događaja koji je generiran pomoću SGI namijenjenim LTZVisoru. Komunikacija je temeljena
+konfiguriran kao \textit{Nesiguran}) i puta događaja koji je generiran pomoću SGI namijenjenim LTZVisoru. Komunikacija je temeljena
 na zahtjevima Virtualnih strojeva prema LTZVisoru pomoću SMC instrukcije. Svaki zahtjev se sprema u FIFO (engl. \textit{First
 In First Out}) spremnik te LTZVisor prilikom zamjene konteksta generira SGI odgovarajućem gostu. Prednost takve komunikacije
 je da je pouzdana zato što je upravljana monitorom virtualnih strojeva.
@@ -733,10 +734,10 @@ je struktura navedenog direktorija prikazana slikom \ref{srcdir}. Zbog pregledno
 izostavljen \textit{inc} direktorij koji sadrži odgovarajuća C zaglavlja.
 \textit{arch} direktorij sadrži većinu ključnih dijelova potrebnih za pokretanje cjelokupnog sustava. Većina koda sadržanog u
 ovom direktoriju napisana je u asembleru. U direktoriju se nalazi \textit{cpu\_entry.S} datoteka koja sadrži početnu
-inicijalizaciju CPU0 procesora. Inicijalizacija se sastoji od podešavanja koprocesorskih registara, stoga Sigurnog gosta,
-stoga nadglednog načina rada procesora, tablice prekidnih vektora Sigurnog gosta i nadglednog načina rada te konfigurira
+inicijalizaciju CPU0 procesora. Inicijalizacija se sastoji od podešavanja koprocesorskih registara, stoga \textit{Sigurnog} gosta,
+stoga nadglednog načina rada procesora, tablice prekidnih vektora \textit{Sigurnog} gosta i nadglednog načina rada te konfigurira
 \textit{cache} i MMU koji su nisu omogućeni. Ključni dio za funkcioniranje sustava s dva svijeta je u podešavanju NSACR, SCR
-i MVBAR (engl. \textit{Monitor Vector Base Address Register}) registara, gdje NSACR definira dozvole pristupa Nesigurnom svijetu
+i MVBAR (engl. \textit{Monitor Vector Base Address Register}) registara, gdje NSACR definira dozvole pristupa \textit{Nesigurnom} svijetu
 određenim procesorskim resursima. U MVBAR se sprema početna adresa tablice prekidnih vektora nadglednog načina rada procesora
 koja je ključna za funkcioniranje raspoređivača sustava. Uz to, u direktoriju je sadržan i asemblerski kod koji je namijenjen
 zamjeni konteksta.
@@ -783,11 +784,11 @@ Direktorij \textit{boards} sadrži skriptu za memorijsko povezivanje i kod koji 
 podešavanju sigurnosti uređaja (npr. TTC, UART, globalno brojilo), SLCR registra (podešavanje sigurnosti memorijskih
 segmenata, sigurnosti DMA, \textit{Etherneta}, OCM...) i upravljačke programe uređaja koji se koriste (TTC i UART). Isto tako,
 sadrži i inicijalizaciju GIC-a. Slijedeći direktorij, \textit{core}, sadrži jezgru LTZVisora koja je zadužena za postavljanje
-početnog konteksta Nesigurnog gosta i predavanje kontrole Sigurnom gostu. \textit{drivers} direktorij sadrži upravljački
-program GIC-a, a \textit{lib} funkcije za rukovanje znakovnim nizovima i pristup registrima. Slika Nesigurnog gosta se gradi
-odvojeno od Sigurnog gosta i LTZVisora, koji se izgrađuju zajedno, te direktorij \textit{ns\_guest} sadrži kod za uključivanje
-slike Nesigurnog gosta u sliku cjelokupnog sustava i atribute potrebne za pokretanje Nesigurnog gosta. Zadnji,
-\textit{s\_guest}, direktorij sadrži kod Sigurnog gosta i tablicu prekidnih vektora Sigurnog gosta.
+početnog konteksta \textit{Nesigurnog} gosta i predavanje kontrole \textit{Sigurnom} gostu. \textit{drivers} direktorij sadrži upravljački
+program GIC-a, a \textit{lib} funkcije za rukovanje znakovnim nizovima i pristup registrima. Slika \textit{Nesigurnog} gosta se gradi
+odvojeno od \textit{Sigurnog} gosta i LTZVisora, koji se izgrađuju zajedno, te direktorij \textit{ns\_guest} sadrži kod za uključivanje
+slike \textit{Nesigurnog} gosta u sliku cjelokupnog sustava i atribute potrebne za pokretanje \textit{Nesigurnog} gosta. Zadnji,
+\textit{s\_guest}, direktorij sadrži kod \textit{Sigurnog} gosta i tablicu prekidnih vektora \textit{Sigurnog} gosta.
 
 \chapter{Operacijski sustav Linux}
 Linux je operacijski sustav otvorenog koda te je prvenstveno namijenjen stolnim računalima (spada u GPOS).
@@ -804,7 +805,7 @@ Linuxa. Priprema platforme sastoji se od:
   \item{predaje ulaznih argumenata Linuxu}
   \item{pripremanja serijske konzole za jezgru (ovaj korak je izborni, ako se postave odgovarajući parametri za automatsko
   pokretanje jezgre OS-a)}
-  \item{predaje kontrole jezgri OS-a}
+  \item{predaje kontrole jezgri OS-a.}
 \end{itemize}
 Neposredno prije nego što program pokretač skoči na početnu instrukciju jezgre Linuxa, pokretač
 pripremi tri parametra koja su nužna za pokretanje Linuxa. Parametri se prenose preko registara opće namjene R0-R2, gdje
@@ -831,7 +832,7 @@ može imati čvorove djece i čvor roditelja. Korjenski čvor je roditelj svim o
   \item{čvor koji sadrži informacije o memoriji}
   \item{izborni čvor koji može sadržavati konfiguracijske podatke (parametre jezgre, lokaciju datotečnog podsustava...)}
   \item{čvor koji označava istoznačnice (alijase)}
-  \item{čvorove koji sadrže informacije sabirnica platforme}
+  \item{čvorove koji sadrže informacije sabirnica platforme.}
 \end{itemize}
 Sintaksa \textit{Device Tree} strukture prikazana je slikom \ref{devtree_sintax}.
 
@@ -905,7 +906,7 @@ koju izvršava jezgra:
   \item{Podešava se datotečni podsustav i inicijaliziraju se procesi, izvršavaju se \textit{daemon} programi koji su zaduženi
   za stvaranje niti (engl. \textit{thread}) jezgre}
   \item{Jezgra se otključava i raspoređivač se pokreće}
-  \item{Inicijaliziraju se razni uređaji i mreža}
+  \item{Inicijaliziraju se razni uređaji i mreža.}
 \end{enumerate}
 Važno je napomenuti da prije predaje kontrole jezgri operacijskog sustava, MMU i podatkovna \textit{cache} memorija moraju biti
 onemogućeni te početno stanje jezgre mora biti u \textit{supervisor} načinu rada uz IRQ i FIQ maskirane (onemogućene). Ako
@@ -945,20 +946,20 @@ izgradnje sustava, slika jezgre Linuxa za Zynq-7000 platforme je naziva \textit{
 za datotečni podsustav odabere \textit{initramfs}, komprimirana slika datotečnog podsustava je automatski sadržana u
 \textit{zImage} slici. Binarni oblik \textit{Device Tree} strukture je generiran u datoteku naziva \textit{system.dtb}.
 
-\section{Prilagođenje Linuxa kao Nesigurnog gosta LTZVisora}
-Preporuka ARM-a je da složeniji operacijski sustavi budu namijenjeni Nesigurnom svijetu, jer je kod sustava s većom
+\section{Prilagođenje Linuxa kao \textit{Nesigurnog} gosta LTZVisora}
+Preporuka ARM-a je da složeniji operacijski sustavi budu namijenjeni \textit{Nesigurnom} svijetu, jer je kod sustava s većom
 količinom koda veća vjerojatnost pronalaženja prolaza do probijanja sigurnosti. Zbog toga razloga, autori LTZVisora također
-preporučuju implementaciju GPOS-a kao Nesigurnog gosta. Prilagođenje kompleksnog sustava kao što je to Linux za Nesigurni
+preporučuju implementaciju GPOS-a kao \textit{Nesigurnog} gosta. Prilagođenje kompleksnog sustava kao što je to Linux za \textit{Nesigurni}
 svijet \textit{TrustZone} platforme je posao koji zahtjeva vrlo dobro poznavanje arhitekture jezgre operacijskog sustava, kao
 i detaljno poznavanje platforme za koju se Linux prilagođava. Pristup prilagođenju može biti sljedeći: ako se Linux priprema
-za Nesigurni svijet, ključno je omogućiti konfiguriranje jezgre koje zahtjeva pristup sigurnoj memoriji, odnosno registrima
-kojima može pristupiti samo Sigurni svijet. Ovakav pristup, odmah u početku, uklanja potrebu za detaljnim poznavanjem
+za \textit{Nesigurni} svijet, ključno je omogućiti konfiguriranje jezgre koje zahtjeva pristup sigurnoj memoriji, odnosno registrima
+kojima može pristupiti samo \textit{Sigurni} svijet. Ovakav pristup, odmah u početku, uklanja potrebu za detaljnim poznavanjem
 dijela jezgre operacijskog sustava koji je neovisan o arhitekturi platforme što znatno smanjuje vrijeme prilagodbe jezgre
-Nesigurnom svijetu. Uz takav pristup, jasno je i da se \textit{Device Tree} mora promijeniti. Prilagođenje Linuxa se sastoji
+\textit{Nesigurnom} svijetu. Uz takav pristup, jasno je i da se \textit{Device Tree} mora promijeniti. Prilagođenje Linuxa se sastoji
 i od pripreme LTZVisora za Linux te su postupci prilagodbe dani u nastavku.
 
 \subsection{Stvaranje cjelokupne slike Linuxa}
-Arhitektura LTZVisora zahtjeva jednu izvršnu datoteku Nesigurnog gosta, dok se Linux sastoji od više slika sustava (datotečnog
+Arhitektura LTZVisora zahtjeva jednu izvršnu datoteku \textit{Nesigurnog} gosta, dok se Linux sastoji od više slika sustava (datotečnog
 podsustava, \textit{Device Tree} strukture i jezgre). Uz to, Linux zahtjeva i program pokretač koji će pripremiti jezgru za
 početak izvršavanja. Jasno je da je potrebno sve slike sustava Linux i program pokretač povezati u jednu izvršnu datoteku
 koju će LTZVisor kasnije učitati u RAM. Jedan od intuitivnih načina na koji to postići je pomoću skripte za memorijsko
@@ -997,9 +998,9 @@ povežu u konačnu sliku, potrebno je konvertirati sliku jezgre i \textit{Device
 \textit{arm-none-eabi-objcpy}. Nakon toga, slike se mogu povezati u jednu koja se može iskoristiti za LTZVisor.
 
 \subsection{Izmjene operacijskog sustava Linux}
-Kao što je već napomenuto, prilikom prilagođenja Linuxa za izvršavanje u Nesigurnom svijetu treba voditi posebnu brigu o
+Kao što je već napomenuto, prilikom prilagođenja Linuxa za izvršavanje u \textit{Nesigurnom} svijetu treba voditi posebnu brigu o
 pristupu Linuxa hardveru. Da bi uopće imalo smisla tražiti dijelove izvornog koda koji bi mogli biti problematični za
-Nesigurni svijet, jasno je da programer mora biti vrlo dobro upoznat arhitekturom \textit{TrustZone} ekstenzije, kao i
+\textit{Nesigurni} svijet, jasno je da programer mora biti vrlo dobro upoznat arhitekturom \textit{TrustZone} ekstenzije, kao i
 platforme za koju se Linux prilagođava. Iako to nije nužno, poželjno je da je programer upoznat s arhitekturom operacijskog
 sustava kojeg prilagođava. Poznavanje arhitekture operacijskog sustava znatno olakšava lociranje nastalih problema, ali se
 oni mogu otkriti i praćenjem toka programa od zadnjeg ispisa kojeg je dao Linux.
@@ -1058,7 +1059,7 @@ resursa.
 Dobra početna točka kod izmjene jezgre je u direktoriju odgovarajuće arhitekture izvornog koda Linuxa. U slučaju ZedBoard
 platforme, radi se o \textit{arch/arm/mach-zynq} direktoriju koji sadrži kod za inicijalizaciju platforme potrebnu za
 pokretanje Linuxa. Ako se pogleda sadržaj navedenog direktorija, vidi se \textit{slcr.c} datoteka za koju je jasno da su
-potrebne promjene (SLCR je dostupan samo Sigurnom svijetu, a nužan je za npr. podešavanje signala takta za razne uređaje).
+potrebne promjene (SLCR je dostupan samo \textit{Sigurnom} svijetu, a nužan je za npr. podešavanje signala takta za razne uređaje).
 Funkcije za pristup SLCR registru, originalno su implementirane kako je prikazano slikom \ref{slcr_orig}.
 \begin{figure}[H]
   \begin{lstlisting}
@@ -1079,7 +1080,7 @@ Funkcije \textit{regmap\_write} i \textit{regmap\_read} kao ulazni argument prim
 baznom adresom SLCR registra te se kasnije prevodi u fizičku adresu. Pozivanje ovih funkcija izaziva \textit{external abort}
 zbog pristupanja sigurnoj memoriji. Kako bi se ove funkcije uspješno izvele, potrebno je implementirati funkcije za pristup
 SLCR registru koji će biti izveden intervencijom LTZVisora. LTZVisor već implementira sustavske pozive koji se mogu iskoristiti
-kao zahtjev Nesigurnog gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom
+kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom
 \ref{slcr_secure}.
 \begin{figure}[H]
   \lstset{breaklines=true}
@@ -1108,14 +1109,14 @@ U svakoj od funkcija sa slike \ref{slcr_secure} je dodana instrukcija \textit{re
 uspješan pristup SLCR-u, a manje od 0 ako je pristup bio neuspješan te je ovdje pretpostavljeno da će pristup biti uspješan.
 Za stvarnu informaciju o uspješnosti pristupa trebalo bi promijeniti implementaciju sustavskih poziva u LTZVisoru.
 Uz pristup SLCR-u, Linux pristupa i jednom od koprocesorskih registara koji je zadužen za upravljanje snagom u koji se može
-upisivati samo u Sigurnom svijetu. Za uspješno konfiguriranje registra za upravljanje snagom također je implementirana posebna
+upisivati samo u \textit{Sigurnom} svijetu. Za uspješno konfiguriranje registra za upravljanje snagom također je implementirana posebna
 funkcija koja pomoću SMC instrukcije od LTZVisora zahtjeva siguran upis u registar. ACTLR je također registar koji je dostupan
-samo Sigurnom svijetu, ali nema potrebe za implementacijom posebnog poziva LTZVisoru za upis u ACTLR jer su Linuxovi upisi u
-registar zadovoljeni postavljanjem početnog konteksta Nesigurnog gosta.
+samo \textit{Sigurnom} svijetu, ali nema potrebe za implementacijom posebnog poziva LTZVisoru za upis u ACTLR jer su Linuxovi upisi u
+registar zadovoljeni postavljanjem početnog konteksta \textit{Nesigurnog} gosta.
 Uz promjene u izvornom kodu jezgre Linuxa, potrebno je i isključiti VFP (engl. \textit{Vector Floating Point}) podršku da se
 izbjegne \textit{undefined} iznimka na početku izvođenja \textit{init} skripte datotečnog podsustava. VFP se može isključiti
 pomoću izbornika koji se pokreće naredbom \textit{petalinux-config -c kernel}.\\
-Navedene promjene su minimalne za uspješno pokretanje operacijskog sustava Linux kao Nesigurnog gosta LTZVisora. Iako se Linux
+Navedene promjene su minimalne za uspješno pokretanje operacijskog sustava Linux kao \textit{Nesigurnog} gosta LTZVisora. Iako se Linux
 uspješno pokreće nakon navedenih promjena, u ispisu kojeg Linux daje vide se neke dodatne pogreške koje se javljaju tokom
 inicijalizacije. Pogreške se mogu vidjeti u isječku ispisa na slici \ref{plnx_errors}.
 \begin{figure}[H]
@@ -1125,31 +1126,31 @@ inicijalizacije. Pogreške se mogu vidjeti u isječku ispisa na slici \ref{plnx_
   \label{plnx_errors}
 \end{figure}
 Pogreška koja se odnosi na DMAC (\textit{DMA Controller}) se javlja zbog netočnog opisa DMA upravitelja u \textit{Device
-Tree} strukturi. Naime, \textit{PetaLinux} prilikom generiranja \textit{Device Tree} strukture pretpostavlja Sigurno stanje i
-time automatski opisuje DMAC koji pripada Sigurnom svijetu (Zynq-7000 platforme imaju poseban DMAC za Sigurni i poseban za
-Nesigurni svijet čije se adrese razlikuju). Da se ukloni takva pogreška, potrebno je u \textit{Device Tree} umjesto DMAC
-Sigurnog svijeta, opisati DMAC Nesigurnog svijeta (prvenstveno se odnosi na promjenu bazne adrese upravitelja).
-Adresa DMA upravitelja Nesigurnog svijeta je 0xf8004000.
+Tree} strukturi. Naime, \textit{PetaLinux} prilikom generiranja \textit{Device Tree} strukture pretpostavlja \textit{Sigurno} stanje i
+time automatski opisuje DMAC koji pripada \textit{Sigurnom} svijetu (Zynq-7000 platforme imaju poseban DMAC za \textit{Sigurni} i poseban za
+\textit{Nesigurni} svijet čije se adrese razlikuju). Da se ukloni takva pogreška, potrebno je u \textit{Device Tree} umjesto DMAC
+\textit{Sigurnog} svijeta, opisati DMAC \textit{Nesigurnog} svijeta (prvenstveno se odnosi na promjenu bazne adrese upravitelja).
+Adresa DMA upravitelja \textit{Nesigurnog} svijeta je 0xf8004000.
 Slijedeća pogreška koja se može pojaviti je vezana uz OCM te se javlja u slučaju da je \textit{zynq\_slcr\_read} neispravno
 implementiran (treba imati na umu da funkcija vraća pročitanu vrijednost preko ulaznog argumenta, a ne kao povratnu vrijednost
 funkcije).
 
 \subsection{Izmjene u LTZVisoru}
-Uz izmjene Linuxa, potrebne su i izmjene u LTZVisoru koje se odnose na pripremu hardverskih resursa za korištenje u Nesigurnom
+Uz izmjene Linuxa, potrebne su i izmjene u LTZVisoru koje se odnose na pripremu hardverskih resursa za korištenje u \textit{Nesigurnom}
 svijetu i dodavanje sustavskog poziva za upis u koprocesorski registar za kontroliranje snage. Promjene koje su potrebne se
 implementiraju u \textit{boards/zedboard} direktoriju izvornog koda LTZVisora. U \textit{board.c} datoteci se nalazi funkcija
 zadužena za inicijalizaciju cjelokupnog \textit{TrustZone} sustava (podešavanje sigurnosti odgovarajućih uređaja i određivanje
-koji memorijski segmenti pripadaju Sigurnom, a koji Nesigurnom svijetu). Navedena inicijalizacija platforme se odnosi na
+koji memorijski segmenti pripadaju \textit{Sigurnom}, a koji \textit{Nesigurnom} svijetu). Navedena inicijalizacija platforme se odnosi na
 konfiguriranje odgovarajućih SLCR registara. Funkcija zadužena za inicijalizaciju se zove \textit{board\_init} te minimalna
 promjena u ovoj funkciji obuhvaća dopuštanje Linuxu da koristi globalno brojilo koje je nužno za uspješno pokretanje Linuxa.
 Dopuštanje korištenja globalnog brojila sastoji se od upisa u dva registra SACR (engl. \textit{Secure Access Control Register})
-i NSACR (engl. \textit{Non-Secure Access Control Register}) koji služe za konfiguraciju dozvole pristupa Nesigurnog svijeta
+i NSACR (engl. \textit{Non-Secure Access Control Register}) koji služe za konfiguraciju dozvole pristupa \textit{Nesigurnog} svijeta
 privatnom i globalnom brojilu.\\
-Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje DMA upravitelja da će se koristiti u Nesigurnom
+Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje DMA upravitelja da će se koristiti u \textit{Nesigurnom}
 svijetu. Prilikom podešavanja DMA upravitelja, nužno je da se DMA upravitelj drži u \textit{resetu}. Nakon što je DMA upravitelj
 podešen, mora se pustiti iz \textit{reseta}. Opisane promjene prikazane su slikom \ref{tz_init}.
 Kao što je prikazano, prije upisa u SLCR registre potrebno ga je prije svega otključati te po završetku pristupa zaključati.
-Uz navedene promjene, potrebno je i označiti prekid globalnog brojila kao IRQ, odnosno kao prekid Nesigurnog svijeta što se
+Uz navedene promjene, potrebno je i označiti prekid globalnog brojila kao IRQ, odnosno kao prekid \textit{Nesigurnog} svijeta što se
 dodaje u \textit{ltzvisor\_hw.c} datoteku.
 \begin{figure}[H]
   \lstset{breaklines=true, xleftmargin=.05\textwidth}
@@ -1176,7 +1177,7 @@ dodaje u \textit{ltzvisor\_hw.c} datoteku.
 \chapter{Operacijski sustav za rad u stvarnom vremenu (RTOS)}
 \section{FreeRTOS}
 \subsection{Programska podrška za Zynq-7000}
-\subsection{Prilagodba FreeRTOS-a kao Sigurnog gosta LTZVisora}
+\subsection{Prilagodba FreeRTOS-a kao \textit{Sigurnog} gosta LTZVisora}
 
 \chapter{LTZVisor za višejezgrene procesore}
 \section{Prilagođenje LTZVisora za AMP}
@@ -1194,8 +1195,8 @@ razvijen.
 
 \subsection{Arhitektura SMP LTZVisora}
 \subsection{Promjene u nadglednom načinu rada procesora}
-\subsection{Promjene u Nesigurnom \textit{bare-metal} gostu}
-\subsection{Promjene u SMP Linux Nesigurnom gostu}
+\subsection{Promjene u \textit{Nesigurnom} \textit{bare-metal} gostu}
+\subsection{Promjene u SMP Linux \textit{Nesigurnom} gostu}
 
 \chapter{Testiranje LTZVisora za višejezgrene procesore}
 

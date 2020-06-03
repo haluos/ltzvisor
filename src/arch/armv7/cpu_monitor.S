@@ -90,6 +90,22 @@
 	pop 	{r0}
 .endm
 
+.macro SCR_FIQ_CLEAR
+  push {r0}
+  mrc     p15, 0, r0, c1, c1, 0	@ Read SCR
+  bic	r0, r0, #SCR_FIQ_BIT
+  mcr     p15, 0, r0, c1, c1, 0	@ Write SCR
+  pop 	{r0}
+.endm
+
+.macro SCR_FIQ_SET
+  push {r0}
+  mrc     p15, 0, r0, c1, c1, 0	@ Read SCR
+  orr	r0, r0, #SCR_FIQ_BIT
+  mcr     p15, 0, r0, c1, c1, 0	@ Write SCR
+  pop 	{r0}
+.endm
+
 /**
  * SCR Non-Secure bit clear (macro)
  *
@@ -296,6 +312,7 @@
 	mov	r1, #0
 	dsb
 	pop	{r1}
+  SCR_FIQ_SET
 	ldmfd	sp!, {r1-r12, pc}^
 .endm
 
@@ -353,9 +370,11 @@ __mon_fiq_handler:
  *
  * @retval
  */
+ @ .align 8
 .globl _mon_smc_handler
 	/** Monitor - SMC handler */
 _mon_smc_handler:
+  SCR_FIQ_CLEAR
 	cmn	r0, #0
 	blt	board_smc
 	cmp 	r0, #LTZVISOR_SCHED_SYSCALL
@@ -383,6 +402,9 @@ board_smc:
         1. Write address of LTZVisor CPU1 entry code to 0xFFFFFFF0
         2. Issue SEV command - this triggers CPU1 jumping to address written in
            0xfffffff0
+
+    This function boots LTZVisor only! CPU1 NS Guest is booted with
+    _secondary_wake_cpu1.
 */
 .globl _wake_cpu1
 _wake_cpu1:
@@ -395,6 +417,11 @@ _wake_cpu1:
   bl wait_till_cpu1_boots
   b ltzvisor_kickoff    @ go back to NS World
 
+/*
+    Start booting sequence of CPU1 NS Guest!
+    R1 holds address of initalization code for CPU1 NS Guest: this parameter
+    must be passed to LTZVisor by NS Guest.
+*/
 .globl _secondary_wake_cpu1
 _secondary_wake_cpu1:
   push {r0-r12,lr}
@@ -406,6 +433,7 @@ _secondary_wake_cpu1:
   dsb
   isb
   sev
+  SCR_FIQ_SET
   movs pc, lr
 
 
@@ -477,9 +505,9 @@ _mon_fiq_handler:
 	msr		spsr, r1
 	ldmfd 	r0!, {r8-r12}
 
-	cps #IRQ_MODE
-	ldmfd   r0!, {r1, sp, lr}
-	msr	 	spsr, r1
+	@ cps #IRQ_MODE
+	@ ldmfd   r0!, {r1, sp, lr}
+	@ msr	 	spsr, r1
 
 	cps #UNDEFINED_MODE
 	ldmfd   r0!, {r1, sp, lr}
@@ -499,17 +527,14 @@ _mon_fiq_handler:
 
 	cps #MONITOR_MODE
 	mov sp, r0
-  pop {r0, r1}
-  mov lr, r1
-  msr spsr, r0
-  @ push {r0-r12,lr}
-  @ mov r0, lr
-  @ bl print_warning
-  @ pop {r0-r12,lr}
+
 	pop {r0-r12}
 
-	@ rfefd sp!
+  pop {r1, r2}
+  mov lr, r1
+  msr spsr, r2
   movs pc, lr
+  @ rfefd sp!
 
 /**
  * Monitor scheduler - schedule NS_guest
@@ -551,13 +576,16 @@ _mon_fiq_handler:
 
 .globl _mon_scheduler
 _mon_scheduler:
-
-	@ srsfd sp!, #MONITOR_MODE
-	push {r0-r12}
+  SCR_FIQ_CLEAR
+  @ cps #MONITOR_MODE
   mrs r1, spsr
-  @ push {lr, r1}
-  stmfd	sp, {r1,lr}
+  mov r0, lr
+  push {r0, r1}
+  stmfd	sp, {r0,r1}
   sub 	sp, sp, #(2*4)
+  @ srsfd sp!, #MONITOR_MODE
+	push {r0-r12}
+  @ srsfd sp!, #MONITOR_MODE
 	mov r0, sp
 
 	cps #SUPERVISOR_MODE
@@ -576,9 +604,9 @@ _mon_scheduler:
 	mrs	 r1, spsr
 	stmfd    r0!, {r1, sp, lr}
 
-	cps #IRQ_MODE
-	mrs	 r1, spsr
-	stmfd    r0!, {r1, sp, lr}
+	@ cps #IRQ_MODE
+	@ mrs	 r1, spsr
+  @ stmfd    r0!, {r1, sp, lr}
 
 	cps #FIQ_MODE
 	stmfd r0!, {r8-r12}

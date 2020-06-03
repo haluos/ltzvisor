@@ -85,7 +85,7 @@
 
 #define configMAX_TASK_NAME_LEN 10
 
-#define configIDLE_SHOULD_YIELD 1
+#define configIDLE_SHOULD_YIELD 0
 
 #define configUSE_TIME_SLICING 1
 
@@ -95,15 +95,15 @@
 
 #define configTIMER_TASK_STACK_DEPTH ((configMINIMAL_STACK_SIZE) * 2)
 
-// #define configASSERT( x ) if( ( x ) == 0 ) vApplicationAssert( __FILE__, __LINE__ )
+#define configASSERT( x ) if( ( x ) == 0 ) vApplicationAssert( __FILE__, __LINE__ )
 
 #define configUSE_QUEUE_SETS 1
 
 #define configUSE_TASK_NOTIFICATIONS 1
 
-#define configCHECK_FOR_STACK_OVERFLOW 2
+#define configCHECK_FOR_STACK_OVERFLOW 3
 
-#define configUSE_TASK_FPU_SUPPORT 1
+#define configUSE_TASK_FPU_SUPPORT 2
 
 #define configQUEUE_REGISTRY_SIZE 10
 
@@ -133,13 +133,13 @@
 #define portTICK_TYPE_IS_ATOMIC 1
 #define configMESSAGE_BUFFER_LENGTH_TYPE uint32_t
 #define configSTACK_DEPTH_TYPE uint32_t
-#define configMAX_API_CALL_INTERRUPT_PRIORITY (10)
+#define configMAX_API_CALL_INTERRUPT_PRIORITY (17)
 
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 
 #define configINTERRUPT_CONTROLLER_BASE_ADDRESS         ( XPAR_PS7_SCUGIC_0_DIST_BASEADDR )
 #define configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET ( -0xf00 )
-#define configUNIQUE_INTERRUPT_PRIORITIES                16
+#define configUNIQUE_INTERRUPT_PRIORITIES                32
 void vApplicationAssert( const char *pcFile, uint32_t ulLine );
 void FreeRTOS_SetupTickInterrupt( void );
 void FreeRTOS_SetupTTCTickInterrupt( void );

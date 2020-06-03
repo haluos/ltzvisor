@@ -243,20 +243,20 @@ shareable_loop:
 	msr spsr_fsxc,r2
 
 	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the system stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x1F			/* SYS mode */
-	msr	cpsr, r2
-	ldr	r13,=SYS_stack			/* SYS stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
-
-	mrs	r0, cpsr			/* get the current PSR */
 	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
 	and	r2, r1, r0
 	orr	r2, r2, #0x13			/* supervisor mode */
 	msr	cpsr, r2
 	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
+	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
+	msr spsr_fsxc,r2
+
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f			/* set up the system stack pointer */
+	and	r2, r1, r0
+	orr	r2, r2, #0x1F			/* SYS mode */
+	msr	cpsr, r2
+	ldr	r13,=SYS_stack			/* SYS stack pointer */
 
 	/*set scu enable bit in scu*/
 	ldr	r7, =0xf8f00000

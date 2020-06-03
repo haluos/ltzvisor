@@ -34,10 +34,10 @@ void helloworld_cpu1 (void)
     while(!flag);
     // for (int i = 0; i < 100000000; i++);
     printk("CPU1: Hello World 0x%x\r\n", cnt);
-    if(cnt == 2)
-    {
-      got_to_sleep();
-    }
+    // if(cnt == 2)
+    // {
+    //   got_to_sleep();
+    // }
     flag = 0;
     cnt++;
   }
@@ -45,6 +45,7 @@ void helloworld_cpu1 (void)
 
 int main (void)
 {
+  // asm volatile("cps #0x1f");
   uint32_t i, cnt = 0;
   booted = 0;
   hw_init();
@@ -54,12 +55,12 @@ int main (void)
   printk("\n****** NS World running on CPU0 ******\n");
   while(1)
   {
-    if(cnt >= 10)
-    {
-      got_to_sleep();
-    }
-    else
-    {
+    // if(cnt >= 10)
+    // {
+    //   got_to_sleep();
+    // }
+    // else
+    // {
       for (i = 0; i < 100000000; i++);
       printk("NS Guest: Hello World %d %d\r\n", cnt, flag);
       flag = 1;
@@ -70,7 +71,7 @@ int main (void)
         boot_CPU1();
         asm volatile("wfi");
       }
-    }
+    // }
   }
   return 1;
 }

@@ -160,8 +160,9 @@ volatile uint32_t ulLocalLine = ulLine; /* To prevent ulLine being optimized awa
 	not referenced.  They are intended for viewing in the debugger. */
 	( void ) pcLocalFileName;
 	( void ) ulLocalLine;
+	extern uint32_t printk(const char *fmt, ...);
 
-	// xil_printf( "Assert failed in file %s, line %lu\r\n", pcLocalFileName, ulLocalLine );
+	printk( "Assert failed in file %s, line %lu\r\n", pcLocalFileName, ulLocalLine );
 
 	/* If this function is entered then a call to configASSERT() failed in the
 	FreeRTOS code because of a fatal error.  The pcFileName and ulLine
@@ -202,7 +203,8 @@ to allow the application writer to override this default by providing their own
 implementation in the application code. */
 void vApplicationMallocFailedHook( void )
 {
-	// xil_printf( "vApplicationMallocFailedHook() called\n" );
+	extern uint32_t printk(const char *fmt, ...);
+	printk( "vApplicationMallocFailedHook() called\n" );
 }
 /*-----------------------------------------------------------*/
 
@@ -218,8 +220,8 @@ volatile char *pcOverflowingTaskName = pcTaskName;
 
 	( void ) xOverflowingTaskHandle;
 	( void ) pcOverflowingTaskName;
-
-	// xil_printf( "HALT: Task %s overflowed its stack.", pcOverflowingTaskName );
+	extern uint32_t printk(const char *fmt, ...);
+	printk( "HALT: Task %s overflowed its stack.", pcOverflowingTaskName );
 	portDISABLE_INTERRUPTS();
 	for( ;; );
 }

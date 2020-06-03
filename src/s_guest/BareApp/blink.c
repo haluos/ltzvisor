@@ -52,10 +52,30 @@
 
 void led_blink( void * pvParameters );
 
+struct sys_regs s_context;
+
 void vApplicationIdleHook( void )
 {
 	// printk("yield\n");
 	YIELD();
+}
+
+void undefined_exception (void)
+{
+	printk("Undefined\n");
+}
+
+void prefetch_exception(void)
+{
+	printk("Prefetch\n");
+}
+
+void abort_exception(void)
+{
+	uint32_t par;
+	asm volatile ("subs r0, lr, #8");
+	asm volatile ("mov %0, r0" : "=r"(par) ::);
+	printk("Abort 0x%x\n", par);
 }
 
 void print_warning(uint32_t arg)
@@ -69,14 +89,15 @@ int main() {
 	hw_init();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
+	// extern uint32_t _heap;
 
 	/** Generate tick every 1s */
 	tick_set(1000000);
 
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
-	// printk("led blink addr: 0x%x\n", &vApplicationIdleHook);
-	// xTaskCreate( led_blink, "task", 1024, NULL, 1, NULL );
+	// printk("led blink addr: 0x%x\n", &_heap);
+	// xTaskCreate( led_blink, "task", 200, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
 	/* This point will never be reached */

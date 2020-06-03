@@ -437,6 +437,7 @@ XScuGic_Config *pxGICConfig;
 void vPortEnableInterrupt( uint8_t ucInterruptID )
 {
 int32_t lReturn;
+extern void interrupt_enable(uint32_t interrupt, uint32_t enable);
 
 	/* An API function is provided to enable an interrupt in the interrupt
 	controller. */
@@ -445,6 +446,7 @@ int32_t lReturn;
 	// {
 		// XScuGic_Enable( &xInterruptController, ucInterruptID );
 	// }
+	interrupt_enable(ucInterruptID, 1);
 	lReturn = pdPASS;
 	configASSERT( lReturn );
 }
@@ -453,6 +455,7 @@ int32_t lReturn;
 void vPortDisableInterrupt( uint8_t ucInterruptID )
 {
 int32_t lReturn;
+extern void interrupt_enable(uint32_t interrupt, uint32_t enable);
 
 	/* An API function is provided to disable an interrupt in the interrupt
 	controller. */
@@ -461,6 +464,7 @@ int32_t lReturn;
 	// {
 	// 	XScuGic_Disable( &xInterruptController, ucInterruptID );
 	// }
+	interrupt_enable(ucInterruptID, 0);
 	lReturn = pdPASS;
 	configASSERT( lReturn );
 }

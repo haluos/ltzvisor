@@ -115,12 +115,21 @@ _svc:
   .word   FreeRTOS_SWI_Handler
 
 _undefined_entry:
+  push {r0-r12,lr}
+  bl undefined_exception
+  pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
 _prefetch_entry:
+  push {r0-r12,lr}
+  bl prefetch_exception
+  pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
 _low_level_abt:
+  push {r0-r12,lr}
+  bl abort_exception
+  pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
 
