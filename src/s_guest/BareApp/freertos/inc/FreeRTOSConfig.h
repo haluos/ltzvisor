@@ -36,19 +36,17 @@
 
 #define configUSE_MUTEXES 1
 
-#define INCLUDE_xSemaphoreGetMutexHolder 0
+#define INCLUDE_xSemaphoreGetMutexHolder 1
 
-#define configUSE_RECURSIVE_MUTEXES 0
+#define configUSE_RECURSIVE_MUTEXES 1
 
 #define configUSE_COUNTING_SEMAPHORES 1
 
 #define configUSE_TIMERS 1
 
-#define INCLUDE_xTaskGetSchedulerState 1
-
 #define configUSE_IDLE_HOOK 1
 
-#define configUSE_TICK_HOOK 1
+#define configUSE_TICK_HOOK 0
 
 #define configUSE_DAEMON_TASK_STARTUP_HOOK 0
 
@@ -63,8 +61,6 @@
 #define configMESSAGE_BUFFER 0
 
 #define configSUPPORT_STATIC_ALLOCATION 0
-
-// #define configAPPLICATION_ALLOCATED_HEAP 1
 
 #define configUSE_16_BIT_TICKS 0
 
@@ -81,11 +77,10 @@
 #define configMINIMAL_STACK_SIZE ( ( unsigned short ) 200)
 
 #define configTOTAL_HEAP_SIZE ( ( size_t ) ( 65536 ) )
-// #define configTOTAL_HEAP_SIZE ( ( size_t ) ( 2*2*2*2*65536 ) )
 
 #define configMAX_TASK_NAME_LEN 10
 
-#define configIDLE_SHOULD_YIELD 0
+#define configIDLE_SHOULD_YIELD 1
 
 #define configUSE_TIME_SLICING 1
 
@@ -101,9 +96,9 @@
 
 #define configUSE_TASK_NOTIFICATIONS 1
 
-#define configCHECK_FOR_STACK_OVERFLOW 3
+#define configCHECK_FOR_STACK_OVERFLOW 2
 
-#define configUSE_TASK_FPU_SUPPORT 2
+#define configUSE_TASK_FPU_SUPPORT 1
 
 #define configQUEUE_REGISTRY_SIZE 10
 
@@ -133,7 +128,7 @@
 #define portTICK_TYPE_IS_ATOMIC 1
 #define configMESSAGE_BUFFER_LENGTH_TYPE uint32_t
 #define configSTACK_DEPTH_TYPE uint32_t
-#define configMAX_API_CALL_INTERRUPT_PRIORITY (17)
+#define configMAX_API_CALL_INTERRUPT_PRIORITY (18)
 
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 
@@ -141,14 +136,10 @@
 #define configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET ( -0xf00 )
 #define configUNIQUE_INTERRUPT_PRIORITIES                32
 void vApplicationAssert( const char *pcFile, uint32_t ulLine );
-void FreeRTOS_SetupTickInterrupt( void );
 void FreeRTOS_SetupTTCTickInterrupt( void );
-// #define configSETUP_TICK_INTERRUPT() FreeRTOS_SetupTickInterrupt()
 #define configSETUP_TICK_INTERRUPT() FreeRTOS_SetupTTCTickInterrupt()
 
-void FreeRTOS_ClearTickInterrupt( void );
 void FreeRTOS_ClearTTCTickInterrupt( void );
-// #define configCLEAR_TICK_INTERRUPT()	FreeRTOS_ClearTickInterrupt()
 #define configCLEAR_TICK_INTERRUPT()	FreeRTOS_ClearTTCTickInterrupt()
 
 #define portSET_INTERRUPT_MASK_FROM_ISR()	ulPortSetInterruptMask()

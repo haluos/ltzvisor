@@ -7,6 +7,8 @@ extern void invalidate_dcache(void);
 
 void hw_init (void);
 
+extern uint8_t ttc_flag;
+
 // volatile uint32_t flag;
 #define flag  		(*(volatile unsigned long *)(0x001F0000))
 uint8_t booted;
@@ -47,6 +49,7 @@ int main (void)
 {
   // asm volatile("cps #0x1f");
   uint32_t i, cnt = 0;
+  float a = 1.1, b = 3.8, x;
   booted = 0;
   hw_init();
   // asm volatile("smc #0");
@@ -61,10 +64,13 @@ int main (void)
     // }
     // else
     // {
-      for (i = 0; i < 100000000; i++);
-      printk("NS Guest: Hello World %d %d\r\n", cnt, flag);
+      // for (i = 0; i < 100000000; i++);
+      while(!ttc_flag);
+      printk("NS Guest: Hello World %d %d %f\r\n", cnt, flag, x);
       flag = 1;
+      ttc_flag = 0;
       cnt++;
+      x = a * b * cnt;
       // while(flag);
       if(cnt == 5)
       {
@@ -86,7 +92,7 @@ void hw_init (void)
 	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,7);
   ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
-  ttc_request(TTC1, TTCx_2, 10000);
+  ttc_request(TTC1, TTCx_2, 1000000);
 	/** Start counting */
 	ttc_enable(TTC1, TTCx_2);
 }

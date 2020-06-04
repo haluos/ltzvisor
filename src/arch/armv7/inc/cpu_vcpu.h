@@ -82,11 +82,39 @@ struct core_regs {
 	uint32_t spsr_irq;
 	uint32_t r13_irq;
 	uint32_t lr_irq;
-	uint32_t r8_irq;
-	uint32_t r9_irq;
-	uint32_t r10_irq;
-	uint32_t r11_irq;
-	uint32_t r12_irq;
+	uint32_t d0;
+	uint32_t d1;
+	uint32_t d2;
+	uint32_t d3;
+	uint32_t d4;
+	uint32_t d5;
+	uint32_t d6;
+	uint32_t d7;
+	uint32_t d8;
+	uint32_t d9;
+	uint32_t d10;
+	uint32_t d11;
+	uint32_t d12;
+	uint32_t d13;
+	uint32_t d14;
+	uint32_t d15;
+	uint32_t d16;
+	uint32_t d17;
+	uint32_t d18;
+	uint32_t d19;
+	uint32_t d20;
+	uint32_t d21;
+	uint32_t d22;
+	uint32_t d23;
+	uint32_t d24;
+	uint32_t d25;
+	uint32_t d26;
+	uint32_t d27;
+	uint32_t d28;
+	uint32_t d29;
+	uint32_t d30;
+	uint32_t d31;
+	uint32_t fpscr;
 };
 
 /** ARMv7-A CPU CP15 registers */
@@ -139,7 +167,22 @@ struct sys_regs {
 	uint32_t r10;
 	uint32_t r11;
 	uint32_t r12;
-	uint32_t lr;
+	uint32_t spsr_mon;
+	uint32_t lr_mon;
+	uint32_t spsr_svc;
+	uint32_t r13_svc;
+	uint32_t lr_svc;
+	uint32_t spsr_sys;
+	uint32_t r13_sys;
+	uint32_t lr_sys;
+	uint32_t spsr_fiq;
+	uint32_t r13_fiq;
+	uint32_t lr_fiq;
+	uint32_t r8_fiq;
+	uint32_t r9_fiq;
+	uint32_t r10_fiq;
+	uint32_t r11_fiq;
+	uint32_t r12_fiq;
 };
 
 #endif /* __ARMV7_CPU_VCPU_H */

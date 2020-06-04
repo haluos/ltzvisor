@@ -220,8 +220,13 @@
 	cps #IRQ_MODE
 	mrs	 r1, spsr
 	stmia   r0!, {r1, r13, lr}
-  @ IRQ banked registers need to be preserved too
-	stmia r0!, {r8-r12}
+
+  @ vmrs r1, fpscr
+  @ vstmia r0!, {d0-d15}
+  @ vstmia r0!, {d16-d31}
+  @ ldr r2, r0
+  @ str r1, [r2]
+
 	cps #MONITOR_MODE
 .endm
 
@@ -292,7 +297,12 @@
 	cps 	#IRQ_MODE
 	ldmia	r0!, {r1, sp, lr}
 	msr	spsr_cxsf, r1
-  ldmia r0!, {r8-r12}
+
+  @ vldmia r0!, {d0-d15}
+  @ vldmia r0!, {d16-d31}
+  @ ldr r1, [r0]
+  @ add r0, r0, #4
+  @ vmsr fpscr, r1
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
   @ pop {lr}
@@ -377,7 +387,12 @@ _mon_smc_handler:
   SCR_FIQ_CLEAR
 	cmn	r0, #0
 	blt	board_smc
-	cmp 	r0, #LTZVISOR_SCHED_SYSCALL
+  push {r0}
+  mrc     p15, 0, r0, c1, c1, 0
+  and r0, r0, #0x1
+  cmp r0, #0
+  pop {r0}
+	@ cmp 	r0, #LTZVISOR_SCHED_SYSCALL
 	beq	_mon_scheduler
   /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
@@ -433,7 +448,7 @@ _secondary_wake_cpu1:
   dsb
   isb
   sev
-  SCR_FIQ_SET
+  @ SCR_FIQ_SET
   movs pc, lr
 
 
@@ -494,8 +509,9 @@ _secondary_wake_cpu1:
 _mon_fiq_handler:
 	sub	lr, lr, #4			@ Adjust LR
 
-	SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
-
+  SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
+  dsb
+  isb
 	NSWORLD_CONTEXT_SAVE
 
 	mov r0, sp
@@ -509,13 +525,13 @@ _mon_fiq_handler:
 	@ ldmfd   r0!, {r1, sp, lr}
 	@ msr	 	spsr, r1
 
-	cps #UNDEFINED_MODE
-	ldmfd   r0!, {r1, sp, lr}
-	msr	 	spsr, r1
-
-	cps #ABORT_MODE
-	ldmfd   r0!, {r1, sp, lr}
-	msr	 	spsr, r1
+	@ cps #UNDEFINED_MODE
+	@ ldmfd   r0!, {r1, sp, lr}
+	@ msr	 	spsr, r1
+  @
+	@ cps #ABORT_MODE
+	@ ldmfd   r0!, {r1, sp, lr}
+	@ msr	 	spsr, r1
 
 	cps #SYSTEM_MODE
 	ldmfd   r0!, {r1, sp, lr}
@@ -528,13 +544,20 @@ _mon_fiq_handler:
 	cps #MONITOR_MODE
 	mov sp, r0
 
-	pop {r0-r12}
+  @ pop 	{r0}
+	@ vpop	{d16-d31}
+	@ vpop	{d0-d15}
+	@ vmsr  fpscr, r0
 
   pop {r1, r2}
   mov lr, r1
   msr spsr, r2
+
+	pop {r0-r12}
+
   movs pc, lr
   @ rfefd sp!
+
 
 /**
  * Monitor scheduler - schedule NS_guest
@@ -566,10 +589,6 @@ _mon_fiq_handler:
 @ 	WORLD_CONTEXT_RESTORE
 @ 	/* Set NS bit and go NS world */
 @ 	SCR_NS_SET
-@   @ push {r0-r3, lr}
-@   @ bl cachel2_invalidate
-@   @ bl cachel2_clean
-@   @ pop {r0-r3, lr}
 @ 	isb
 @ 	dsb
 @ 	movs    pc, lr				@ Return from exception (MON -> NS_SVC)
@@ -578,14 +597,21 @@ _mon_fiq_handler:
 _mon_scheduler:
   SCR_FIQ_CLEAR
   @ cps #MONITOR_MODE
+  @ srsfd sp!, #MONITOR_MODE
+	push {r0-r12}
+
   mrs r1, spsr
   mov r0, lr
   push {r0, r1}
-  stmfd	sp, {r0,r1}
-  sub 	sp, sp, #(2*4)
-  @ srsfd sp!, #MONITOR_MODE
-	push {r0-r12}
-  @ srsfd sp!, #MONITOR_MODE
+  
+  @ stmfd	sp!, {r0,r1}
+  @ sub 	sp, sp, #(2*4)
+
+  @ fmrx  r1,  fpscr
+	@ vpush {d0-d15}
+  @ vpush	{d16-d31}
+  @ push	{r1}
+
 	mov r0, sp
 
 	cps #SUPERVISOR_MODE
@@ -596,30 +622,30 @@ _mon_scheduler:
 	mrs	 r1, spsr
 	stmfd   r0!, {r1, sp, lr}
 
-	cps #ABORT_MODE
-	mrs	 r1, spsr
-	stmfd    r0!, {r1, sp, lr}
-
-	cps #UNDEFINED_MODE
-	mrs	 r1, spsr
-	stmfd    r0!, {r1, sp, lr}
+	@ cps #ABORT_MODE
+	@ mrs	 r1, spsr
+	@ stmfd    r0!, {r1, sp, lr}
+  @
+	@ cps #UNDEFINED_MODE
+	@ mrs	 r1, spsr
+	@ stmfd    r0!, {r1, sp, lr}
 
 	@ cps #IRQ_MODE
 	@ mrs	 r1, spsr
   @ stmfd    r0!, {r1, sp, lr}
 
 	cps #FIQ_MODE
-	stmfd r0!, {r8-r12}
+  stmfd 	 r0!, {r8-r12}
 	mrs	 r1, spsr
 	stmfd    r0!, {r1, sp, lr}
 
 	cps #MONITOR_MODE
 	mov sp, r0
 
-	NSWORLD_CONTEXT_RESTORE
+  NSWORLD_CONTEXT_RESTORE
 
 	/* Set NS bit and go NS world */
-	SCR_NS_SET
+  SCR_NS_SET
 	isb
 	dsb
 	movs    pc, lr

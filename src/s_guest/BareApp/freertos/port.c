@@ -138,15 +138,6 @@ the CPU itself before modifying certain hardware registers. */
 
 
 /* Macro to unmask all interrupt priorities. */
-// #define portCLEAR_INTERRUPT_MASK()									\
-// {																	\
-// 	portCPU_IRQ_DISABLE();											\
-// 	portICCPMR_PRIORITY_MASK_REGISTER = portUNMASK_VALUE;			\
-// 	__asm volatile (	"DSB		\n"								\
-// 						"ISB		\n" );							\
-// 	portCPU_IRQ_ENABLE();											\
-// }
-
 #define portCLEAR_INTERRUPT_MASK()									\
 {																	\
 	portCPU_FIQ_DISABLE();											\

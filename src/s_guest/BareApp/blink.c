@@ -83,6 +83,16 @@ void print_warning(uint32_t arg)
 	printk("Arg 0x%x\n", arg);
 }
 
+void print_restore (uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5)
+{
+	printk("Restore:\nR0: 0x%x, R1: 0x%x, R2: 0x%x,\n R3: 0x%x, R4: 0x%x, R5: 0x%x\n", r0, r1, r2, r3, r4, r5);
+}
+
+void print_save (uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5)
+{
+	printk("Save:\nR0: 0x%x, R1: 0x%x, R2: 0x%x,\n R3: 0x%x, R4: 0x%x, R5: 0x%x\n", r0, r1, r2, r3, r4, r5);
+}
+
 int main() {
 
 	/** Initialize hardware */
@@ -120,6 +130,7 @@ void led_blink( void * parameters ){
 
 	for( ;; ){
 		toggle ^=0xF;
+		// printk("blink\n");
 		*ptr = toggle;
 		YIELD();
 		// printk("call yield\n");

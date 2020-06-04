@@ -17,6 +17,7 @@ void vApplicationFIQHandler( uint32_t ulICCIAR );
 // XScuGic xInterruptController; 	/* Interrupt controller instance */
 
 void vApplicationFIQHandler( uint32_t ulICCIAR )
+// void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
 {
 // extern const XScuGic_Config XScuGic_ConfigTable[];
 extern void FreeRTOS_Tick_Handler (void);

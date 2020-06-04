@@ -54,11 +54,10 @@ extern uint8_t ttc_flag;
 
 void sFIQ_handler() __attribute__ ((interrupt ("FIQ")));
 void register_handler(uint32_t interrupt, fiq_handler handler);
-
+// asm volatile("ldr r0, =0x0ffffff1\n");
 #define YIELD() \
 do{ \
 			asm volatile(".arch_extension sec\n");\
-			asm volatile("ldr r0, =0x0ffffff1\n");\
 			asm volatile("smc #0");\
 }while(0)
 

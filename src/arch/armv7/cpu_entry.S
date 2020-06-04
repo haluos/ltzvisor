@@ -131,6 +131,8 @@ __init_vmemory:
 	/* Disable MMU */
 	mrc 	p15, 0, r1, c1, c0, 0			@ Read SCTLR register
 	bic 	r1, r1, #SCTLR_MMU_BIT			@ Clear M bit (disable MMU)
+	bic		r1, r1, #0x2
+	orr		r1, r1, #(0x1 << 10)
 	mcr 	p15, 0, r1, c1, c0, 0			@ Write SCTLR register
 	/* Disable L1 Caches */
 	mrc 	p15, 0, r1, c1, c0, 0			@ Read SCTLR register
