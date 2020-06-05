@@ -92,7 +92,7 @@ void hw_init (void)
 	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,7);
   ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
-  ttc_request(TTC1, TTCx_2, 1000000);
+  ttc_request(TTC1, TTCx_2, 10000);
 	/** Start counting */
 	ttc_enable(TTC1, TTCx_2);
 }

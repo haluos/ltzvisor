@@ -97,19 +97,12 @@ _secure_vector_table:
 	b	_low_level_abt			@ Data Abort exception handler
 	nop	  				@ Placeholder for address exception vector
 	b     	.				@ IRQ exception handler -not used
-	ldr    pc, _fiq			@ FIQ exception handler
+	ldr pc, _fiq			@ FIQ exception handler
 
 .globl sFIQ_handler
 _fiq:
   .word sFIQ_handler
   @ .word   FreeRTOS_IRQ_Handler
-  @ call_c_function_arg sFIQ_handler
-  @ exception_return_arg
-  @ bx lr
-  @ stmdb	sp!,{r0-r3,r12}		/* state save from compiled code */
-	@ bl 	sFIQ_handler
-  @ ldmia	sp!,{r0-r3,r12}		/* state restore from compiled code */
-	@ subs	pc, lr, #4			/* adjust return */
 
 _svc:
   .word   FreeRTOS_SWI_Handler
@@ -127,9 +120,11 @@ _prefetch_entry:
 	b	.	@ Stuck (FIXME)
 
 _low_level_abt:
-  push {r0-r12,lr}
-  bl abort_exception
-  pop {r0-r12,lr}
+  @ push {r0-r12,lr}
+  @ mrs r1, spsr
+  @ push {r1}
+  b abort_exception
+  @ pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
 

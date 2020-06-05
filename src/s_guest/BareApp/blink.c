@@ -72,10 +72,16 @@ void prefetch_exception(void)
 
 void abort_exception(void)
 {
-	uint32_t par;
-	asm volatile ("subs r0, lr, #8");
+	uint32_t par, state;
+	asm volatile("push {lr}");
+	asm volatile ("sub r0, lr, #8");
 	asm volatile ("mov %0, r0" : "=r"(par) ::);
-	printk("Abort 0x%x\n", par);
+	asm volatile("mrs %0, spsr" : "=r"(state)::);
+	printk("Abort at 0x%x, SPSR: 0x%x\n", par, state);
+	// for(int i=0;i<1000;i++);
+	asm volatile("pop {lr}");
+	asm volatile("subs pc, lr, #8");
+	while(1);
 }
 
 void print_warning(uint32_t arg)
@@ -127,6 +133,9 @@ void led_blink( void * parameters ){
 	static uint32_t toggle;
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
+	uint32_t state;
+	asm volatile("mrs %0, CPSR" : "=r"(state)::);
+	printk("CPSR: 0x%x\n", state);
 
 	for( ;; ){
 		toggle ^=0xF;

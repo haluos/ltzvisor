@@ -65,21 +65,7 @@
 
 	SRSDB	sp!, #SYS_MODE
 	CPS		#SYS_MODE
-	@ push {r0-r12,lr}
-	@ mrs r3, spsr
-	@ mov r0, r12
-	@ mov r1, r14
-	@ mov r2, r8
-	@ @ mov r3, r9
-	@ mov r4, r10
-	@ mov r5, r11
-	@ bl print_save
-	@ pop {r0-r12,lr}
 	PUSH	{R0-R12, R14}
-
-	@ mrs r1, spsr
-  @ mov r0, lr
-  @ push {r0, r1}
 
 	/* Push the critical nesting count. */
 	LDR		R2, ulCriticalNestingConst
@@ -146,34 +132,10 @@
 
 	/* Restore all system mode registers other than the SP (which is already
 	being used). */
-
-	@ pop {r1, r2}
-  @ mov lr, r1
-	@ mrs r3, cpsr
-  @ msr spsr, r3
-
 	POP		{R0-R12, R14}
-	@ push {r0-r12,lr}
-	@ mov r0, r12
-	@ mov r1, r14
-	@ mov r2, r8
-	@ mov r3, r9
-	@ mov r4, r10
-	@ mov r5, r11
-	@ bl print_restore
-	@ pop {r0-r12,lr}
-	@ pop {r6,r7}
-	@ mrs r8, cpsr
-	@ push {r0-r12,lr}
-	@ mov r0, r8
-	@ bl print_warning
-	@ pop {r0-r12,lr}
-	@ msr spsr, r8
-	@ movs pc, r6
 
 	/* Return to the task code, loading CPSR on the way. */
 	RFEIA	sp!
-	@ movs pc, lr
 
 	.endm
 

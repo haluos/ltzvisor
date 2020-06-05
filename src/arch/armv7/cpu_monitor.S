@@ -221,11 +221,11 @@
 	mrs	 r1, spsr
 	stmia   r0!, {r1, r13, lr}
 
-  @ vmrs r1, fpscr
+  @ fmrx r1, fpscr
   @ vstmia r0!, {d0-d15}
   @ vstmia r0!, {d16-d31}
-  @ ldr r2, r0
-  @ str r1, [r2]
+  @ @ mov r2, r0
+  @ stmia r0!, {r1}
 
 	cps #MONITOR_MODE
 .endm
@@ -300,9 +300,11 @@
 
   @ vldmia r0!, {d0-d15}
   @ vldmia r0!, {d16-d31}
-  @ ldr r1, [r0]
-  @ add r0, r0, #4
+  @ @ mov r2, r0
+  @ ldmia r0!, {r1}
+  @ @ add r0, r0, #4
   @ vmsr fpscr, r1
+
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
   @ pop {lr}
@@ -316,14 +318,19 @@
  * @retval
  */
 .macro exception_return_arg
-	ldmfd	sp!, {r1}
-	msr	spsr, r1
-	push	{r1}
-	mov	r1, #0
-	dsb
-	pop	{r1}
-  SCR_FIQ_SET
-	ldmfd	sp!, {r1-r12, pc}^
+	@ ldmfd	sp!, {r1}
+	@ msr	spsr, r1
+	@ push	{r1}
+	@ mov	r1, #0
+	@ dsb
+	@ pop	{r1}
+	@ ldmfd	sp!, {r1-r12, lr}
+  @ SCR_FIQ_SET
+  @ SCR_NS_SET
+  @ movs pc, lr
+  pop {r1-r12,lr}
+  SCR_NS_SET
+  rfefd sp!
 .endm
 
 /**
@@ -334,9 +341,13 @@
  * @retval
  */
 .macro call_c_function_arg func_name
-	stmfd   sp!, {r1-r12, lr}
-	mrs	r4, spsr
-	stmfd   sp!, {r4}
+  SCR_NS_CLEAR
+  srsfd sp!, #MONITOR_MODE
+  push {r1-r12,lr}
+  @ SCR_FIQ_CLEAR
+	@ stmfd   sp!, {r1-r12, lr}
+	@ mrs	r4, spsr
+	@ stmfd   sp!, {r4}
 	bl	\func_name
 .endm
 
@@ -384,15 +395,9 @@ __mon_fiq_handler:
 .globl _mon_smc_handler
 	/** Monitor - SMC handler */
 _mon_smc_handler:
-  SCR_FIQ_CLEAR
 	cmn	r0, #0
 	blt	board_smc
-  push {r0}
-  mrc     p15, 0, r0, c1, c1, 0
-  and r0, r0, #0x1
-  cmp r0, #0
-  pop {r0}
-	@ cmp 	r0, #LTZVISOR_SCHED_SYSCALL
+	cmp 	r0, #LTZVISOR_SCHED_SYSCALL
 	beq	_mon_scheduler
   /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
@@ -426,7 +431,7 @@ _wake_cpu1:
   ldr r0,=0xfffffff0    @ location to which code address needs to be written
   ldr r1,=_cpu1_entry_address   @ fetch start address of code
   str r1,[r0]   @ store start address to predefined location
-  bl flush_icache_and_dcache
+  @ bl flush_icache_and_dcache
   dmb         @ wait till address is written to 0xfffffff0
   sev         @ issue Send Event instruction
   bl wait_till_cpu1_boots
@@ -439,17 +444,20 @@ _wake_cpu1:
 */
 .globl _secondary_wake_cpu1
 _secondary_wake_cpu1:
-  push {r0-r12,lr}
-  bl flush_icache_and_dcache
-  pop {r0-r12,lr}
+  @ push {r0-r12,lr}
+  @ bl flush_icache_and_dcache
+  @ pop {r0-r12,lr}
+  SCR_NS_CLEAR
+  srsfd sp!, #MONITOR_MODE
   ldr r3, =0xfffffff0
   str r1, [r3]
   dmb
   dsb
   isb
   sev
-  @ SCR_FIQ_SET
-  movs pc, lr
+  SCR_NS_SET
+  @ movs pc, lr
+  rfefd sp!
 
 
 /**
@@ -509,9 +517,14 @@ _secondary_wake_cpu1:
 _mon_fiq_handler:
 	sub	lr, lr, #4			@ Adjust LR
 
+  push {r1}
+  mov 	r1,#0
+	mcr	p15, 0, r1, c7, c5, 6
+  pop {r1}
+
   SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
-  dsb
-  isb
+  @ dsb
+  @ isb
 	NSWORLD_CONTEXT_SAVE
 
 	mov r0, sp
@@ -525,13 +538,13 @@ _mon_fiq_handler:
 	@ ldmfd   r0!, {r1, sp, lr}
 	@ msr	 	spsr, r1
 
-	@ cps #UNDEFINED_MODE
-	@ ldmfd   r0!, {r1, sp, lr}
-	@ msr	 	spsr, r1
-  @
-	@ cps #ABORT_MODE
-	@ ldmfd   r0!, {r1, sp, lr}
-	@ msr	 	spsr, r1
+	cps #UNDEFINED_MODE
+	ldmfd   r0!, {r1, sp, lr}
+	msr	 	spsr, r1
+
+	cps #ABORT_MODE
+	ldmfd   r0!, {r1, sp, lr}
+	msr	 	spsr, r1
 
 	cps #SYSTEM_MODE
 	ldmfd   r0!, {r1, sp, lr}
@@ -544,16 +557,15 @@ _mon_fiq_handler:
 	cps #MONITOR_MODE
 	mov sp, r0
 
-  @ pop 	{r0}
-	@ vpop	{d16-d31}
-	@ vpop	{d0-d15}
-	@ vmsr  fpscr, r0
+  pop 	{r0}
+	vpop	{d16-d31}
+	vpop	{d0-d15}
+	vmsr  fpscr, r0
 
-  pop {r1, r2}
-  mov lr, r1
-  msr spsr, r2
+  pop {r1}
+  msr spsr, r1
 
-	pop {r0-r12}
+	pop {r0-r12,r14}
 
   movs pc, lr
   @ rfefd sp!
@@ -595,22 +607,23 @@ _mon_fiq_handler:
 
 .globl _mon_scheduler
 _mon_scheduler:
-  SCR_FIQ_CLEAR
-  @ cps #MONITOR_MODE
   @ srsfd sp!, #MONITOR_MODE
-	push {r0-r12}
+  @ cps #MONITOR_MODE
+
+	push {r0-r12,r14}
 
   mrs r1, spsr
-  mov r0, lr
-  push {r0, r1}
-  
+  push {r1}
+
   @ stmfd	sp!, {r0,r1}
   @ sub 	sp, sp, #(2*4)
 
-  @ fmrx  r1,  fpscr
-	@ vpush {d0-d15}
-  @ vpush	{d16-d31}
-  @ push	{r1}
+  fmrx  r1,  fpscr
+	vpush {d0-d15}
+  vpush	{d16-d31}
+  push	{r1}
+
+  cps #MONITOR_MODE
 
 	mov r0, sp
 
@@ -622,13 +635,13 @@ _mon_scheduler:
 	mrs	 r1, spsr
 	stmfd   r0!, {r1, sp, lr}
 
-	@ cps #ABORT_MODE
-	@ mrs	 r1, spsr
-	@ stmfd    r0!, {r1, sp, lr}
-  @
-	@ cps #UNDEFINED_MODE
-	@ mrs	 r1, spsr
-	@ stmfd    r0!, {r1, sp, lr}
+	cps #ABORT_MODE
+	mrs	 r1, spsr
+	stmfd    r0!, {r1, sp, lr}
+
+	cps #UNDEFINED_MODE
+	mrs	 r1, spsr
+	stmfd    r0!, {r1, sp, lr}
 
 	@ cps #IRQ_MODE
 	@ mrs	 r1, spsr

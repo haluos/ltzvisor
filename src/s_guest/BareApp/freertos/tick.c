@@ -29,6 +29,7 @@ uint32_t ulInterruptID;
 	/* The ID of the interrupt is obtained by bitwise anding the ICCIAR value
 	with 0x3FF. */
 	ulInterruptID = ulICCIAR & 0x3FFUL;
+	// ulInterruptID = interrupt_number_get();
 	if( ulInterruptID < NO_OF_INTERRUPTS_IMPLEMENTED )
 	{
 		// xil_printf("%d\n", ulInterruptID);
@@ -55,11 +56,12 @@ void FreeRTOS_SetupTTCTickInterrupt( void )
 
 	FreeRTOS_ClearTTCTickInterrupt();
 	/* Set tick every 10 ms */
-	ttc_request(TTC0, TTCx_2, 10000);
+	ttc_request(TTC0, TTCx_2, 50000);
 	ttc_enable(TTC0, TTCx_2);
 }
 
 void FreeRTOS_ClearTTCTickInterrupt( void )
 {
 	ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+	interrupt_clear(TTC0_TTCx_2_INTERRUPT,0);
 }

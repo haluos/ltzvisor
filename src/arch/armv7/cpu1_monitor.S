@@ -23,13 +23,16 @@
  * @retval
  */
 .macro cpu1_exception_return_arg
-	ldmfd	sp!, {r1}
-	msr	spsr, r1
-	push	{r1}
-	mov	r1, #0
-	dsb
-	pop	{r1}
-	ldmfd	sp!, {r1-r12, pc}^
+	@ ldmfd	sp!, {r1}
+	@ msr	spsr, r1
+	@ push	{r1}
+	@ mov	r1, #0
+	@ dsb
+	@ pop	{r1}
+	@ ldmfd	sp!, {r1-r12, pc}^
+  pop {r1-r12,lr}
+	SET_SCR_NS
+  rfefd sp!
 .endm
 
 /**
@@ -40,9 +43,12 @@
  * @retval
  */
 .macro cpu1_call_c_function_arg func_name
-	stmfd   sp!, {r1-r12, lr}
-	mrs	r4, spsr
-	stmfd   sp!, {r4}
+	@ stmfd   sp!, {r1-r12, lr}
+	@ mrs	r4, spsr
+	@ stmfd   sp!, {r4}
+	CLEAR_SCR_NS
+  srsfd sp!, #MONITOR_MODE
+  push {r1-r12,lr}
 	bl	\func_name
 .endm
 
@@ -112,8 +118,6 @@
 	cps #IRQ_MODE
 	mrs r1, spsr
 	stmia r0!, {r1, r13, lr}
-	@ IRQ banked registers need to be preserved too
-	stmia r0!, {r8-r12}
 	@ Go back to Monitor
 	cps #MONITOR_MODE
 .endm
@@ -150,8 +154,6 @@
 	cps #IRQ_MODE
 	ldmia r0!, {r1, sp, lr}
 	msr spsr_cxsf, r1
-	@ Refresh IRQ banked registers
-	ldmia r0!, {r8-r12}
 	@ Go back to Monitor
 	cps #MONITOR_MODE
 	pop {r0, r1}
