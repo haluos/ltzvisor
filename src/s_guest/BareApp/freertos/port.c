@@ -126,13 +126,27 @@ the CPU itself before modifying certain hardware registers. */
 	__asm volatile ( "DSB" );										\
 	__asm volatile ( "ISB" );
 
+uint32_t val;
+// \
+// extern uint32_t printk(const char *fmt, ...);\
+// asm volatile("mrs %0, CPSR" : "=r"(val)::);\
+// printk("\nCPSR in FIQ disable is 0x%x\n", val);
+// \
+// extern uint32_t printk(const char *fmt, ...);\
+// asm volatile("mrs %0, CPSR" : "=r"(val)::);\
+// printk("\nCPSR in FIQ enable is 0x%x\n", val);
+
 #define portCPU_FIQ_DISABLE()										\
-	__asm volatile ( "CPSID f" ::: "memory" );						\
+	__asm volatile ( "mrs %0, cpsr" : "=r"(val):: );						\
+	__asm volatile("orr %0,%1,#0x40" : "=r"(val) : "r"(val):);\
+	__asm volatile("msr cpsr_c, %0" :: "r"(val):);\
 	__asm volatile ( "DSB" );										\
 	__asm volatile ( "ISB" );
 
 #define portCPU_FIQ_ENABLE()										\
-	__asm volatile ( "CPSIE f" ::: "memory" );						\
+	__asm volatile ( "mrs %0, cpsr" : "=r"(val):: );						\
+	__asm volatile("bic %0,%1,#0x40" : "=r"(val) : "r"(val):);\
+	__asm volatile("msr cpsr_c, %0" :: "r"(val):);\
 	__asm volatile ( "DSB" );										\
 	__asm volatile ( "ISB" );
 

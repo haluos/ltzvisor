@@ -65,6 +65,8 @@ extern uint32_t _abort_stack[STACK_SIZE/4];
 extern uint32_t _undefined_stack[STACK_SIZE/4];
 
 /** SYS stack allocation */
+extern uint32_t _system_stack[(STACK_SIZE)/4];
+
 extern uint32_t _user_stack[(STACK_SIZE)/4];
 
 /** MON stack allocation */

@@ -61,6 +61,8 @@ uint32_t _abort_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ 
 uint32_t _undefined_stack[STACK_SIZE/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** SYS stack allocation (4-bit alligned) */
+uint32_t _system_stack[(STACK_SIZE)/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
+
 uint32_t _user_stack[(STACK_SIZE)/4] __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
 
 /** MON stack allocation (4-bit alligned) */

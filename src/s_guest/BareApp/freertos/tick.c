@@ -56,7 +56,7 @@ void FreeRTOS_SetupTTCTickInterrupt( void )
 
 	FreeRTOS_ClearTTCTickInterrupt();
 	/* Set tick every 10 ms */
-	ttc_request(TTC0, TTCx_2, 50000);
+	ttc_request(TTC0, TTCx_2, 10000);
 	ttc_enable(TTC0, TTCx_2);
 }
 

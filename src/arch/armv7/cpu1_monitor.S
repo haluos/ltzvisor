@@ -30,8 +30,10 @@
 	@ dsb
 	@ pop	{r1}
 	@ ldmfd	sp!, {r1-r12, pc}^
-  pop {r1-r12,lr}
+  pop {r1-r12}
 	SET_SCR_NS
+  dsb
+  isb
   rfefd sp!
 .endm
 
@@ -47,8 +49,10 @@
 	@ mrs	r4, spsr
 	@ stmfd   sp!, {r4}
 	CLEAR_SCR_NS
+  dsb
+  isb
   srsfd sp!, #MONITOR_MODE
-  push {r1-r12,lr}
+  push {r1-r12}
 	bl	\func_name
 .endm
 

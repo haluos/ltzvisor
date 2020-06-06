@@ -60,28 +60,12 @@ void vApplicationIdleHook( void )
 	YIELD();
 }
 
-void undefined_exception (void)
+void secure_yield()
 {
-	printk("Undefined\n");
-}
-
-void prefetch_exception(void)
-{
-	printk("Prefetch\n");
-}
-
-void abort_exception(void)
-{
-	uint32_t par, state;
-	asm volatile("push {lr}");
-	asm volatile ("sub r0, lr, #8");
-	asm volatile ("mov %0, r0" : "=r"(par) ::);
-	asm volatile("mrs %0, spsr" : "=r"(state)::);
-	printk("Abort at 0x%x, SPSR: 0x%x\n", par, state);
-	// for(int i=0;i<1000;i++);
-	asm volatile("pop {lr}");
-	asm volatile("subs pc, lr, #8");
-	while(1);
+	while(1){
+		YIELD();
+		// vTaskDelay(1000/portTICK_RATE_MS);
+	}
 }
 
 void print_warning(uint32_t arg)
@@ -113,7 +97,8 @@ int main() {
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
-	// xTaskCreate( led_blink, "task", 200, NULL, 1, NULL );
+	// xTaskCreate( led_blink, "task", 600, NULL, 2, NULL );
+	// xTaskCreate( secure_yield, "task", 200, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
 	/* This point will never be reached */

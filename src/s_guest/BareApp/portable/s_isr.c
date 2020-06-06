@@ -91,6 +91,46 @@ void register_handler(uint32_t interrupt, fiq_handler handler){
 
 }
 
+void undefined_exception (void)
+{
+	uint32_t par, state;
+	// asm volatile("push {lr}");
+	asm volatile ("sub r0, lr, #4");
+	asm volatile ("mov %0, r0" : "=r"(par) ::);
+	asm volatile("mrs %0, spsr" : "=r"(state)::);
+	printk("Undefined at 0x%x, SPSR: 0x%x\n", par, state);
+	// asm volatile("pop {lr}");
+	// asm volatile("subs pc, lr, #4");
+	while(1);
+}
+
+void prefetch_exception(void)
+{
+	uint32_t par, state;
+	asm volatile("push {lr}");
+	asm volatile ("sub r0, lr, #4");
+	asm volatile ("mov %0, r0" : "=r"(par) ::);
+	asm volatile("mrs %0, spsr" : "=r"(state)::);
+	printk("Prefetch at 0x%x, SPSR: 0x%x\n", par, state);
+	asm volatile("pop {lr}");
+	asm volatile("subs pc, lr, #4");
+	while(1);
+}
+
+void abort_exception(void)
+{
+	uint32_t par, state;
+	asm volatile("push {lr}");
+	asm volatile ("sub r0, lr, #8");
+	asm volatile ("mov %0, r0" : "=r"(par) ::);
+	asm volatile("mrs %0, spsr" : "=r"(state)::);
+	printk("Abort at 0x%x, SPSR: 0x%x\n", par, state);
+	// for(int i=0;i<1000;i++);
+	asm volatile("pop {lr}");
+	asm volatile("subs pc, lr, #8");
+	while(1);
+}
+
 void undef_yield(void)
 {
 	printk("Undef yield!\n");

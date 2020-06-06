@@ -64,6 +64,7 @@
 	system mode to save the remaining system mode registers. */
 
 	SRSDB	sp!, #SYS_MODE
+	push {r8-r12,lr}
 	CPS		#SYS_MODE
 	PUSH	{R0-R12, R14}
 
@@ -135,6 +136,9 @@
 	POP		{R0-R12, R14}
 
 	/* Return to the task code, loading CPSR on the way. */
+	cps #FIQ_MODE
+	pop {r8-r12,lr}
+	cps #SYS_MODE
 	RFEIA	sp!
 
 	.endm
@@ -170,16 +174,18 @@ vPortRestoreTaskContext:
 .align 8
 .type FreeRTOS_IRQ_Handler, %function
 FreeRTOS_IRQ_Handler:
-	/* Return to the interrupted instruction. */
-	SUB		lr, lr, #4
 	@ push {r0-r12,lr}
 	@ bl print_warning
 	@ pop {r0-r12,lr}
+	/* Return to the interrupted instruction. */
+	SUB		lr, lr, #4
 
 	/* Push the return address and SPSR. */
 	PUSH	{lr}
 	MRS		lr, SPSR
 	PUSH	{lr}
+
+	push {r0-r12,lr}
 
 	/* Change to supervisor mode to allow reentry. */
 	CPS		#SVC_MODE
@@ -215,9 +221,9 @@ FreeRTOS_IRQ_Handler:
 	POP		{r0-r12, lr}
 	ADD		sp, sp, r2
 
-	CPSID	f
-	DSB
-	ISB
+	@ CPSID	f
+	@ DSB
+	@ ISB
 
 	/* Write the value read from ICCIAR to ICCEOIR. */
 	LDR 	r4, ulICCEOIRConst
@@ -245,6 +251,7 @@ exit_without_switch:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
+	pop {r0-r12,lr}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}
@@ -261,6 +268,7 @@ switch_before_exit:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
+	pop {r0-r12,lr}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}
