@@ -28,7 +28,6 @@
 /* Standard includes. */
 #include <stdlib.h>
 #include <string.h>
-// #include "printk.h"
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
 all the API functions to use the MPU wrappers.  That should only be done when
@@ -880,8 +879,7 @@ UBaseType_t x;
 	{
 		pxTopOfStack = &( pxNewTCB->pxStack[ ulStackDepth - ( uint32_t ) 1 ] );
 		pxTopOfStack = ( StackType_t * ) ( ( ( portPOINTER_SIZE_TYPE ) pxTopOfStack ) & ( ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK ) ) ); /*lint !e923 !e9033 !e9078 MISRA exception.  Avoiding casts between pointers and integers is not practical.  Size differences accounted for using portPOINTER_SIZE_TYPE type.  Checked by assert(). */
-		// extern uint32_t printk(const char *fmt, ...);
-		// printk("\nStack is at 0x%x\n", pxTopOfStack);
+
 		/* Check the alignment of the calculated top of stack is correct. */
 		configASSERT( ( ( ( portPOINTER_SIZE_TYPE ) pxTopOfStack & ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK ) == 0UL ) );
 
@@ -2249,8 +2247,6 @@ BaseType_t xAlreadyYielded = pdFALSE;
 		}
 	}
 	taskEXIT_CRITICAL();
-	// extern uint32_t printk(const char *fmt, ...);
-	// printk("critical exit\n");
 
 	return xAlreadyYielded;
 }
@@ -2692,8 +2688,6 @@ BaseType_t xSwitchRequired = pdFALSE;
 					be removed from the Blocked state. */
 					pxTCB = listGET_OWNER_OF_HEAD_ENTRY( pxDelayedTaskList ); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
 					xItemValue = listGET_LIST_ITEM_VALUE( &( pxTCB->xStateListItem ) );
-					// extern uint32_t printk(const char *fmt, ...);
-					// printk("\nstate list item in incrementTick 0x%x\n",&( pxCurrentTCB->xStateListItem));
 
 					if( xConstTickCount < xItemValue )
 					{
@@ -2973,8 +2967,6 @@ void vTaskSwitchContext( void )
 		}
 		#endif /* configUSE_NEWLIB_REENTRANT */
 	}
-	// extern uint32_t printk(const char *fmt, ...);
-	// printk("\nselect highest %s\n", pxCurrentTCB->pcTaskName);
 }
 /*-----------------------------------------------------------*/
 

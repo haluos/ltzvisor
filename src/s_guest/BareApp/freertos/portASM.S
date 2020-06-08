@@ -51,10 +51,6 @@
 	.global FreeRTOS_SWI_Handler
 	.global vPortRestoreTaskContext
 
-.macro portGET_S_CONTEXT reg
-	ldr \reg, =s_context
-.endm
-
 
 
 
@@ -62,11 +58,16 @@
 
 	/* Save the LR and SPSR onto the system mode stack before switching to
 	system mode to save the remaining system mode registers. */
-
 	SRSDB	sp!, #SYS_MODE
-	push {r8-r12,lr}
 	CPS		#SYS_MODE
 	PUSH	{R0-R12, R14}
+
+	mov r0, sp
+	cps #FIQ_MODE
+	stmfd r0!, {r8-r12}
+
+	cps #SYS_MODE
+	mov sp, r0
 
 	/* Push the critical nesting count. */
 	LDR		R2, ulCriticalNestingConst
@@ -131,14 +132,18 @@
 	LDRNE	R4, [R4]
 	STR		R4, [R2]
 
+	mov r0, sp
+	cps #FIQ_MODE
+	ldmfd r0!, {r8-r12}
+
+	cps #SYS_MODE
+	mov sp, r0
+
 	/* Restore all system mode registers other than the SP (which is already
 	being used). */
 	POP		{R0-R12, R14}
 
 	/* Return to the task code, loading CPSR on the way. */
-	cps #FIQ_MODE
-	pop {r8-r12,lr}
-	cps #SYS_MODE
 	RFEIA	sp!
 
 	.endm
@@ -149,13 +154,10 @@
 /******************************************************************************
  * SVC handler is used to start the scheduler.
  *****************************************************************************/
-.align 8
+@ .align 4
 .type FreeRTOS_SWI_Handler, %function
 FreeRTOS_SWI_Handler:
 	/* Save the context of the current task and select a new task to run. */
-	@ push {r0-r12,lr}
-	@ bl print_warning
-	@ pop {r0-r12,lr}
 	portSAVE_CONTEXT
 	LDR R0, vTaskSwitchContextConst
 	BLX	R0
@@ -171,27 +173,59 @@ vPortRestoreTaskContext:
 	CPS		#SYS_MODE
 	portRESTORE_CONTEXT
 
-.align 8
+@ .align 4
 .type FreeRTOS_IRQ_Handler, %function
 FreeRTOS_IRQ_Handler:
+	/* Return to the interrupted instruction. */
 	@ push {r0-r12,lr}
 	@ bl print_warning
 	@ pop {r0-r12,lr}
-	/* Return to the interrupted instruction. */
+	push {r0-r2}
+	ldr r0, =monitor_flag
+	ldr r1, [r0]
+	mov r2, #1
+	cmp r1,r2
+	beq cont
 	SUB		lr, lr, #4
 
 	/* Push the return address and SPSR. */
+cont:
+	mov r2, #0
+	str r2, [r0]
+	pop {r0-r2}
+
 	PUSH	{lr}
 	MRS		lr, SPSR
 	PUSH	{lr}
-
-	push {r0-r12,lr}
 
 	/* Change to supervisor mode to allow reentry. */
 	CPS		#SVC_MODE
 
 	/* Push used registers. */
 	PUSH	{r0-r4, r12}
+
+	/* Read value from the interrupt acknowledge register, which is stored in r0
+	for future parameter and interrupt clearing use. */
+	LDR 	r2, ulICCIARConst
+	LDR		r2, [r2]
+	LDR		r0, [r2]
+
+	CMP		r0, #8
+	BNE		1f
+
+	LDR 	r4, ulICCEOIRConst
+	LDR		r4, [r4]
+	STR		r0, [r4]
+
+	POP		{r0-r4, r12}
+	CPS		#FIQ_MODE
+	POP		{LR}
+	MSR		SPSR_cxsf, LR
+	POP		{LR}
+
+	B		FreeRTOS_SWI_Handler
+
+1:
 
 	/* Increment nesting count.  r3 holds the address of ulPortInterruptNesting
 	for future use.  r1 holds the original ulPortInterruptNesting value for
@@ -201,12 +235,6 @@ FreeRTOS_IRQ_Handler:
 	ADD		r4, r1, #1
 	STR		r4, [r3]
 
-	/* Read value from the interrupt acknowledge register, which is stored in r0
-	for future parameter and interrupt clearing use. */
-	LDR 	r2, ulICCIARConst
-	LDR		r2, [r2]
-	LDR		r0, [r2]
-
 	/* Ensure bit 2 of the stack pointer is clear.  r2 holds the bit 2 value for
 	future use.  _RB_ Does this ever actually need to be done provided the start
 	of the stack is 8-byte aligned? */
@@ -215,13 +243,13 @@ FreeRTOS_IRQ_Handler:
 	SUB		sp, sp, r2
 
 	/* Call the interrupt handler.  r4 pushed to maintain alignment. */
-	PUSH	{r0-r12, lr}
+	PUSH	{r0-r4, lr}
 	LDR		r1, vApplicationIRQHandlerConst
 	BLX		r1
-	POP		{r0-r12, lr}
+	POP		{r0-r4, lr}
 	ADD		sp, sp, r2
 
-	@ CPSID	f
+	@ CPSID	i
 	@ DSB
 	@ ISB
 
@@ -251,7 +279,6 @@ exit_without_switch:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
-	pop {r0-r12,lr}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}
@@ -268,7 +295,6 @@ switch_before_exit:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
-	pop {r0-r12,lr}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}
@@ -304,7 +330,7 @@ switch_before_exit:
  * called vApplicationIRQHandler().
  *****************************************************************************/
 
-.align 8
+@ .align 4
 .weak vApplicationIRQHandler
 .type vApplicationIRQHandler, %function
 vApplicationIRQHandler:
@@ -333,7 +359,7 @@ ulCriticalNestingConst: .word ulCriticalNesting
 ulPortTaskHasFPUContextConst: .word ulPortTaskHasFPUContext
 ulMaxAPIPriorityMaskConst: .word ulMaxAPIPriorityMask
 vTaskSwitchContextConst: .word vTaskSwitchContext
-vApplicationIRQHandlerConst: .word vApplicationFIQHandler
+vApplicationIRQHandlerConst: .word vApplicationIRQHandler
 ulPortInterruptNestingConst: .word ulPortInterruptNesting
 vApplicationFPUSafeIRQHandlerConst: .word vApplicationFPUSafeIRQHandler
 

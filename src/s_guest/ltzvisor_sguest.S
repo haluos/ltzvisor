@@ -6,6 +6,7 @@
  * Authors:
  *  Sandro Pinto <sandro@tzvisor.org>
  *  Jorge Pereira <jorgepereira89@gmail.com>
+ *  José Martins <josemartins90@gmail.com>
  *
  * This file is part of LTZVisor.
  *
@@ -38,92 +39,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  *
- * [ltzvisor_api.h]
+ * [ltzvisor_sguest.S]
  *
- * This file contains the LTZVisor API header.
+ * This file includes the S Guest binary image.
  *
- * (#) $id: ltzvisor_api.h 10-06-2015 s_pinto & j_pereira $
- * (#) $id: ltzvisor_api.h 18-09-2017 s_pinto (modified)$
+ * (#) $id: ltzvisor_nsguest.S 10-10-2015 s_pinto & j_pereira $
+ * (#) $id: ltzvisor_nsguest.S 18-09-2017 s_pinto (modified)$
+ * (#) $id: ltzvisor_sguest.S 05-04-2018 j_martins (modified)$
+
 */
 
-#ifndef __LTZVISOR_API_H
-#define __LTZVISOR_API_H
+.section .sguest_image, "a"
 
-#include <string.h>
-#include <cpu_defines.h>
-#include <cpu_helper.h>
-#include <cpu_vcpu.h>
-#include <cpu_cp15_switch.h>
-#include <ltzvisor.h>
-#include <ltzvisor_nsguest_config.h>
-#include <ltzvisor_hw.h>
-
-struct guest_conf {
-
-	char_t gce_name[30];
-	uint32_t gce_id;
-	/* Initial Ram Disk info */
-	uint32_t gce_trd_init;
-	uint32_t gce_trd_start;
-	uint32_t gce_trd_end;
-	uint32_t gce_trd_load;
-	/* Binary info */
-	uint32_t gce_bin_start;
-	uint32_t gce_bin_end;
-	uint32_t gce_bin_load;
-};
-
-
-void wait_till_cpu1_boots(void);
-void lock_cpu0 (void);
-/**
- * LTZVisor initialization
- *
- * @param
- *
- * @retval
- */
-uint32_t ltzvisor_init(void);
-
-/**
- * LTZVisor Kick off implementation
- *
- * @param
- *
- * @retval
- */
-void ltzvisor_kickoff(void);
-
-/**
- * LTZVisor Scheduler
- *
- * @param
- *
- * @retval
- */
-void ltzvisor_schedule(void);
-
-/**
- * LTZVisor NS_guest create
- *
- * @param  	g = pointer to guest configuration
- *
- * @retval 	TRUE if it is successful; FALSE if not!
- */
-uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g );
-
-uint32_t ltzvisor_sguest_create( struct guest_conf *g );
-
-/**
- * LTZVisor NS_guest restart
- *
- * @param  	g = pointer to guest configuration
- *
- * @retval 	TRUE if it is successful; FALSE if not!
- */
-uint32_t ltzvisor_nsguest_restart( struct nsguest_conf_entry *g );
-
-uint8_t get_sched_flag (void);
-
-
-#endif /* __LTZVISOR_API_H */
+.global SGUEST_start
+.global SGUEST_end
+SGUEST_start:
+	.incbin "../../../freertos_s/freertos.bin"
+SGUEST_end:

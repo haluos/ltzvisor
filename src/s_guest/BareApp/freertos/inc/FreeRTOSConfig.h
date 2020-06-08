@@ -74,7 +74,7 @@
 
 #define configMAX_CO_ROUTINE_PRIORITIES 2
 
-#define configMINIMAL_STACK_SIZE ( ( unsigned short ) 200)
+#define configMINIMAL_STACK_SIZE ( ( unsigned short ) 600)
 
 #define configTOTAL_HEAP_SIZE ( ( size_t ) ( 65536 ) )
 
@@ -98,7 +98,7 @@
 
 #define configCHECK_FOR_STACK_OVERFLOW 2
 
-#define configUSE_TASK_FPU_SUPPORT 1
+#define configUSE_TASK_FPU_SUPPORT 2
 
 #define configQUEUE_REGISTRY_SIZE 10
 
@@ -136,11 +136,11 @@
 #define configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET ( -0xf00 )
 #define configUNIQUE_INTERRUPT_PRIORITIES                32
 void vApplicationAssert( const char *pcFile, uint32_t ulLine );
-void FreeRTOS_SetupTTCTickInterrupt( void );
-#define configSETUP_TICK_INTERRUPT() FreeRTOS_SetupTTCTickInterrupt()
+void FreeRTOS_SetupTickInterrupt( void );
+#define configSETUP_TICK_INTERRUPT() FreeRTOS_SetupTickInterrupt()
 
-void FreeRTOS_ClearTTCTickInterrupt( void );
-#define configCLEAR_TICK_INTERRUPT()	FreeRTOS_ClearTTCTickInterrupt()
+void FreeRTOS_ClearTickInterrupt( void );
+#define configCLEAR_TICK_INTERRUPT()	FreeRTOS_ClearTickInterrupt()
 
 #define portSET_INTERRUPT_MASK_FROM_ISR()	ulPortSetInterruptMask()
 #define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vPortClearInterruptMask(x)

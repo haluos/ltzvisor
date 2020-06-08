@@ -482,4 +482,5 @@ void interrupt_critical_exit() {
 void interrupt_IPI_generate(uint32_t id, uint32_t target){
 	/* Software Generated Interrupt Register */
    	int_dist->ICDSGIR = (target << IPI_TARGET_SHIFT) | id;
+		// int_dist->ICDSGIR = (target << 24) | (1 << IPI_TARGET_SHIFT) | id;
 }

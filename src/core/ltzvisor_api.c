@@ -51,6 +51,8 @@
 /** Main is part of the secure VM */
 extern void main(void);
 
+void (*_start)(void);
+
 volatile uint8_t sync_flag;
 
 void lock_cpu0 (void)
@@ -109,6 +111,7 @@ void ltzvisor_kickoff(void){
 
 	/** Secure guest entry point */
 	main();
+	// _start();
 
 	/** This point should never be reached */
 	while(1);
@@ -187,6 +190,25 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 
 	return TRUE;
 }
+
+// uint32_t ltzvisor_sguest_create( struct guest_conf *g )
+// {
+//
+// 	_start = (void (*)(void)) g->gce_bin_load;
+//
+// 	/** Load Guest bin to Non-Secure Memory */
+// 	printk("      * S_Guest loading ...  \n\t");
+// 	printk("      * S_Guest gce_bin_load: 0x%x \n\t", g->gce_bin_load);
+// 	printk("      * S_Guest gce_bin_start: 0x%x \n\t", g->gce_bin_start);
+// 	printk("      * S_Guest gce_bin_end: 0x%x \n\t", g->gce_bin_end);
+// 	memcpy((uint32_t *)g->gce_bin_load,(uint32_t *)g->gce_bin_start,(g->gce_bin_end - g->gce_bin_start));
+// 	if(g->gce_trd_init) {
+// 		memcpy((uint32_t *)g->gce_trd_load,(uint32_t *)g->gce_trd_start,(g->gce_trd_end - g->gce_trd_start));
+// 	}
+// 	printk("      * NS_Guest load - OK  \n\t");
+//
+// 	return TRUE;
+// }
 
 /**
  * LTZVisor NS_guest restart

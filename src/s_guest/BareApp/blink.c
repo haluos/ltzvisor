@@ -64,6 +64,8 @@ void secure_yield()
 {
 	while(1){
 		YIELD();
+		asm volatile("dsb\n"
+									"isb");
 		// vTaskDelay(1000/portTICK_RATE_MS);
 	}
 }
@@ -98,7 +100,7 @@ int main() {
 	led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
 	// xTaskCreate( led_blink, "task", 600, NULL, 2, NULL );
-	// xTaskCreate( secure_yield, "task", 200, NULL, 1, NULL );
+	// xTaskCreate( secure_yield, "task", 600, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
 	/* This point will never be reached */

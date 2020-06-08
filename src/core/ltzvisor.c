@@ -52,6 +52,7 @@
 
 /** Config NS_Guest struct */
 extern struct nsguest_conf_entry nsguest_config;
+extern struct guest_conf sguest_config;
 
 /** NS_Guest context */
 tzmachine NS_Guest __attribute__ ((aligned (4))) __attribute__ ((section (".bss")));
@@ -83,6 +84,8 @@ void ltzvisor_main(void){
 		printk("Error: LTZVisor NS_Guest Create\n\t");
 		while(1);
 	}
+	// ltzvisor_sguest_create(&sguest_config);
+
 	printk(" -> CPUs: Waking up CPU1\n\t");
 	lock_cpu0();
 	_wake_cpu1();

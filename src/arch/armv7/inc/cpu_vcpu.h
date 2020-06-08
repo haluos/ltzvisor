@@ -95,7 +95,7 @@ struct core_regs {
 	uint32_t spsr_irq;
 	uint32_t r13_irq;
 	uint32_t lr_irq;
-	uint32_t r13_usr;
+	// uint32_t r13_usr;
 	uint32_t d0;
 	uint32_t d1;
 	uint32_t d2;

@@ -23,18 +23,19 @@
  * @retval
  */
 .macro cpu1_exception_return_arg
-	@ ldmfd	sp!, {r1}
-	@ msr	spsr, r1
-	@ push	{r1}
-	@ mov	r1, #0
-	@ dsb
-	@ pop	{r1}
-	@ ldmfd	sp!, {r1-r12, pc}^
-  pop {r1-r12}
-	SET_SCR_NS
-  dsb
-  isb
-  rfefd sp!
+	ldmfd	sp!, {r1}
+	msr	spsr, r1
+	push	{r1}
+	mov	r1, #0
+	dsb
+	pop	{r1}
+  SET_SCR_NS
+	ldmfd	sp!, {r1-r12, pc}^
+  @ pop {r1-r12}
+	@ SET_SCR_NS
+  @ dsb
+  @ isb
+  @ rfefd sp!
 .endm
 
 /**
@@ -45,14 +46,15 @@
  * @retval
  */
 .macro cpu1_call_c_function_arg func_name
-	@ stmfd   sp!, {r1-r12, lr}
-	@ mrs	r4, spsr
-	@ stmfd   sp!, {r4}
-	CLEAR_SCR_NS
-  dsb
-  isb
-  srsfd sp!, #MONITOR_MODE
-  push {r1-r12}
+  CLEAR_SCR_NS
+	stmfd   sp!, {r1-r12, lr}
+	mrs	r4, spsr
+	stmfd   sp!, {r4}
+	@ CLEAR_SCR_NS
+  @ dsb
+  @ isb
+  @ srsfd sp!, #MONITOR_MODE
+  @ push {r1-r12}
 	bl	\func_name
 .endm
 

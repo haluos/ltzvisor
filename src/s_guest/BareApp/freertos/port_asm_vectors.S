@@ -55,8 +55,7 @@
 .text
 .arm
 
-@ .global _bootp
-@ .global _startp
+.global _boot
 .global _freertos_vector_table
 .global _vector_table
 
@@ -71,8 +70,7 @@
 .section .vectors
 _vector_table:
 _freertos_vector_table:
-	//B	  _bootp
-	B 		.
+	B	  _boot
 	B	  FreeRTOS_Undefined
 	ldr   pc, _swi
 	B	  FreeRTOS_PrefetchAbortHandler

@@ -90,6 +90,13 @@ uint32_t ltzvisor_hw_init(void){
 	{
 		interrupt_security_config(i, Int_NS);
 	}
+	for(int i = 8; i < 16; i++)
+	{
+		interrupt_security_config(i, Int_S);
+	}
+	// interrupt_enable(8,TRUE);
+	// interrupt_target_set(8,0,1);
+	// interrupt_priority_set(8,3);
 	printk("      * GIC security - OK  \n\t");
 
 	/** Initialize Platform-specific */

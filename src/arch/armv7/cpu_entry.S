@@ -121,10 +121,10 @@ __setup_stacks:
 	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
 	add	sp, r1, #STACK_SIZE
 
-	ldr r1, =_user_stack
-	add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
-	add	r1, r1, #STACK_SIZE
-	ldm r1, {sp}^
+	@ ldr r1, =_user_stack
+	@ add	r1, r1, r0, lsl #STACK_SIZE_SHIFT
+	@ add	r1, r1, #STACK_SIZE
+	@ ldm r1, {sp}^
 
 	/* MONITOR mode */
 	msr	cpsr_c,#(MONITOR_MODE | IRQ_BIT | FIQ_BIT)	@ Change CPSR to Monitor MODE and disable only IRQ interrupts

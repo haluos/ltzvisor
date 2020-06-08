@@ -33,8 +33,11 @@
 /* Xilinx includes. */
 #include "xscutimer.h"
 #include "xscugic.h"
+#include "gic.h"
+#include "zynq_ttc.h"
 
 #define XSCUTIMER_CLOCK_HZ ( XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 2UL )
+extern uint32_t printk(const char *fmt, ...);
 
 /*
  * Some FreeRTOSConfig.h settings require the application writer to provide the
@@ -64,6 +67,7 @@ extern void FreeRTOS_Tick_Handler( void );
 XScuTimer_Config *pxTimerConfig;
 XScuGic_Config *pxGICConfig;
 const uint8_t ucRisingEdge = 3;
+// printk("Init tick\n");
 
 	/* This function is called with the IRQ interrupt disabled, and the IRQ
 	interrupt should be left disabled.  It is enabled automatically when the
@@ -77,10 +81,11 @@ const uint8_t ucRisingEdge = 3;
 	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
 
 	/* The priority must be the lowest possible. */
+	// interrupt_priority_set(XPAR_XTTCPS_1_INTR, 6);
 	// XScuGic_SetPriorityTriggerType( &xInterruptController, XPAR_SCUTIMER_INTR, portLOWEST_USABLE_INTERRUPT_PRIORITY << portPRIORITY_SHIFT, ucRisingEdge );
 
 	/* Install the FreeRTOS tick handler. */
-	// xStatus = XScuGic_Connect( &xInterruptController, XPAR_SCUTIMER_INTR, (Xil_ExceptionHandler) FreeRTOS_Tick_Handler, ( void * ) &xTimer );
+	// xStatus = XScuGic_Connect( &xInterruptController, TTC0_TTCx_2_INTERRUPT, (Xil_ExceptionHandler) FreeRTOS_Tick_Handler, ( void * ) &xTimer );
 	// configASSERT( xStatus == XST_SUCCESS );
 	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
 
@@ -89,6 +94,7 @@ const uint8_t ucRisingEdge = 3;
 	// xStatus = XScuTimer_CfgInitialize( &xTimer, pxTimerConfig, pxTimerConfig->BaseAddr );
 	// configASSERT( xStatus == XST_SUCCESS );
 	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
+	// ttc_init(TTC0,TTCx_2,INTERVAL);
 
 	/* Enable Auto reload mode. */
 	// XScuTimer_EnableAutoReload( &xTimer );
@@ -112,10 +118,19 @@ const uint8_t ucRisingEdge = 3;
 	// XScuTimer_Start( &xTimer );
 
 	/* Enable the interrupt for the xTimer in the interrupt controller. */
-	// XScuGic_Enable( &xInterruptController, XPAR_SCUTIMER_INTR );
+	// XScuGic_Enable( &xInterruptController, TTC0_TTCx_2_INTERRUPT );
 
 	/* Enable the interrupt in the xTimer itself. */
-	FreeRTOS_ClearTickInterrupt();
+	ttc_init(TTC0,TTCx_2,INTERVAL);
+
+	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
+	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
+	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 6);
+
+	FreeRTOS_ClearTTCTickInterrupt();
+	/* Set tick every 10 ms */
+	ttc_request(TTC0, TTCx_2, 10000);
+	ttc_enable(TTC0, TTCx_2);
 	// XScuTimer_EnableInterrupt( &xTimer );
 }
 /*-----------------------------------------------------------*/
@@ -123,28 +138,37 @@ const uint8_t ucRisingEdge = 3;
 void FreeRTOS_ClearTickInterrupt( void )
 {
 	// XScuTimer_ClearInterruptStatus( &xTimer );
+	ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+	// interrupt_clear(TTC0_TTCx_2_INTERRUPT,0);
+	// ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+	// interrupt_clear(TTC0_TTCx_2_INTERRUPT,0);
 }
 /*-----------------------------------------------------------*/
 
 // void vApplicationIRQHandler( uint32_t ulICCIAR )
-// {
-// extern const XScuGic_Config XScuGic_ConfigTable[];
-// static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;
-// uint32_t ulInterruptID;
-// const XScuGic_VectorTableEntry *pxVectorEntry;
-// uint32_t *ptr = (uint32_t *) 0x41200000;
-// *ptr |= 0xFF;
+void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
+{
+extern const XScuGic_Config XScuGic_ConfigTable[];
+static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;
+uint32_t ulInterruptID;
+const XScuGic_VectorTableEntry *pxVectorEntry;
+extern void FreeRTOS_Tick_Handler( void );
 
-// 	/* The ID of the interrupt is obtained by bitwise anding the ICCIAR value */
-// 	with 0x3FF.
-// 	ulInterruptID = ulICCIAR & 0x3FFUL;
-// 	if( ulInterruptID < XSCUGIC_MAX_NUM_INTR_INPUTS )
-// 	{
-// 		/* Call the function installed in the array of installed handler functions. */
-// 		pxVectorEntry = &( pxVectorTable[ ulInterruptID ] );
-// 		pxVectorEntry->Handler( pxVectorEntry->CallBackRef );
-// 	}
-// }
+	/* The ID of the interrupt is obtained by bitwise anding the ICCIAR value
+	with 0x3FF. */
+	ulInterruptID = ulICCIAR & 0x3FFUL;
+	if (ulInterruptID == TTC0_TTCx_2_INTERRUPT)
+	{
+		FreeRTOS_Tick_Handler();
+		return;
+	}
+	if( ulInterruptID < XSCUGIC_MAX_NUM_INTR_INPUTS )
+	{
+		/* Call the function installed in the array of installed handler functions. */
+		pxVectorEntry = &( pxVectorTable[ ulInterruptID ] );
+		pxVectorEntry->Handler( pxVectorEntry->CallBackRef );
+	}
+}
 /*-----------------------------------------------------------*/
 
 /* This version of vApplicationAssert() is declared as a weak symbol to allow it
@@ -160,7 +184,6 @@ volatile uint32_t ulLocalLine = ulLine; /* To prevent ulLine being optimized awa
 	not referenced.  They are intended for viewing in the debugger. */
 	( void ) pcLocalFileName;
 	( void ) ulLocalLine;
-	extern uint32_t printk(const char *fmt, ...);
 
 	printk( "Assert failed in file %s, line %lu\r\n", pcLocalFileName, ulLocalLine );
 
@@ -193,9 +216,9 @@ void vApplicationTickHook( void )
 /* This default idle hook does nothing and is declared as a weak symbol to allow
 the application writer to override this default by providing their own
 implementation in the application code. */
-// void vApplicationIdleHook( void )
-// {
-// }
+void vApplicationIdleHook( void )
+{
+}
 /*-----------------------------------------------------------*/
 
 /* This default malloc failed hook does nothing and is declared as a weak symbol
@@ -203,7 +226,6 @@ to allow the application writer to override this default by providing their own
 implementation in the application code. */
 void vApplicationMallocFailedHook( void )
 {
-	extern uint32_t printk(const char *fmt, ...);
 	printk( "vApplicationMallocFailedHook() called\n" );
 }
 /*-----------------------------------------------------------*/
@@ -220,7 +242,7 @@ volatile char *pcOverflowingTaskName = pcTaskName;
 
 	( void ) xOverflowingTaskHandle;
 	( void ) pcOverflowingTaskName;
-	extern uint32_t printk(const char *fmt, ...);
+
 	printk( "HALT: Task %s overflowed its stack.", pcOverflowingTaskName );
 	portDISABLE_INTERRUPTS();
 	for( ;; );

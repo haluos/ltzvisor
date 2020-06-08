@@ -83,8 +83,13 @@ extern uint32_t ulPortYieldRequired;			\
 	}											\
 }
 
+extern void interrupt_IPI_generate(uint32_t id, uint32_t target);
+
 #define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
-#define portYIELD() __asm volatile ( "SWI 0" ::: "memory" );
+// #define portYIELD() __asm volatile ( "SWI 0" ::: "memory" );
+#define portYIELD()	interrupt_IPI_generate(8,1);\
+						__asm volatile("dsb\n"\
+														"isb")
 
 
 /*-----------------------------------------------------------

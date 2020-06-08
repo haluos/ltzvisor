@@ -53,6 +53,7 @@ uint32_t interrupt;
 fiq_handler sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {NULL};
 
 extern uint8_t ttc_flag;
+uint8_t monitor_flag;
 
 /**
  * Generic FIQ handler

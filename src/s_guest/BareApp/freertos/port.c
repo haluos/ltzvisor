@@ -126,39 +126,15 @@ the CPU itself before modifying certain hardware registers. */
 	__asm volatile ( "DSB" );										\
 	__asm volatile ( "ISB" );
 
-uint32_t val;
-// \
-// extern uint32_t printk(const char *fmt, ...);\
-// asm volatile("mrs %0, CPSR" : "=r"(val)::);\
-// printk("\nCPSR in FIQ disable is 0x%x\n", val);
-// \
-// extern uint32_t printk(const char *fmt, ...);\
-// asm volatile("mrs %0, CPSR" : "=r"(val)::);\
-// printk("\nCPSR in FIQ enable is 0x%x\n", val);
-
-#define portCPU_FIQ_DISABLE()										\
-	__asm volatile ( "mrs %0, cpsr" : "=r"(val):: );						\
-	__asm volatile("orr %0,%1,#0x40" : "=r"(val) : "r"(val):);\
-	__asm volatile("msr cpsr_c, %0" :: "r"(val):);\
-	__asm volatile ( "DSB" );										\
-	__asm volatile ( "ISB" );
-
-#define portCPU_FIQ_ENABLE()										\
-	__asm volatile ( "mrs %0, cpsr" : "=r"(val):: );						\
-	__asm volatile("bic %0,%1,#0x40" : "=r"(val) : "r"(val):);\
-	__asm volatile("msr cpsr_c, %0" :: "r"(val):);\
-	__asm volatile ( "DSB" );										\
-	__asm volatile ( "ISB" );
-
 
 /* Macro to unmask all interrupt priorities. */
 #define portCLEAR_INTERRUPT_MASK()									\
 {																	\
-	portCPU_FIQ_DISABLE();											\
+	portCPU_IRQ_DISABLE();											\
 	portICCPMR_PRIORITY_MASK_REGISTER = portUNMASK_VALUE;			\
 	__asm volatile (	"DSB		\n"								\
 						"ISB		\n" );							\
-	portCPU_FIQ_ENABLE();											\
+	portCPU_IRQ_ENABLE();											\
 }
 
 #define portINTERRUPT_PRIORITY_REGISTER_OFFSET		0x400UL
@@ -226,7 +202,7 @@ extern XScuGic xInterruptController;
  * FPU registers to be saved on interrupt entry their IRQ handler must be
  * called vApplicationIRQHandler().
  */
-void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR ) __attribute__((weak));
+void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR ) __attribute__((weak) );
 
 /*-----------------------------------------------------------*/
 
@@ -324,6 +300,17 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	*pxTopOfStack = ( StackType_t ) pvParameters; /* R0 */
 	pxTopOfStack--;
 
+	*pxTopOfStack = ( StackType_t ) 0x06060606;	/* R12_fiq */
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x05050505;	/* R11_fiq */
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x04040404;	/* R10_fiq */
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x03030303;	/* R9_fiq */
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x02020202;	/* R8_fiq */
+	pxTopOfStack--;
+
 	/* The task will start with a critical nesting count of 0 as interrupts are
 	enabled. */
 	*pxTopOfStack = portNO_CRITICAL_NESTING;
@@ -379,7 +366,7 @@ int32_t lReturn;
 	lReturn = prvEnsureInterruptControllerIsInitialised();
 	if( lReturn == pdPASS )
 	{
-		// lReturn = XScuGic_Connect( &xInterruptController, ucInterruptID, pxHandler, pvCallBackRef );
+		lReturn = XScuGic_Connect( &xInterruptController, ucInterruptID, pxHandler, pvCallBackRef );
 	}
 	if( lReturn == XST_SUCCESS )
 	{
@@ -400,7 +387,7 @@ int32_t lReturn;
 	it is used, and that the initialisation only happens once. */
 	if( lInterruptControllerInitialised != pdTRUE )
 	{
-		lReturn = prvInitialiseInterruptController();
+		// lReturn = prvInitialiseInterruptController();
 
 		if( lReturn == pdPASS )
 		{
@@ -412,7 +399,7 @@ int32_t lReturn;
 		lReturn = pdPASS;
 	}
 
-	return lReturn;
+	return pdPASS;
 }
 /*-----------------------------------------------------------*/
 
@@ -422,18 +409,17 @@ BaseType_t xStatus;
 XScuGic_Config *pxGICConfig;
 
 	/* Initialize the interrupt controller driver. */
-	// pxGICConfig = XScuGic_LookupConfig( XPAR_SCUGIC_SINGLE_DEVICE_ID );
-	// xStatus = XScuGic_CfgInitialize( &xInterruptController, pxGICConfig, pxGICConfig->CpuBaseAddress );
-	// 	if( xStatus == XST_SUCCESS )
-	// 	{
-	// 		xStatus = pdPASS;
-	// 	}
-	// 	else
-	// 	{
-	// 		xStatus = pdFAIL;
-	// 	}
-	// configASSERT( xStatus == pdPASS );
-	xStatus = pdPASS;
+	pxGICConfig = XScuGic_LookupConfig( XPAR_SCUGIC_SINGLE_DEVICE_ID );
+	xStatus = XScuGic_CfgInitialize( &xInterruptController, pxGICConfig, pxGICConfig->CpuBaseAddress );
+		if( xStatus == XST_SUCCESS )
+		{
+			xStatus = pdPASS;
+		}
+		else
+		{
+			xStatus = pdFAIL;
+		}
+	configASSERT( xStatus == pdPASS );
 
 	return xStatus;
 }
@@ -442,17 +428,14 @@ XScuGic_Config *pxGICConfig;
 void vPortEnableInterrupt( uint8_t ucInterruptID )
 {
 int32_t lReturn;
-extern void interrupt_enable(uint32_t interrupt, uint32_t enable);
 
 	/* An API function is provided to enable an interrupt in the interrupt
 	controller. */
-	// lReturn = prvEnsureInterruptControllerIsInitialised();
-	// if( lReturn == pdPASS )
-	// {
-		// XScuGic_Enable( &xInterruptController, ucInterruptID );
-	// }
-	interrupt_enable(ucInterruptID, 1);
-	lReturn = pdPASS;
+	lReturn = prvEnsureInterruptControllerIsInitialised();
+	if( lReturn == pdPASS )
+	{
+		XScuGic_Enable( &xInterruptController, ucInterruptID );
+	}
 	configASSERT( lReturn );
 }
 /*-----------------------------------------------------------*/
@@ -460,17 +443,14 @@ extern void interrupt_enable(uint32_t interrupt, uint32_t enable);
 void vPortDisableInterrupt( uint8_t ucInterruptID )
 {
 int32_t lReturn;
-extern void interrupt_enable(uint32_t interrupt, uint32_t enable);
 
 	/* An API function is provided to disable an interrupt in the interrupt
 	controller. */
-	// lReturn = prvEnsureInterruptControllerIsInitialised();
-	// if( lReturn == pdPASS )
-	// {
-	// 	XScuGic_Disable( &xInterruptController, ucInterruptID );
-	// }
-	interrupt_enable(ucInterruptID, 0);
-	lReturn = pdPASS;
+	lReturn = prvEnsureInterruptControllerIsInitialised();
+	if( lReturn == pdPASS )
+	{
+		XScuGic_Disable( &xInterruptController, ucInterruptID );
+	}
 	configASSERT( lReturn );
 }
 /*-----------------------------------------------------------*/
@@ -534,7 +514,6 @@ uint32_t ulAPSR;
 			automatically turned back on in the CPU when the first task starts
 			executing. */
 			// portCPU_IRQ_DISABLE();
-			portCPU_FIQ_DISABLE();
 
 			/* Start the timer that generates the tick ISR. */
 			configSETUP_TICK_INTERRUPT();
@@ -564,8 +543,11 @@ void vPortEndScheduler( void )
 
 void vPortEnterCritical( void )
 {
+	extern uint32_t printk(const char *fmt, ...);
 	/* Mask interrupts up to the max syscall interrupt priority. */
+	// printk("Enter critical\n");
 	ulPortSetInterruptMask();
+	printk("Interrupt\n");
 
 	/* Now interrupts are disabled ulCriticalNesting can be accessed
 	directly.  Increment ulCriticalNesting to keep a count of how many times
@@ -624,13 +606,11 @@ void FreeRTOS_Tick_Handler( void )
 	so there is no need to save and restore the current mask value.  It is
 	necessary to turn off interrupts in the CPU itself while the ICCPMR is being
 	updated. */
-	// portCPU_IRQ_DISABLE();
-	portCPU_FIQ_DISABLE();
+	portCPU_IRQ_DISABLE();
 	portICCPMR_PRIORITY_MASK_REGISTER = ( uint32_t ) ( configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT );
 	__asm volatile (	"dsb		\n"
 						"isb		\n" ::: "memory" );
-	// portCPU_IRQ_ENABLE();
-	portCPU_FIQ_ENABLE();
+	portCPU_IRQ_ENABLE();
 
 	/* Increment the RTOS tick. */
 	if( xTaskIncrementTick() != pdFALSE )
@@ -677,8 +657,7 @@ uint32_t ulReturn;
 
 	/* Interrupt in the CPU must be turned off while the ICCPMR is being
 	updated. */
-	// portCPU_IRQ_DISABLE();
-	portCPU_FIQ_DISABLE();
+	portCPU_IRQ_DISABLE();
 	if( portICCPMR_PRIORITY_MASK_REGISTER == ( uint32_t ) ( configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT ) )
 	{
 		/* Interrupts were already masked. */
@@ -691,8 +670,7 @@ uint32_t ulReturn;
 		__asm volatile (	"dsb		\n"
 							"isb		\n" ::: "memory" );
 	}
-	// portCPU_IRQ_ENABLE();
-	portCPU_FIQ_ENABLE();
+	portCPU_IRQ_ENABLE();
 
 	return ulReturn;
 }
@@ -734,11 +712,11 @@ uint32_t ulReturn;
 #endif /* configASSERT_DEFINED */
 /*-----------------------------------------------------------*/
 
-void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR )
-{
-	( void ) ulICCIAR;
-	configASSERT( ( volatile void * ) NULL );
-}
+// void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR )
+// {
+// 	( void ) ulICCIAR;
+// 	configASSERT( ( volatile void * ) NULL );
+// }
 
 #if( configGENERATE_RUN_TIME_STATS == 1 )
 /*

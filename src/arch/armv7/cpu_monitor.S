@@ -224,13 +224,13 @@
 	mrs	 r1, spsr
 	stmia   r0!, {r1, r13, lr}
 
-  stmia r0!, {sp}^
+  @ stmia r0!, {sp}^
 
-  @ fmrx r1, fpscr
-  @ vstmia r0!, {d0-d15}
-  @ vstmia r0!, {d16-d31}
-  @ @ mov r2, r0
-  @ stmia r0!, {r1}
+  fmrx r1, fpscr
+  vstmia r0!, {d0-d15}
+  vstmia r0!, {d16-d31}
+  @ mov r2, r0
+  stmia r0!, {r1}
 
 	cps #MONITOR_MODE
 .endm
@@ -304,14 +304,14 @@
 	ldmia	r0!, {r1, sp, lr}
 	msr	spsr_cxsf, r1
 
-  ldmia r0!, {sp}^
+  @ ldmia r0!, {sp}^
 
-  @ vldmia r0!, {d0-d15}
-  @ vldmia r0!, {d16-d31}
-  @ @ mov r2, r0
-  @ ldmia r0!, {r1}
-  @ @ add r0, r0, #4
-  @ vmsr fpscr, r1
+  vldmia r0!, {d0-d15}
+  vldmia r0!, {d16-d31}
+  @ mov r2, r0
+  ldmia r0!, {r1}
+  @ add r0, r0, #4
+  vmsr fpscr, r1
 
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
@@ -332,12 +332,12 @@
 	mov	r1, #0
 	dsb
 	pop	{r1}
-  SCR_FIQ_SET
+  @ SCR_FIQ_SET
   SCR_NS_SET
-  dsb
-  isb
+  @ dsb
+  @ isb
 	ldmfd	sp!, {r1-r12, pc}^
-  movs pc, lr
+  @ movs pc, lr
   @ pop {r1-r12}
   @ SCR_NS_SET
   @ dsb
@@ -358,7 +358,7 @@
   @ isb
   @ srsfd sp!, #MONITOR_MODE
   @ push {r1-r12}
-  SCR_FIQ_CLEAR
+  @ SCR_FIQ_CLEAR
 	stmfd   sp!, {r1-r12, lr}
 	mrs	r4, spsr
 	stmfd   sp!, {r4}
@@ -462,7 +462,7 @@ _secondary_wake_cpu1:
   @ bl flush_icache_and_dcache
   @ pop {r0-r12,lr}
   SCR_NS_CLEAR
-  srsfd sp!, #MONITOR_MODE
+  @ srsfd sp!, #MONITOR_MODE
   ldr r3, =0xfffffff0
   str r1, [r3]
   dmb
@@ -470,8 +470,8 @@ _secondary_wake_cpu1:
   isb
   sev
   SCR_NS_SET
-  @ movs pc, lr
-  rfefd sp!
+  movs pc, lr
+  @ rfefd sp!
 
 
 /**
@@ -554,6 +554,10 @@ _mon_fiq_handler:
   isb
 	NSWORLD_CONTEXT_SAVE
 
+  ldr r0, =monitor_flag
+  mov r1, #1
+  str r1, [r0]
+
 	mov r0, sp
 
 	cps #FIQ_MODE
@@ -584,22 +588,22 @@ _mon_fiq_handler:
 	cps #MONITOR_MODE
 	mov sp, r0
 
-  @ pop 	{r0}
-	@ vpop	{d16-d31}
-	@ vpop	{d0-d15}
-	@ vmsr  fpscr, r0
+  pop 	{r0}
+	vpop	{d16-d31}
+	vpop	{d0-d15}
+	vmsr  fpscr, r0
 
-  pop {r1}
+  @ pop {r1}
   @ mov lr, r2
-  msr spsr, r1
+  @ msr spsr, r1
 
 	ldmfd sp, {r0-r12}^
   add 	sp,sp,#(13*4)
 
-  pop {r0-r12,lr}
+  pop {r0-r12}
 
-  @ rfefd sp!
-  movs pc, lr
+  rfefd sp!
+  @ movs pc, lr
 
 
 /**
@@ -649,24 +653,24 @@ _mon_fiq_handler:
 
 .globl _mon_scheduler
 _mon_scheduler:
-  @ srsfd sp!, #MONITOR_MODE
+  srsfd sp!, #MONITOR_MODE
   cps #MONITOR_MODE
   @ push {lr}
-  push {r0-r12,lr}
+  push {r0-r12}
 
 	stmfd sp, {r0-r12}^
   sub 	sp, sp, #(13*4)
 
-  mrs r1, spsr
-  push {r1}
+  @ mrs r1, spsr
+  @ push {r1}
 
   @ stmfd	sp!, {r0,r1}
   @ sub 	sp, sp, #(2*4)
 
-  @ fmrx  r1,  fpscr
-	@ vpush {d0-d15}
-  @ vpush	{d16-d31}
-  @ push	{r1}
+  fmrx  r1,  fpscr
+	vpush {d0-d15}
+  vpush	{d16-d31}
+  push	{r1}
 
   @ cps #MONITOR_MODE
 
