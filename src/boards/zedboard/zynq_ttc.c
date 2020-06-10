@@ -242,6 +242,27 @@ uint32_t ttc_request(uint32_t ttc_num, uint32_t timer_num, uint32_t useconds){
 	return TRUE;
 }
 
+uint32_t ttc_reset (uint32_t ttc_num, uint32_t timer_num)
+{
+	Zynq_Ttc * ptr_ttc = NULL;
+	uint32_t cnt_cntrl = 0;
+	uint32_t clk_cntrl = 0;
+
+	/**  Check Arguments  */
+	if( (ttc_num > TTC1) || (timer_num > TTCx_2)){
+		/* Invalid Argument */
+		return (FALSE);
+	}
+	ptr_ttc = Ptr_Ttc[ttc_num];
+
+	/** Reset counter value and restarts counting */
+	cnt_cntrl = ptr_ttc->cnt_cntrl[timer_num];
+	cnt_cntrl |= TTC_CNT_CNTRL_RST;
+	ptr_ttc->cnt_cntrl[timer_num] = cnt_cntrl;
+
+	return TRUE;
+}
+
 /**
  * TTC interrupt clear
  *
@@ -277,8 +298,12 @@ uint32_t ttc_interrupt_clear(uint32_t interrupt){
 			ttc_tim_num = 0;
 			break;
 		case TTC1_TTCx_2_INTERRUPT:
+			// printk("Clear TTC1\n");
 			ttc_num = 1;
 			ttc_tim_num = 1;
+			// ttc_disable(TTC1,TTCx_2);
+			// ttc_reset(TTC0,TTCx_2);
+			// ttc_enable(TTC0,TTCx_2);
 			break;
 		case TTC1_TTCx_3_INTERRUPT:
 			ttc_num = 1;

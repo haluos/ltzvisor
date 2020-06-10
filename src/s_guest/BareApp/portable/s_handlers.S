@@ -96,29 +96,34 @@ _secure_vector_table:
 	b	_prefetch_entry			@ Prefetch Abort exception handler
 	b	_low_level_abt			@ Data Abort exception handler
 	nop	  				@ Placeholder for address exception vector
-	b     	.				@ IRQ exception handler -not used
+  b .				@ IRQ exception handler -not used
 	ldr pc, _fiq			@ FIQ exception handler
 
+@ .align 4
 .globl sFIQ_handler
 _fiq:
   .word sFIQ_handler
   @ .word   FreeRTOS_IRQ_Handler
 
+@ .align 4
 _svc:
   .word   FreeRTOS_SWI_Handler
 
+@ .align 4
 _undefined_entry:
   @ push {r0-r12,lr}
   b undefined_exception
   @ pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
+@ .align 4
 _prefetch_entry:
   @ push {r0-r12,lr}
   b prefetch_exception
   @ pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
 
+@ .align 4
 _low_level_abt:
   @ push {r0-r12,lr}
   @ mrs r1, spsr
@@ -126,6 +131,11 @@ _low_level_abt:
   b abort_exception
   @ pop {r0-r12,lr}
 	b	.	@ Stuck (FIXME)
+
+@ .align 4
+_irq_handler:
+  b irq_exception
+  b .
 
 
 .global yield

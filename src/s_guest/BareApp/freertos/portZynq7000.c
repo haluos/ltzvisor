@@ -125,9 +125,9 @@ const uint8_t ucRisingEdge = 3;
 
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
-	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 6);
+	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 31);
 
-	FreeRTOS_ClearTTCTickInterrupt();
+	FreeRTOS_ClearTickInterrupt();
 	/* Set tick every 10 ms */
 	ttc_request(TTC0, TTCx_2, 10000);
 	ttc_enable(TTC0, TTCx_2);
@@ -145,8 +145,8 @@ void FreeRTOS_ClearTickInterrupt( void )
 }
 /*-----------------------------------------------------------*/
 
-// void vApplicationIRQHandler( uint32_t ulICCIAR )
-void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
+void vApplicationIRQHandler( uint32_t ulICCIAR )
+// void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
 {
 extern const XScuGic_Config XScuGic_ConfigTable[];
 static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;
@@ -160,6 +160,11 @@ extern void FreeRTOS_Tick_Handler( void );
 	if (ulInterruptID == TTC0_TTCx_2_INTERRUPT)
 	{
 		FreeRTOS_Tick_Handler();
+		return;
+	}
+	if (ulInterruptID == TTC1_TTCx_2_INTERRUPT)
+	{
+		ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
 		return;
 	}
 	if( ulInterruptID < XSCUGIC_MAX_NUM_INTR_INPUTS )

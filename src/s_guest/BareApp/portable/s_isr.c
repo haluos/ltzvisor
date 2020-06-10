@@ -114,7 +114,7 @@ void prefetch_exception(void)
 	asm volatile("mrs %0, spsr" : "=r"(state)::);
 	printk("Prefetch at 0x%x, SPSR: 0x%x\n", par, state);
 	asm volatile("pop {lr}");
-	asm volatile("subs pc, lr, #4");
+	// asm volatile("subs pc, lr, #4");
 	while(1);
 }
 
@@ -129,6 +129,20 @@ void abort_exception(void)
 	// for(int i=0;i<1000;i++);
 	asm volatile("pop {lr}");
 	asm volatile("subs pc, lr, #8");
+	while(1);
+}
+
+void irq_exception(void)
+{
+	uint32_t par, state;
+	// asm volatile("push {lr}");
+	asm volatile ("sub r0, lr, #4");
+	asm volatile ("mov %0, r0" : "=r"(par) ::);
+	asm volatile("mrs %0, spsr" : "=r"(state)::);
+	printk("IRQ at 0x%x, SPSR: 0x%x\n", par, state);
+	// for(int i=0;i<1000;i++);
+	// asm volatile("pop {lr}");
+	// asm volatile("subs pc, lr, #8");
 	while(1);
 }
 

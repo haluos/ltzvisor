@@ -64,8 +64,8 @@ int main (void)
     // }
     // else
     // {
-      // for (i = 0; i < 100000000; i++);
-      while(!ttc_flag);
+      for (i = 0; i < 100000000; i++);
+      // while(!ttc_flag);
       printk("NS Guest: Hello World %d %d %f\r\n", cnt, flag, x);
       flag = 1;
       ttc_flag = 0;

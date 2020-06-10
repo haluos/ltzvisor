@@ -160,40 +160,6 @@
  *
  * @retval
  */
-@ .macro WORLD_CONTEXT_SAVE
-@ 	mov	r4, r0
-@ 	pop	{r0 - r3}
-@ 	stmia	r4, {r0 - r3}
-@ 	mov	r3, r4
-@ 	add	r4, r4, #_ASM_R4_OFFSET
-@ 	mov	r0, r4
-@ 	pop	{r4, lr}
-@ 	stmia	r0!, {r4-r12}
-@ 	mrs	r1, spsr
-@ 	stmia	r0!, {r1, lr}
-@ 	/* Save SVC */
-@ 	cps #SUPERVISOR_MODE
-@ 	mrs	 r1, spsr
-@ 	stmia   r0!, {r1, r13, lr}
-@ 	/* Save SYS */
-@ 	cps #SYSTEM_MODE
-@ 	mrs	 r1, spsr
-@ 	stmia   r0!, {r1,r13, lr}
-@ 	/* Save ABORT */
-@ 	cps #ABORT_MODE
-@ 	mrs	 r1, spsr
-@ 	stmia   r0!, {r1, r13, lr}
-@ 	/* Save UNDEF */
-@ 	cps #UNDEFINED_MODE
-@ 	mrs	 r1, spsr
-@ 	stmia   r0!, {r1, r13, lr}
-@ 	/* Save IRQ */
-@ 	cps #IRQ_MODE
-@ 	mrs	 r1, spsr
-@ 	stmia   r0!, {r1, r13, lr}
-@ 	cps #MONITOR_MODE
-@ .endm
-
 .macro NSWORLD_CONTEXT_SAVE
 	push {lr}
 	GET_NS_WORLD_CONTEXT lr
@@ -224,13 +190,25 @@
 	mrs	 r1, spsr
 	stmia   r0!, {r1, r13, lr}
 
-  @ stmia r0!, {sp}^
+  @ stmia r0, {r0-r12}^
+  @ add r0, r0, #(13*4)
+  @ stmia r0, {sp, lr}^
+  @ add r0, r0, #(2*4)
 
-  fmrx r1, fpscr
-  vstmia r0!, {d0-d15}
-  vstmia r0!, {d16-d31}
-  @ mov r2, r0
-  stmia r0!, {r1}
+  @ mov   r1, #0x00f00000
+  @ mcr p15, 0, r1, c1, c0, 2
+  @ isb
+  @ mov   r1, #0x40000000    /* Enable FPU to enable acess FPU registers*/
+  @ vmsr  fpexc, r1
+  @ isb
+  @ vmrs r1, fpexc
+  @ stmia r0!, {r1}
+
+  @ fmrx r1, fpscr
+  @ vstmia r0!, {d0-d15}
+  @ vstmia r0!, {d16-d31}
+  @ @ mov r2, r0
+  @ stmia r0!, {r1}
 
 	cps #MONITOR_MODE
 .endm
@@ -242,38 +220,6 @@
  *
  * @retval
  */
-@ .macro WORLD_CONTEXT_RESTORE
-@ 	mov	r4, r0
-@ 	ldmia 	r4!, {r0 - r3}
-@ 	push 	{r0, r1}
-@ 	mov 	r0, r4
-@ 	ldmia	r0!, {r4 - r12}
-@ 	ldmia	r0!, {r1, lr}
-@ 	msr	spsr_cxsf, r1
-@ 	/* Restore SVC */
-@ 	cps 	#SUPERVISOR_MODE
-@ 	ldmia   r0!, {r1, r13, lr}
-@ 	msr 	spsr_cxsf, r1
-@ 	/* Restore SYS */
-@ 	cps 	#SYSTEM_MODE
-@ 	ldmia   r0!, {r1,r13, lr}
-@ 	msr 	spsr_cxsf, r1
-@ 	/* Restore ABORT */
-@ 	cps 	#ABORT_MODE
-@ 	ldmia	r0!, {r1, r13, lr}
-@ 	msr	spsr_cxsf, r1
-@ 	/* Restore UNDEF */
-@ 	cps 	#UNDEFINED_MODE
-@ 	ldmia	r0!, {r1, r13, lr}
-@ 	msr	spsr_cxsf, r1
-@ 	/* Restore IRQ */
-@ 	cps 	#IRQ_MODE
-@ 	ldmia	r0!, {r1, r13, lr}
-@ 	msr	spsr_cxsf, r1
-@ 	cps 	#MONITOR_MODE
-@ 	pop	{r0, r1}
-@ .endm
-
 .macro NSWORLD_CONTEXT_RESTORE
   @ push {lr}
 	GET_NS_WORLD_CONTEXT lr
@@ -304,14 +250,40 @@
 	ldmia	r0!, {r1, sp, lr}
 	msr	spsr_cxsf, r1
 
-  @ ldmia r0!, {sp}^
+  @ ldmia r0, {r0-r12}^
+  @ add r0, r0, #(13*4)
+  @ ldmia r0, {sp, lr}^
+  @ add r0, r0, #(2*4)
 
-  vldmia r0!, {d0-d15}
-  vldmia r0!, {d16-d31}
-  @ mov r2, r0
-  ldmia r0!, {r1}
-  @ add r0, r0, #4
-  vmsr fpscr, r1
+  @ mov   r1, #0x00f00000
+  @ mcr p15, 0, r1, c1, c0, 2
+  @ isb
+  @ mov   r1, #0x40000000    /* Enable FPU to enable acess FPU registers*/
+  @ vmsr  fpexc, r1
+  @ isb
+  @ ldmia r0!, {r1}
+  @ vmsr  fpexc, r1
+  @ isb
+
+  @ vldmia r0!, {d0-d15}
+  @ vldmia r0!, {d16-d31}
+  @ @ mov r2, r0
+  @ ldmia r0!, {r1}
+  @ @ add r0, r0, #4
+  @ vmsr fpscr, r1
+
+  @ ldmia r0!, {r1}
+  @ mcr p15, 0, r1, c1, c0, 2
+
+  @ cps #FIQ_MODE
+  @ mov r8, #0
+  @ mov r9, #0
+  @ mov r10, #0
+  @ mov r11, #0
+  @ mov r12, #0
+  @ mov sp, #0
+  @ mov lr, #0
+  @ msr spsr_fsxc, #0
 
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
@@ -426,9 +398,35 @@ _mon_smc_handler:
    * @retval
    */
 board_smc:
-	call_c_function_arg board_handler
-	exception_return_arg
-  @ movs pc, lr
+	@ call_c_function_arg board_handler
+	@ exception_return_arg
+  @ srsfd sp!, #MONITOR_MODE
+  SCR_NS_CLEAR
+  cmp r0, #-30        @ Read handler
+  bne 1f
+  ldr r0, [r1]
+	b smc_handler_end
+1:
+  cmp r0, #-31        @ Write handler
+	bne 2f
+  @ cmp r1, #0xfffffff0
+  @ beq smc_handler_end
+  str r2, [r1]
+	dsb
+	isb
+	b smc_handler_end
+2:
+  cmp r0, #-32        @ Power control CP15 write handler
+	bne smc_handler_end
+  mrc p15, 0, r0, c15, c0, 0
+  orr r0, r0, #1
+  mcr p15, 0, r0, c15, c0, 0
+  dsb
+  isb
+smc_handler_end:
+  SCR_NS_SET
+  movs pc, lr
+	@ rfefd sp!
 
 /*
     _wake_cpu1 is part of ZedBoard's LTZVisor SMP library code. It follows
@@ -481,63 +479,6 @@ _secondary_wake_cpu1:
  *
  * @retval
  */
-@ .globl _mon_fiq_handler
-@ 	/** Monitor - FIQ handler */
-@ _mon_fiq_handler:
-@ 	sub	lr, lr, #4			@ Adjust LR
-@   push {r4, lr}
-@ 	push	{r0 - r3}
-@ 	@ /* ACK FIQ */
-@ 	@ mrc 	p15,4,r0,c15,c0,0		@ Read Periph Base Addr
-@ 	@ add 	r0,r0, #0x0100			@ Add GIC interface offset (A9)
-@ 	@ ldr 	r1,[r0,#_ASM_GIC_INT_ID]	@ Get interrupt ID
-@ 	@ ldr 	r2,=interrupt
-@ 	@ str 	r1,[r2]
-@ 	@ ldr 	r0,[r0,#0x0C]			@ ACK FIQ
-@ 	/* Save NS context */
-@ 	SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
-@ 	GET_NS_WORLD_CONTEXT
-@ 	WORLD_CONTEXT_SAVE
-@ 	/* Handling FIQ */
-@ 	@ ldr 	r2,=interrupt
-@ 	@ ldr 	r0,[r2]
-@ 	@ //bl 	ttc_interrupt_clear		/* FIXME - supposing always ttc_isr */
-@ 	@ bl 	fiq_handler			/* FIXME - supposing always ttc_isr */
-@ 	@ ldr 	r2,=interrupt
-@ 	@ ldr 	r0,[r2]
-@ 	@ ldr 	r1,=0x00
-@ 	@ bl 	interrupt_clear
-@   mov r0, sp
-@
-@   cps #SYSTEM_MODE
-@   ldmfd r0!, {r1, sp, lr}
-@   msr spsr, r1
-@
-@   cps #SUPERVISOR_MODE
-@   ldmfd r0!, {r1, sp, lr}
-@   msr spsr, r1
-@ 	/* Restore FIQ state */
-@   cps 	#FIQ_MODE
-@   ldmfd r0,	{r1-r2}				@ Pop SPSR_FIQ and LR_FIQ
-@   add r0, r0, #(2*4)
-@ 	@ mov 	r0, sp				@ Update stack pointer
-@ 	msr 	spsr,r1
-@ 	mov 	lr,r2
-@ 	ldmfd 	r0, {r8-r13}			@ Restore all banked FIQ regs (R8-R14)
-@ 	add 	r0,r0,#(6*4)			@ Update stack pointer
-@
-@ 	/* Get back to MON */
-@ 	cps 	#MONITOR_MODE
-@ 	mov 	sp,r0
-@ 	/* Go S world */
-@ 	pop 	{r0-r1}
-@ 	msr 	spsr,r0
-@ 	mov 	lr,r1
-@ 	ldmfd 	sp, {r0-r14}^
-@ 	add 	sp,sp,#(14*4)
-@   pop {r0-r12}
-@ 	movs	pc,lr				@ Return from exception (MON -> S_SVC)
-
 .globl _mon_fiq_handler
 	/** Monitor - FIQ handler */
 _mon_fiq_handler:
@@ -550,13 +491,13 @@ _mon_fiq_handler:
   pop {r1}
 
   SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
-  dsb
-  isb
+  @ dsb
+  @ isb
 	NSWORLD_CONTEXT_SAVE
 
-  ldr r0, =monitor_flag
-  mov r1, #1
-  str r1, [r0]
+  @ ldr r0, =monitor_flag
+  @ mov r1, #1
+  @ str r1, [r0]
 
 	mov r0, sp
 
@@ -586,24 +527,28 @@ _mon_fiq_handler:
 	msr	 	spsr, r1
 
 	cps #MONITOR_MODE
+
+  @ ldmfd r0, {sp, lr}^
+  @ add r0, r0, #(2*4)
+
 	mov sp, r0
 
-  pop 	{r0}
-	vpop	{d16-d31}
-	vpop	{d0-d15}
-	vmsr  fpscr, r0
+  @ ldmfd sp, {r0-r12}^
+  @ add 	sp,sp,#(13*4)
 
-  @ pop {r1}
+  @ pop 	{r0}
+	@ vpop	{d16-d31}
+	@ vpop	{d0-d15}
+	@ vmsr  fpscr, r0
+
+  pop {r1}
   @ mov lr, r2
-  @ msr spsr, r1
+  msr spsr, r1
 
-	ldmfd sp, {r0-r12}^
-  add 	sp,sp,#(13*4)
+  pop {r0-r12,lr}
 
-  pop {r0-r12}
-
-  rfefd sp!
-  @ movs pc, lr
+  @ rfefd sp!
+  movs pc, lr
 
 
 /**
@@ -613,68 +558,32 @@ _mon_fiq_handler:
  *
  * @retval
  */
-@ .globl _mon_scheduler
-@ _mon_scheduler:
-@ 	stmfd 	sp,{r0-r14}^			@ Push SYS regs to monitor stack
-@ 	sub 	sp, sp, #(14*4)      		@ Point stack to the top
-@   push {r0-r12}
-@ 	mrs 	r0,spsr				@ Read the SPSR
-@ 	stmfd	sp, {r0,lr}			@ Push SPSR_mon & lr_mon
-@ 	sub 	sp, sp, #(2*4)      		@ Update stack pointer
-@ 	/* Save FIQ state */
-@ 	mov	r0, sp				@ Save pointer to monitor stack
-@ 	cps #FIQ_MODE
-@ 	stmfd 	r0,{r8-r13}			@ Save all banked FIQ regs (R8-R14)
-@ 	sub 	r0, r0, #(6*4)      		@ Update stack pointer
-@ 	mrs 	r1,spsr				@ Read the SPSR_FIQ
-@ 	stmfd	r0, {r1,lr}			@ Push SPSR_FIQ and lr_FIQ
-@ 	sub 	r0, r0, #(2*4)      		@ Update stack pointer
-@
-@   cps #SUPERVISOR_MODE
-@   mrs r1, spsr
-@   stmfd r0, {r1, sp, lr}
-@   sub r0, r0, #(3*4)
-@
-@   cps #SYSTEM_MODE
-@   mrs r1, spsr
-@   stmfd r0, {r1, sp, lr}
-@   sub r0, r0, #(3*4)
-@ 	/* Get back to MON */
-@ 	cps #MONITOR_MODE
-@ 	mov 	sp, r0
-@ 	/* Restore NS context */
-@ 	GET_NS_WORLD_CONTEXT
-@ 	WORLD_CONTEXT_RESTORE
-@ 	/* Set NS bit and go NS world */
-@ 	SCR_NS_SET
-@ 	isb
-@ 	dsb
-@ 	movs    pc, lr				@ Return from exception (MON -> NS_SVC)
-
 .globl _mon_scheduler
 _mon_scheduler:
-  srsfd sp!, #MONITOR_MODE
-  cps #MONITOR_MODE
-  @ push {lr}
-  push {r0-r12}
+  @ srsfd sp!, #MONITOR_MODE
+  @ cps #MONITOR_MODE
+  push {r0-r12,lr}
 
-	stmfd sp, {r0-r12}^
-  sub 	sp, sp, #(13*4)
-
-  @ mrs r1, spsr
-  @ push {r1}
+  mrs r1, spsr
+  push {r1}
 
   @ stmfd	sp!, {r0,r1}
   @ sub 	sp, sp, #(2*4)
 
-  fmrx  r1,  fpscr
-	vpush {d0-d15}
-  vpush	{d16-d31}
-  push	{r1}
+  @ fmrx  r1,  fpscr
+	@ vpush {d0-d15}
+  @ vpush	{d16-d31}
+  @ push	{r1}
 
   @ cps #MONITOR_MODE
 
 	mov r0, sp
+
+  @ stmfd r0, {r0-r12}^
+  @ sub 	r0, r0, #(13*4)
+  @
+  @ stmfd r0, {sp, lr}^
+  @ sub r0, r0, #(2*4)
 
 	cps #SUPERVISOR_MODE
 	mrs	 r1, spsr

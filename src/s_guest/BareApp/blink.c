@@ -51,6 +51,7 @@
 #include "task.h"
 
 void led_blink( void * pvParameters );
+void vHwSetup(void);
 
 struct sys_regs s_context;
 
@@ -69,6 +70,45 @@ void secure_yield()
 		// vTaskDelay(1000/portTICK_RATE_MS);
 	}
 }
+
+#if (configUSE_TICKLESS_IDLE != 0)
+void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
+{
+	eSleepModeStatus eSleepStatus;
+
+	ttc_disable(TTC0,TTCx_2);
+
+	eSleepStatus = eTaskConfirmSleepModeStatus();
+
+	if( eSleepStatus == eAbortSleep )
+	{
+		ttc_enable(TTC0,TTCx_2);
+	}
+	else
+	{
+		if( eSleepStatus == eNoTasksWaitingTimeout )
+		{
+			// printk("Yield forever\n");
+			YIELD();
+		}
+		else
+		{
+			ttc_request(TTC1, TTCx_2, xSleepTime * 10000);
+			ttc_enable(TTC1, TTCx_2);
+			// printk("Yield\n");
+			YIELD();
+			ttc_disable(TTC1,TTCx_2);
+			// printk("Disable TTC1\n");
+			vTaskStepTick(xSleepTime+1);
+		}
+		// printk("Reset TTC0\n");
+		ttc_request(TTC0, TTCx_2, 1 * 10000);
+		ttc_enable(TTC0,TTCx_2);
+	}
+	// printk("Sleep for %d\n", xSleepTime);
+	// YIELD();
+}
+#endif
 
 void print_warning(uint32_t arg)
 {
@@ -89,6 +129,7 @@ int main() {
 
 	/** Initialize hardware */
 	hw_init();
+	// vHwSetup();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
 	// extern uint32_t _heap;
@@ -99,8 +140,8 @@ int main() {
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
-	// xTaskCreate( led_blink, "task", 600, NULL, 2, NULL );
-	// xTaskCreate( secure_yield, "task", 600, NULL, 1, NULL );
+	// xTaskCreate( led_blink, "task", 300, NULL, 2, NULL );
+	// xTaskCreate( secure_yield, "task", 300, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
 	/* This point will never be reached */
@@ -121,16 +162,21 @@ void led_blink( void * parameters ){
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
 	uint32_t state;
-	asm volatile("mrs %0, CPSR" : "=r"(state)::);
-	printk("CPSR: 0x%x\n", state);
 
 	for( ;; ){
 		toggle ^=0xF;
-		// printk("blink\n");
 		*ptr = toggle;
 		YIELD();
-		// printk("call yield\n");
 		// vTaskDelay( 1000 / portTICK_RATE_MS);
-		// printk("after delay\n");
 	}
+}
+
+void vHwSetup (void)
+{
+	ttc_init(TTC1,TTCx_2,INTERVAL);
+
+	/** Config TTC1_2 ISR*/
+	interrupt_enable(TTC1_TTCx_2_INTERRUPT,TRUE);
+	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
+	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,31);
 }

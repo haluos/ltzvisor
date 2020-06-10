@@ -59,8 +59,6 @@ void register_handler(uint32_t interrupt, fiq_handler handler);
 do{ \
 			asm volatile(".arch_extension sec\n");\
 			asm volatile("ldr r0, =0x0ffffff1\n");\
-			asm volatile("dsb\n");\
-			asm volatile("isb\n");\
 			asm volatile("smc #0");\
 }while(0)
 

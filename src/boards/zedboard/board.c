@@ -144,9 +144,9 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 		}
 		case (-32):{
 			// printk("Board CP15 write\n");
-			asm volatile("mrc p15, 0, r1, c15, c0, 0\n"
+			asm volatile("mrc p15, 0, r0, c15, c0, 0\n"
 									 "orr r0, r0, #1\n"
-									 "mcr p15, 0, r1, c15, c0, 0\n");
+									 "mcr p15, 0, r0, c15, c0, 0\n");
 			asm volatile("isb\n"
 											"dsb");
 			break;

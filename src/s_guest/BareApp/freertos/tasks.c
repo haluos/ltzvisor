@@ -3370,7 +3370,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 					/* Now the scheduler is suspended, the expected idle
 					time can be sampled again, and this time its value can
 					be used. */
-					configASSERT( xNextTaskUnblockTime >= xTickCount );
+					configASSERT( xNextTaskUnsblockTime >= xTickCount );
 					xExpectedIdleTime = prvGetExpectedIdleTime();
 
 					/* Define the following macro to set xExpectedIdleTime to 0

@@ -62,12 +62,12 @@
 	CPS		#SYS_MODE
 	PUSH	{R0-R12, R14}
 
-	mov r0, sp
-	cps #FIQ_MODE
-	stmfd r0!, {r8-r12}
-
-	cps #SYS_MODE
-	mov sp, r0
+	@ mov r0, sp
+	@ cps #FIQ_MODE
+	@ stmfd r0!, {r8-r12}
+	@
+	@ cps #SYS_MODE
+	@ mov sp, r0
 
 	/* Push the critical nesting count. */
 	LDR		R2, ulCriticalNestingConst
@@ -132,12 +132,12 @@
 	LDRNE	R4, [R4]
 	STR		R4, [R2]
 
-	mov r0, sp
-	cps #FIQ_MODE
-	ldmfd r0!, {r8-r12}
-
-	cps #SYS_MODE
-	mov sp, r0
+	@ mov r0, sp
+	@ cps #FIQ_MODE
+	@ ldmfd r0!, {r8-r12}
+	@
+	@ cps #SYS_MODE
+	@ mov sp, r0
 
 	/* Restore all system mode registers other than the SP (which is already
 	being used). */
@@ -177,26 +177,24 @@ vPortRestoreTaskContext:
 .type FreeRTOS_IRQ_Handler, %function
 FreeRTOS_IRQ_Handler:
 	/* Return to the interrupted instruction. */
-	@ push {r0-r12,lr}
-	@ bl print_warning
-	@ pop {r0-r12,lr}
-	push {r0-r2}
-	ldr r0, =monitor_flag
-	ldr r1, [r0]
-	mov r2, #1
-	cmp r1,r2
-	beq cont
+	@ push {r0-r2}
+	@ ldr r0, =monitor_flag
+	@ ldr r1, [r0]
+	@ mov r2, #1
+	@ cmp r1,r2
+	@ beq cont
 	SUB		lr, lr, #4
 
 	/* Push the return address and SPSR. */
-cont:
-	mov r2, #0
-	str r2, [r0]
-	pop {r0-r2}
+@ cont:
+@ 	mov r2, #0
+@ 	str r2, [r0]
+@ 	pop {r0-r2}
 
 	PUSH	{lr}
 	MRS		lr, SPSR
 	PUSH	{lr}
+	@ push {r8-r12}
 
 	/* Change to supervisor mode to allow reentry. */
 	CPS		#SVC_MODE
@@ -210,23 +208,6 @@ cont:
 	LDR		r2, [r2]
 	LDR		r0, [r2]
 
-	CMP		r0, #8
-	BNE		1f
-
-	LDR 	r4, ulICCEOIRConst
-	LDR		r4, [r4]
-	STR		r0, [r4]
-
-	POP		{r0-r4, r12}
-	CPS		#FIQ_MODE
-	POP		{LR}
-	MSR		SPSR_cxsf, LR
-	POP		{LR}
-
-	B		FreeRTOS_SWI_Handler
-
-1:
-
 	/* Increment nesting count.  r3 holds the address of ulPortInterruptNesting
 	for future use.  r1 holds the original ulPortInterruptNesting value for
 	future use. */
@@ -234,6 +215,27 @@ cont:
 	LDR		r1, [r3]
 	ADD		r4, r1, #1
 	STR		r4, [r3]
+
+	CMP		r0, #8
+	BNE		1f
+
+	LDR 	r4, ulICCEOIRConst
+	LDR		r4, [r4]
+	STR		r0, [r4]
+
+	/* Restore the old nesting count. */
+	STR		r1, [r3]
+
+	POP		{r0-r4, r12}
+	CPS		#FIQ_MODE
+	@ pop {r8-r12}
+	POP		{LR}
+	MSR		SPSR_cxsf, LR
+	POP		{LR}
+
+	B		FreeRTOS_SWI_Handler
+
+1:
 
 	/* Ensure bit 2 of the stack pointer is clear.  r2 holds the bit 2 value for
 	future use.  _RB_ Does this ever actually need to be done provided the start
@@ -244,8 +246,10 @@ cont:
 
 	/* Call the interrupt handler.  r4 pushed to maintain alignment. */
 	PUSH	{r0-r4, lr}
+	@ push {r8-r12}
 	LDR		r1, vApplicationIRQHandlerConst
 	BLX		r1
+	@ pop {r8-r12}
 	POP		{r0-r4, lr}
 	ADD		sp, sp, r2
 
@@ -279,9 +283,14 @@ exit_without_switch:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
+	@ pop {r8-r12}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}
+	@ push {r0-r12,lr}
+	@ mov r0, lr
+	@ bl print_warning
+	@ pop {r0-r12,lr}
 	MOVS	PC, LR
 
 switch_before_exit:
@@ -295,6 +304,7 @@ switch_before_exit:
 	POP		{r0-r4, r12}
 	@ CPS		#IRQ_MODE
 	CPS		#FIQ_MODE
+	@ pop {r8-r12}
 	POP		{LR}
 	MSR		SPSR_cxsf, LR
 	POP		{LR}

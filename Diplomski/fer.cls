@@ -34,7 +34,7 @@
 						\@fonttimesfalse}
 \DeclareOption{times}{\@fonttimestrue%
 					  \@fontlmodernfalse}
-					  
+
 % Tip rada
 \DeclareOption{seminar}{\@radseminartrue%
 					  \@radzavrsnifalse%
@@ -45,7 +45,7 @@
 \DeclareOption{diplomski}{\@radseminarfalse%
 					  \@radzavrsnifalse%
 					  \@raddiplomskitrue}
-					  
+
 % Encoding
 \DeclareOption{utf8}{\@encutftrue%
 					 \@enccpfalse}
@@ -118,7 +118,7 @@
 	\def\bibname{Literatura}
 }
 
-% Podešavanje oznaka kod listi (1. razina je crtica, 2. puni krug) 
+% Podešavanje oznaka kod listi (1. razina je crtica, 2. puni krug)
 \renewcommand{\labelitemi}{\textendash}
 \renewcommand{\labelitemii}{\textbullet}
 
@@ -262,10 +262,10 @@
 	\begin{titlepage}%
 		\let\footnotesize\small
 		\let\footnoterule\relax
-	
+
 		\begin{center}
 			{\large\sffamily SVEU\v{C}ILI\v{S}TE U ZAGREBU}
-			
+
 			{\large\bfseries\sffamily FAKULTET ELEKTROTEHNIKE I RA\v{C}UNARSTVA}
 		\end{center}
 		\vfill
@@ -293,7 +293,7 @@
 		\end{center}\par
 		\vfill
 		\begin{center}
-			{\sffamily\large Zagreb, 
+			{\sffamily\large Zagreb,
 			\ifcase\month\or
 				sije\v{c}anj\or velja\v{c}a\or o\v{z}ujak\or travanj\or svibanj\or
 	   	 		lipanj\or srpanj\or kolovoz\or rujan\or listopad\or studeni\or

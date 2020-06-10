@@ -65,19 +65,6 @@ struct core_regs {
 	uint32_t r10;
 	uint32_t r11;
 	uint32_t r12;
-	// uint32_t r0_sys;
-	// uint32_t r1_sys;
-	// uint32_t r2_sys;
-	// uint32_t r3_sys;
-	// uint32_t r4_sys;
-	// uint32_t r5_sys;
-	// uint32_t r6_sys;
-	// uint32_t r7_sys;
-	// uint32_t r8_sys;
-	// uint32_t r9_sys;
-	// uint32_t r10_sys;
-	// uint32_t r11_sys;
-	// uint32_t r12_sys;
 	uint32_t spsr_mon;
 	uint32_t lr_mon;
 	uint32_t spsr_svc;
@@ -95,7 +82,21 @@ struct core_regs {
 	uint32_t spsr_irq;
 	uint32_t r13_irq;
 	uint32_t lr_irq;
+	// uint32_t r0_sys;
+	// uint32_t r1_sys;
+	// uint32_t r2_sys;
+	// uint32_t r3_sys;
+	// uint32_t r4_sys;
+	// uint32_t r5_sys;
+	// uint32_t r6_sys;
+	// uint32_t r7_sys;
+	// uint32_t r8_sys;
+	// uint32_t r9_sys;
+	// uint32_t r10_sys;
+	// uint32_t r11_sys;
+	// uint32_t r12_sys;
 	// uint32_t r13_usr;
+	// uint32_t r14_usr;
 	uint32_t d0;
 	uint32_t d1;
 	uint32_t d2;
@@ -129,6 +130,7 @@ struct core_regs {
 	uint32_t d30;
 	uint32_t d31;
 	uint32_t fpscr;
+	uint32_t fpexc;
 };
 
 /** ARMv7-A CPU CP15 registers */

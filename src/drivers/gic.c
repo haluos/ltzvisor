@@ -274,7 +274,7 @@ uint32_t interrupt_interface_init(void){
 
 	/** Enable the CPU Interface */
 	cpu_inter->ICCICR = 0x00000009;
-	cpu_inter->ICCICR |= 0x00000002;
+	// cpu_inter->ICCICR |= 0x00000002;
 
 	return TRUE;
 }

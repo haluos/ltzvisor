@@ -243,11 +243,40 @@ _smc_handler:
 	beq _cpu1_ns_wfi
 	movs pc, lr
 
-.globl cpu1_board_smc
+@ .globl cpu1_board_smc
+@ cpu1_board_smc:
+@ 	cpu1_call_c_function_arg cpu1_board_handler
+@ 	cpu1_exception_return_arg
+@ 	movs pc, lr
+
 cpu1_board_smc:
-	cpu1_call_c_function_arg cpu1_board_handler
-	cpu1_exception_return_arg
+	@ call_c_function_arg board_handler
+	@ exception_return_arg
+	@ srsfd sp!, #MONITOR_MODE
+	CLEAR_SCR_NS
+  cmp r0, #-30        @ Read handler
+  bne 1f
+  ldr r0, [r1]
+	b smc_handler_end
+1:
+  cmp r0, #-31        @ Write handler
+	bne 2f
+  str r2, [r1]
+	dsb
+	isb
+	b smc_handler_end
+2:
+  cmp r0, #-32        @ Power control CP15 write handler
+	bne smc_handler_end
+  mrc p15, 0, r0, c15, c0, 0
+  orr r0, r0, #1
+  mcr p15, 0, r0, c15, c0, 0
+  dsb
+  isb
+smc_handler_end:
+	SET_SCR_NS
 	movs pc, lr
+	@ rfefd sp!
 
 _cpu1_ns_wfi:
 	mrs r3, cpsr

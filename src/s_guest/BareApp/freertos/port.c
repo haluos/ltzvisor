@@ -70,10 +70,10 @@
 	#endif
 #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
 
-/* In case security extensions are implemented. */
-#if configMAX_API_CALL_INTERRUPT_PRIORITY <= ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
-	#error configMAX_API_CALL_INTERRUPT_PRIORITY must be greater than ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
-#endif
+// /* In case security extensions are implemented. */
+// #if configMAX_API_CALL_INTERRUPT_PRIORITY <= ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
+// 	#error configMAX_API_CALL_INTERRUPT_PRIORITY must be greater than ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
+// #endif
 
 /* Some vendor specific files default configCLEAR_TICK_INTERRUPT() in
 portmacro.h. */
@@ -116,15 +116,9 @@ mode. */
 /* The critical section macros only mask interrupts up to an application
 determined priority level.  Sometimes it is necessary to turn interrupt off in
 the CPU itself before modifying certain hardware registers. */
-#define portCPU_IRQ_DISABLE()										\
-	__asm volatile ( "CPSID i" ::: "memory" );						\
-	__asm volatile ( "DSB" );										\
-	__asm volatile ( "ISB" );
+#define portCPU_IRQ_DISABLE()
 
-#define portCPU_IRQ_ENABLE()										\
-	__asm volatile ( "CPSIE i" ::: "memory" );						\
-	__asm volatile ( "DSB" );										\
-	__asm volatile ( "ISB" );
+#define portCPU_IRQ_ENABLE()
 
 
 /* Macro to unmask all interrupt priorities. */
@@ -300,16 +294,16 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	*pxTopOfStack = ( StackType_t ) pvParameters; /* R0 */
 	pxTopOfStack--;
 
-	*pxTopOfStack = ( StackType_t ) 0x06060606;	/* R12_fiq */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x05050505;	/* R11_fiq */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x04040404;	/* R10_fiq */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x03030303;	/* R9_fiq */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x02020202;	/* R8_fiq */
-	pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x06060606;	/* R12_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x05050505;	/* R11_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x04040404;	/* R10_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x03030303;	/* R9_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x02020202;	/* R8_fiq */
+	// pxTopOfStack--;
 
 	/* The task will start with a critical nesting count of 0 as interrupts are
 	enabled. */
@@ -388,6 +382,7 @@ int32_t lReturn;
 	if( lInterruptControllerInitialised != pdTRUE )
 	{
 		// lReturn = prvInitialiseInterruptController();
+		lReturn = pdPASS;
 
 		if( lReturn == pdPASS )
 		{
@@ -543,11 +538,11 @@ void vPortEndScheduler( void )
 
 void vPortEnterCritical( void )
 {
-	extern uint32_t printk(const char *fmt, ...);
+	// extern uint32_t printk(const char *fmt, ...);
 	/* Mask interrupts up to the max syscall interrupt priority. */
 	// printk("Enter critical\n");
 	ulPortSetInterruptMask();
-	printk("Interrupt\n");
+	// printk("Interrupt\n");
 
 	/* Now interrupts are disabled ulCriticalNesting can be accessed
 	directly.  Increment ulCriticalNesting to keep a count of how many times
@@ -712,11 +707,11 @@ uint32_t ulReturn;
 #endif /* configASSERT_DEFINED */
 /*-----------------------------------------------------------*/
 
-// void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR )
-// {
-// 	( void ) ulICCIAR;
-// 	configASSERT( ( volatile void * ) NULL );
-// }
+void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR )
+{
+	( void ) ulICCIAR;
+	configASSERT( ( volatile void * ) NULL );
+}
 
 #if( configGENERATE_RUN_TIME_STATS == 1 )
 /*

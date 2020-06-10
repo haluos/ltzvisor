@@ -83,7 +83,7 @@ uint32_t ltzvisor_hw_init(void){
 	interrupt_security_configall();
 	interrupt_security_config(UART_1_INTERRUPT,Int_NS);
 	interrupt_security_config(TTC0_TTCx_2_INTERRUPT,Int_S);
-	interrupt_security_config(TTC1_TTCx_2_INTERRUPT,Int_NS);
+	interrupt_security_config(TTC1_TTCx_2_INTERRUPT,Int_S);
 	interrupt_security_config(GLOBAL_TIMER_INTERRUPT, Int_NS);
 	interrupt_security_config(PRIVATE_TIMER_INTERRUPT, Int_NS);
 	for(int i = 0; i < 8; i++)
@@ -96,7 +96,7 @@ uint32_t ltzvisor_hw_init(void){
 	}
 	// interrupt_enable(8,TRUE);
 	// interrupt_target_set(8,0,1);
-	// interrupt_priority_set(8,3);
+	interrupt_priority_set(8,31);
 	printk("      * GIC security - OK  \n\t");
 
 	/** Initialize Platform-specific */
@@ -107,8 +107,6 @@ uint32_t ltzvisor_hw_init(void){
 		printk("ERROR: Platform init!\n\r");
 		return ret;
 	}
-	// asm volatile("mrc	p15, 0, r0, c1, c1, 0\n"
-	// 							"bl print_addr");
 
 	return ret;
 }

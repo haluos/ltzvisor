@@ -1180,10 +1180,80 @@ dodaje u \textit{ltzvisor\_hw.c} datoteku.
 \subsection{Prilagodba FreeRTOS-a kao \textit{Sigurnog} gosta LTZVisora}
 
 \chapter{LTZVisor za višejezgrene procesore}
+Predstavljeni dizajn LTZVisora ima jedan nedostatak, a to je situacija u kojoj \textit{Sigurni} gost ne prepušta procesorsko
+vrijeme \textit{Nesigurnom} gostu \cite{amp_ltzvisor}. Takav slučaj je moguć kod aplikacija koje u \textit{Sigurnom} gostu
+implementiraju zadatke koji predstavljaju veliko opterećenje procesora, što vodi izgladnjivanju procesora od strane
+\textit{Sigurnog} gosta. Navedeni problem je glavna motivacija za proširenje LTZVisora za višejezgrene procesore. U nastavku su
+opisani postupci prilagođenja LTZVisora za dva modela višejezgrenih konfiguracija, AMP i SMP. AMP inačica LTZVisora je razvijena
+kada i originalna verzija LTZVisora, a SMP inačica je implementirana u sklopu ovog rada.
+
 \section{Prilagođenje LTZVisora za AMP}
+Kao što je već bilo prikazano, razvoj \textit{TrustZone} aplikacija se sastoji od razvoja:
+\begin{itemize}
+  \item {\textit{Sigurnog} softvera}
+  \item{\textit{Nesigurnog} softvera}
+  \item{softvera nadglednog načina rada procesora.}
+\end{itemize}
+Razvoj \textit{Sigurnog} i \textit{Nesigurnog} softvera podsjeća na razvoj AMP aplikacije: svaki svijet ima svoju posebnu
+skriptu za memorijsko povezivanje i skriptu za pokretanje sustava. Isto tako, svaki svijet može implementirati svoj operacijski
+sustav što se može i povezati s AMP konfiguracijom gdje svaka jezgra u sustavu implementira svoj operacijski sustav. Kod
+usporedbe ovakva dva sustava, naziru se dvije značajne razlike:
+\begin{enumerate}
+  \item {Razvoj \textit{TrustZone} softvera pruža izolaciju između dva svijeta (dva operacijska sustava), dok običan razvoj
+  AMP aplikacije to ne pruža.}
+  \item{Kod običnih AMP aplikacija, operacijski sustavi imaju vlastitu jezgru dodijeljenu samo njima, dok kod
+  \textit{TrustZone} aplikacija \textit{Sigurni} i \textit{Nesigurni} svijet dijele jednu jezgru.}
+\end{enumerate}
+AMP LTZVisor objedinjuje razvoj obične AMP aplikacije i razvoj \textit{TrustZone} softvera te time poboljšava performanse
+originalnog LTZVisora.
+
 \subsection{Arhitektura AMP LTZVisora}
-\subsection{Nadgledni način rada CPU0}
-\subsection{Nadgledni način rada CPU1}
+AMP LTZVisor u potpunosti uklanja mogućnost pojave izgladnjivanja procesora od strane \textit{Sigurnog} softvera. Jedna jezgra
+u sustavu izvodi softver \textit{Sigurnog} svijeta, odnosno zadužena je za izvođenje privilegiranog softvera. Druga jezgra
+izvod softver \textit{Nesigurnog} svijeta, odnosno zadužena je za izvođenje neprivilegiranog softvera. Pravilo na kojem je
+temeljen model je da jedna jezgra implementira jedan svijet u jednom sigurnosnom stanju. Arhitektura AMP LTZVisora može se
+vidjeti na slici \ref{amp_ltzvisor}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=300pt]{amp_ltzvisor}
+  \caption{Arhitektura AMP LTZVisora \cite{amp_ltzvisor}}
+  \label{amp_ltzvisor}
+\end{figure}
+Na slici se mogu vidjeti tri osnovne komponente:
+\begin{itemize}
+  \item {\textit{Nesigurni} gost čija se jezgra operacijskog sustava izvršava u \textit{supervisor} načinu rada, a aplikacije
+  \textit{Nesigurnog} gosta u korisničkom načinu rada procesora \textit{Nesigurnog} svijeta}
+  \item{\textit{Sigurni} gost čija se jezgra operacijskog sustava izvršava u \textit{supervisor} načinu rada, a aplikacije
+  \textit{Sigurnog} gosta u korisničkom načinu rada procesora \textit{Sigurnog} svijeta}
+  \item{LTZVisor koji se izvršava u najprivilegiranijem načinu rada procesora: nadglednom načinu rada.}
+\end{itemize}
+\newpage
+Zbog AMP modela, LTZVisor je podijeljen na dva dijela:
+\begin{itemize}
+  \item {jezgru LTZVisora}
+  \item{sloj usluga \engl{Service Layer}.}
+\end{itemize}
+Jezgra LTZVisora je zadužena za sve ključne zadatke kao što su to konfiguriranje memorije, dodjeljivanje prekida i uređaja
+svakom gost virtualnom stroju uz pružanje podrške za komunikaciju između procesora, odnosno gost virtualnih strojeva.
+Sloj usluga je minimalna implementacija nadglednog načina rada procesora koji je zadužen za obradu i prosljeđivanje iznimaka,
+kao i kontrolu nad komunikacijom između procesora. Iako se oba gosta izvode u privilegiranom načinu rada (\textit{supervisor})
+\textit{Sigurni} svijet ostaje u potpunosti izoliran od privilegiranog softvera \textit{Nesigurnog} softvera. Dakle,
+\textit{Nesigurni} softver ne može pristupiti niti mijenjati resurse koji su dodijeljeni \textit{Sigurnom} gostu. Svaki pristup
+\textit{Nesigurnog} gosta \textit{Sigurnom} generira iznimku sloju usluga koji je zadužen za prosljeđivanje iznimke jezgri
+LTZVisora.\\
+Na početku izvođenja, LTZVisor svakom gostu dodijeli jednu jezgru, odnosno CPU. Za GPOS je odabran Linux te je njemu
+zbog jednostavnosti dodijeljen CPU0 (Linux je izvorno namijenjen primarnoj jezgri procesora). Svaki OS ima MMU i L1
+\textit{cache} memoriju dodijeljeni odgovarajućim jezgrama. L2 \textit{cache} memorija je dijeljena između procesora, ali zbog
+arhitekture \textit{TrustZone} ekstenzije, postoji \textit{Sigurna} i \textit{Nesigurna} L2 \textit{cache} memorije te zbog
+toga nije potrebno voditi brigu o koherenciji (koherencija je automatski očuvana hardverom). Uređajima direktno upravljaju gost
+particije te su na početku statički dodijeljeni \textit{Sigurnom} ili \textit{Nesigurnom} svijetu da bi se očuvala izolacija
+na razini uređaja. AMP LTZVisor prati prekidni model originalnog LTZVisora, gdje se FIQ dodjeljuje \textit{Sigurnom} gostu,
+a IRQ \textit{Nesigurnom} gostu. Inicijalizacija GIC distributera se izvodi CPU1 jezgrom. Sloj usluga je zadužen za
+inicijalizaciju odgovarajućeg CPU sučelja. Obrada prekida je rješena tako da ako se FIQ pojavi na CPU0, sloj usluga je zadužen
+za prosljeđivanje prekida CPU1. Ako IRQ dođe prilikom izvođenja RTOS-a u \textit{Sigurnom} svijetu, prekid se neće proslijediti
+CPU0. Praćenje vremena gost virtualnih strojeva omogućeno je dodjeljivanjem TTC0 brojila \textit{Sigurnom} gostu i globalnog
+brojila \textit{Nesigurnom} gostu.
+
 \section{Prilagođenje LTZVisora za SMP}
 Kao što je već opisano u prethodnim poglavljima, SMP može predstavljati veliko poboljšanje cjelokupne procesorske efikasnosti.
 Iako je to za većinu slučajeva točno, postoji i određeni tip aplikacija kojima SMP nije dobar izbor. Primjer jedne takve
@@ -1194,17 +1264,44 @@ tipom aplikacija te predstavlja sasvim novu inačicu LTZVisora čija je implemen
 razvijen.
 
 \subsection{Arhitektura SMP LTZVisora}
+Model SMP LTZVisora prati jedan od predloženih ARM-ovih modela za razvoj SMP \textit{TrustZone} aplikacije. Navedeni model se
+odnosi na konfiguraciju gdje \textit{Nesigurni} softver iskorištava SMP mogućnosti, dok se \textit{Sigurni} softver izvodi na
+jednoj jezgri u sustavu. Kod ovakvog modela, u odnosu na originalni LTZVisor, nema potrebe za dodatnim promjenama
+\textit{Sigurnog} softvera te se prilagođenje razvija promjenama u nadglednom načinu rada i u \textit{Nesigurnom} gostu.
+Arhitektura SMP LTZVisora prikazana je slikom \ref{smp_ltzvisor}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=300pt]{smp_ltzvisor_arch}
+  \caption{Arhitektura SMP LTZVisora}
+  \label{smp_ltzvisor}
+\end{figure}
+Pokretanje cjelokupnog sustava započinje ulaskom \textit{Sigurnog supervisor} načina rada procesora u inicijalizacijski proces.
+Početna inicijalizacija \textit{Sigurnog} softvera odnosi se na konfiguriranje SCR, NSACR, SCTLR i ACTLR te MMU,
+\textit{cachea}, polja za predviđanje grananja i inicijalizacija \textit{Sigurnog} stoga i stoga nadglednog načina rada
+procesora. Nakon toga, LTZVisor CPU0 jezgre preuzima kontrolu te inicijalizira memoriju, GIC upravitelja prekidima te
+dodjeljuje uređaje gost virtualnim strojevima. Uz to, CPU0 LTZVisor pripremi sustav za izvođenje \textit{Sigurnog} i
+\textit{Nesigurnog} softvera. Svi nabrojeni koraci su zajednički SMP LTZVisoru i originalnom LTZVisoru. Nakon što se izvrši
+početna inicijalizacija, CPU0 se na trenutak zaustavlja i predaje se kontrola CPU1 LTZVisoru. Zaustavljanje CPU0 je izvedeno
+pomoću jednostavne implementacije koja je slična binarnom semaforu te ima istu namjenu kao i binarni semafor, a to je
+sinkronizacijski mehanizam. Kad je CPU0 zaustavljen, CPU1 LTZVisor obavi početnu inicijalizaciju CPU1 procesora i pripremi
+\textit{Nesigurnog} gosta za izvođenje na CPU1. Po završetku pripreme CPU1 sustava, LTZVisor ponovno stavlja CPU1 u WFE stanje
+te se iz njega budi kad \textit{Nesigurni} gost preda zahtjev za buđenje CPU1.
+
 \subsection{Promjene u nadglednom načinu rada procesora}
 \subsection{Promjene u \textit{Nesigurnom} \textit{bare-metal} gostu}
 \subsection{Promjene u SMP Linux \textit{Nesigurnom} gostu}
 
-\chapter{Testiranje LTZVisora za višejezgrene procesore}
+\chapter{Testiranje SMP LTZVisor rješenja}
+\section{Performanse \textit{Sigurnog} gosta}
+\section{Performanse \textit{Nesigurnog} gosta}
+
+\chapter{Budući rad}
 
 \chapter{Zaključak}
 Zaključak.
 
 \bibliography{literatura}
-\bibliographystyle{fer}
+\bibliographystyle{unsrtnat}
 
 \begin{sazetak}
 Sažetak na hrvatskom jeziku.
