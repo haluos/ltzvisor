@@ -241,6 +241,8 @@ _smc_handler:
 	ldr r3, =LTZVISOR_NS_WFI
 	cmp r0, r3
 	beq _cpu1_ns_wfi
+	cmp r0, #0x9
+  beq communicate
 	movs pc, lr
 
 @ .globl cpu1_board_smc
@@ -289,6 +291,10 @@ _cpu1_ns_wfi:
 	isb
 	wfi
 	movs pc, lr
+
+communicate:
+  cpu1_call_c_function_arg print_message
+  cpu1_exception_return_arg
 
 .globl _prefetch_handler
 _prefetch_handler:

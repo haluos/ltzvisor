@@ -1275,6 +1275,8 @@ Arhitektura SMP LTZVisora prikazana je slikom \ref{smp_ltzvisor}.
   \caption{Arhitektura SMP LTZVisora}
   \label{smp_ltzvisor}
 \end{figure}
+Na slici se vide tri glavne komponente: \textit{Sigurni} gost (RTOS) koji se izvodi na CPU0, \textit{Nesigurni} gost (GPOS)
+koji se izvodi kao SMP gost i LTZVisor koji se izvodi na obje jezgre platforme u SMP konfiguraciji.
 Pokretanje cjelokupnog sustava započinje ulaskom \textit{Sigurnog supervisor} načina rada procesora u inicijalizacijski proces.
 Početna inicijalizacija \textit{Sigurnog} softvera odnosi se na konfiguriranje SCR, NSACR, SCTLR i ACTLR te MMU,
 \textit{cachea}, polja za predviđanje grananja i inicijalizacija \textit{Sigurnog} stoga i stoga nadglednog načina rada
@@ -1285,10 +1287,120 @@ početna inicijalizacija, CPU0 se na trenutak zaustavlja i predaje se kontrola C
 pomoću jednostavne implementacije koja je slična binarnom semaforu te ima istu namjenu kao i binarni semafor, a to je
 sinkronizacijski mehanizam. Kad je CPU0 zaustavljen, CPU1 LTZVisor obavi početnu inicijalizaciju CPU1 procesora i pripremi
 \textit{Nesigurnog} gosta za izvođenje na CPU1. Po završetku pripreme CPU1 sustava, LTZVisor ponovno stavlja CPU1 u WFE stanje
-te se iz njega budi kad \textit{Nesigurni} gost preda zahtjev za buđenje CPU1.
+te se iz njega budi na zahtjev \textit{Nesigurnog} gosta.
+
+\subsubsection{Prekidni podsustav}
+Prekidni podsustav prati predložen ARM-ov model kod implementacije \textit{TrustZone} aplikacija, a to je korištenje FIQ-a za
+\textit{Sigurni} svijet i IRQ-a za \textit{Nesigurni} svijet. Kao i kod prethodnih verzija LTZVisora,
+osigurano je da \textit{Sigurni} gost ne propusti nijedan prekid na jezgri na kojoj se izvodi (CPU0). Obrada prekida SMP
+LTZVisora se odvija po sljedećem modelu:
+\begin{enumerate}
+  \item{Za CPU0:}
+    \begin{itemize}
+      \item{ako se FIQ pojavi kad se izvodi \textit{Sigurni} gost, \textit{Sigurni} gost odmah obrađuje FIQ bez intervencije
+      LTZVisora}
+      \item{ako se FIQ pojavi za vrijeme izvođenja \textit{Nesigurnog} gosta, kontrolu preuzima LTZVisor koji radi zamjenu
+      konteksta i pokreće \textit{Sigurni} gost koji odmah po početku izvođenja obrađuje FIQ}
+      \item{ako se IRQ pojavi za vrijeme izvođenja \textit{Sigurnog} gosta i ako je IRQ namijenjen isključivo CPU0, prekid će
+      se obraditi tek po početku izvođenja \textit{Nesigurnog} gosta}
+      \item{ako se IRQ pojavi za vrijeme izvođenja \textit{Nesigurnog} gosta, IRQ je obrađen prema standardnom modelu obrade
+      prekida.}
+    \end{itemize}
+  \item{Za CPU1:}
+    \begin{itemize}
+      \item{ako se pojavi FIQ, FIQ ostaje neobrađen}
+      \item{IRQ prekidi namijenjeni CPU1 ili oba CPU-a su obrađeni prema standardnom modelu obrade prekida.}
+    \end{itemize}
+\end{enumerate}
+Pogledom na prekidni model SMP LTZVisora može se odmah uočiti jedna mana ovakvog modela, a to je da FIQ koji se pojavi na CPU1
+ostaje neobrađen, što u svakom slučaju nije poželjno. Ovakav model zahtjeva opreznu implementaciju \textit{Sigurnog} softvera
+što se tiče prekidnog podsustava (prekidi moraju biti konfigurirani da se prosljeđuju samo CPU sučelju na kojem se izvodi
+\textit{Sigurni} softver). Ovaj problem se može riješiti i na elegantniji način, npr. prilikom pojave FIQ-a na CPU1 LTZVisor
+može rekonfigurirati prekid tako da se prekid prosljeđuje samo ispravnom CPU sučelju ili samo javiti poruku o grešci
+\textit{Sigurnom} gostu i prepustiti odluku o prekidu \textit{Sigurnom} gostu. LTZVisor je zadužen za konfiguraciju prekida
+i dodjeljivanje uređaja gost virtualnim strojevima za oba CPU sučelja. Uređaji su statički dodijeljeni virtualnim strojevima
+kao i u prethodnim verzijama LTZVisora. Prilikom implementacije SMP rješenja, vodila se briga
+o tome da GIC distributer bude inicijaliziran samo jednom te to izvodi LTZVisor na CPU0 procesoru, dok su CPU sučelja
+inicijalizirana na svakom CPU-u zasebno. Za praćenje stvarnog vremena virtualnih strojeva, \textit{Sigurnom} gostu je
+dodijeljen TTC0, a \textit{Nesigurnom} gostu je dodijeljeno globalno brojilo.
+
+\subsubsection{Memorijski podsustav}
+\textit{Sigurni} gost je implementiran kao \textit{bare-metal} aplikacija kojoj LTZVisor dodjeljuje 64~MB, dok
+\textit{Nesigurni} gost implementira SMP Linux operacijski sustav te mu je dodijeljena preostala memorija koja iznosi 448~MB.
+\textit{Sigurni} gost, zbog očuvanja jednostavnosti i predvidljivosti implementacije, ne koristi MMU ni L1 i L2 \textit{cache}
+memorije. Uz to, ne koriste se ni polja za predviđanje grananja. Poznato je da Linux zahtjeva korištenje MMU jedinice za
+ispravno funkcioniranje te se podrazumijeva da će se \textit{Nesigurne} MMU tablice za prevođenje koristiti. Isto tako, Linux
+spada u sustave opće namjene te je nepredvidljivost do neke razine dozvoljena. Stoga, Linux koristi i L1 i L2 \textit{cache} te
+polja za predviđanje grananja. Ključna činjenica koja omogućava ovakvu konfiguraciju gost virtualnih strojeva je da
+\textit{Sigurni} softver ima pristup \textit{Nesigurnim} tablicama te je zbog toga moguće izvesti skok na virtualnu adresu
+\textit{Nesigurnog} gosta.
+
+\subsubsection{Komunikacijski model}
 
 \subsection{Promjene u nadglednom načinu rada procesora}
-\subsection{Promjene u \textit{Nesigurnom} \textit{bare-metal} gostu}
+Prvo što je potrebno kod razvoja SMP aplikacija je početna adresa aplikacije koja će se izvoditi na sekundarnom procesoru.
+U SMP LTZVisor implementaciji, početna adresa za CPU1 je definirana u skripti za memorijsko povezivanje. Da bi varijabla u
+skripti za memorijsko povezivanje sadržavala ispravnu adresu, potrebno je kod za početnu inicijalizaciju CPU1 procesora staviti
+u posebnu sekciju. Sljedeće što je potrebno je kod koji će se izvršavati po pokretanju CPU1 sustava. Početni kod sadrži
+inicijalizaciju koja je vrlo slična inicijalizaciji koja se izvršava na CPU0. Razlika je u tome što nema potrebe za
+inicijalizacijom stoga \textit{Sigurnog} gosta te sadrži samo inicijalizaciju stoga nadglednog načina rada. Nadalje, da se
+sustav pripremi za izvršavanje \textit{Nesigurnog} gosta, inicijaliziraju se i SCR i NSACR registri s jednakim vrijednostima
+kao i kod CPU0. Nakon što su početna adresa za CPU1 i inicijalizacijski kod definirani, LTZVisor je spreman za buđenje CPU1
+procesora. Buđenje CPU1 je izvedeno u asembleru te je prikazano slikom \ref{wake_cpu1}.
+\begin{figure}[H]
+  \centering
+  % \lstset{language=[x86masm]Assembler}
+  \lstset{numbers=left, numbersep=2pt, numberstyle=\tiny, breaklines=true, xleftmargin=.2\textwidth}
+  \begin{lstlisting}[firstnumber=1]
+    _wake_cpu1:
+      ldr r0,=0xfffffff0
+      ldr r1,=_cpu1_entry_address
+      str r1,[r0]
+      dmb
+      sev
+      bl wait_till_cpu1_boots
+      b ltzvisor_kickoff
+  \end{lstlisting}
+  \caption{Postupak buđenja CPU1}
+  \label{wake_cpu1}
+\end{figure}
+Simbol \textit{\_cpu1\_entry\_address} sadrži početnu adresu za CPU1 koja se upisuje na odgovarajuću adresu koju CPU1 čita
+odmah po buđenju. Instrukcija \textit{dmb} se koristi da se osigura završetak pisanja u memoriju. Buđenje se okida pozivom
+instrukcije \textit{sev} te su nakon izvršavanja te instrukcije, oba procesora platforme aktivna. Kako bi se osigurala ispravna
+inicijalizacija CPU1 sustava, CPU0 se blokira skokom na funkciju \textit{wait\_till\_cpu1\_boots} koja u petlji čeka da se
+postavi zastavica koju postavlja CPU1 točno prije nego se CPU1 ponovno stavi u WFE stanje. Kad je za CPU0 sigurno da krene
+s daljnjim izvođenjem, skače se na \textit{ltzvisor\_kickoff} funkciju iz koje se poziva \textit{Sigurni} gost te iz navedene
+funkcije nema povratka.\\
+WFE stanje CPU1 procesora je isto kao i početno WFE stanje u kojem se je nalazi CPU1 prije pokretanja LTZVisora na njemu.
+Nakon što je LTZVisor završio s inicijalizacijom, na adresu \textit{0xFFFFFFF0} se upisuje 0 te CPU1 čeka događaj sustava i
+vrijednost različitu od 0 na navedenoj adresi. Opisani postupak implementiran je kodom prikazanim slikom \ref{cpu1_wfe}.
+\begin{figure}[H]
+  \centering
+  \lstset{numbers=left, numbersep=2pt, numberstyle=\tiny, breaklines=true, xleftmargin=.2\textwidth}
+  \begin{lstlisting}[firstnumber=1]
+    put_cpu1_back_to_sleep:
+      ldr r0, =0xfffffff0
+      ldr r1, =0
+      str r1, [r0]
+      bl unlock_cpu0
+    wait:
+      wfe
+      ldr r0, =0xfffffff0
+      ldr r1, [r0]
+      cmp r1, #0
+      beq wait
+      movs pc, r1
+  \end{lstlisting}
+  \caption{Postavljanje sekundarnog procesora u WFE stanje}
+  \label{cpu1_wfe}
+\end{figure}
+Funkcija \textit{unlock\_cpu0} postavlja potrebnu zastavicu koja će osloboditi CPU0, čime započinje izvođenje \textit{Sigurnog}
+gosta. Ako se CPU1 probudi iz WFE stanja i na odgovarajućoj adresi pročita vrijednost 0, procesor se ponovno stavlja u WFE
+stanje. Kad je vrijednost različita od 0, LTZVisor predaje kontrolu \textit{Nesigurnom} gostu skokom na adresu koja je upisana
+na \textit{0xFFFFFFF0} lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja uz skok na odgovarajuću adresu i učita
+vrijednost iz SPSR u CPSR. Kako Linux zahtjeva da se procesori pokreću u \textit{supervisor} način rada, u SPSR-u se mora
+nalaziti ispravna vrijednost te se ta vrijednost postavlja prilikom postavljanja početnog konteksta \textit{Nesigurnog} gosta.
+
 \subsection{Promjene u SMP Linux \textit{Nesigurnom} gostu}
 
 \chapter{Testiranje SMP LTZVisor rješenja}

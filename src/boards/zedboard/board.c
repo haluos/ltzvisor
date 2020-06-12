@@ -158,3 +158,9 @@ uint32_t board_handler(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 
 		return arg0;
 }
+
+void print_message()
+{
+	uint32_t *message = 0x2010000;
+	printk("Message from NS: %d\n", *message);
+}

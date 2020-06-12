@@ -388,6 +388,8 @@ _mon_smc_handler:
   /* Check if SMC came with request for booting CPU1 */
   cmp   r0, #LTZVISOR_BOOT_CPU1
   beq _secondary_wake_cpu1
+  cmp r0, #0x9
+  beq communicate
 	movs	pc, lr
 
   /**
@@ -470,6 +472,10 @@ _secondary_wake_cpu1:
   SCR_NS_SET
   movs pc, lr
   @ rfefd sp!
+
+communicate:
+  call_c_function_arg print_message
+  exception_return_arg
 
 
 /**
