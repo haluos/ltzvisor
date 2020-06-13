@@ -145,8 +145,8 @@ void FreeRTOS_ClearTickInterrupt( void )
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationIRQHandler( uint32_t ulICCIAR )
-// void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
+// void vApplicationIRQHandler( uint32_t ulICCIAR )
+void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
 {
 extern const XScuGic_Config XScuGic_ConfigTable[];
 static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;

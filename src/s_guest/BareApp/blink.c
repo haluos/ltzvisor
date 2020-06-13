@@ -140,8 +140,8 @@ int main() {
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
-	// xTaskCreate( led_blink, "task", 300, NULL, 2, NULL );
-	// xTaskCreate( secure_yield, "task", 300, NULL, 1, NULL );
+	// xTaskCreate( led_blink, "task", 1024, NULL, 2, NULL );
+	// xTaskCreate( secure_yield, "task", 1024, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
 	/* This point will never be reached */

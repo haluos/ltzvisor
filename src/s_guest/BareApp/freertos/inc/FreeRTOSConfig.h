@@ -98,7 +98,7 @@
 
 #define configCHECK_FOR_STACK_OVERFLOW 2
 
-#define configUSE_TASK_FPU_SUPPORT 1
+#define configUSE_TASK_FPU_SUPPORT 2
 
 #define configQUEUE_REGISTRY_SIZE 10
 

@@ -195,20 +195,11 @@
   @ stmia r0, {sp, lr}^
   @ add r0, r0, #(2*4)
 
-  @ mov   r1, #0x00f00000
-  @ mcr p15, 0, r1, c1, c0, 2
-  @ isb
-  @ mov   r1, #0x40000000    /* Enable FPU to enable acess FPU registers*/
-  @ vmsr  fpexc, r1
-  @ isb
-  @ vmrs r1, fpexc
-  @ stmia r0!, {r1}
-
-  @ fmrx r1, fpscr
-  @ vstmia r0!, {d0-d15}
-  @ vstmia r0!, {d16-d31}
-  @ @ mov r2, r0
-  @ stmia r0!, {r1}
+  fmrx r1, fpscr
+  vstmia r0!, {d0-d15}
+  vstmia r0!, {d16-d31}
+  @ mov r2, r0
+  stmia r0!, {r1}
 
 	cps #MONITOR_MODE
 .endm
@@ -255,35 +246,12 @@
   @ ldmia r0, {sp, lr}^
   @ add r0, r0, #(2*4)
 
-  @ mov   r1, #0x00f00000
-  @ mcr p15, 0, r1, c1, c0, 2
-  @ isb
-  @ mov   r1, #0x40000000    /* Enable FPU to enable acess FPU registers*/
-  @ vmsr  fpexc, r1
-  @ isb
-  @ ldmia r0!, {r1}
-  @ vmsr  fpexc, r1
-  @ isb
-
-  @ vldmia r0!, {d0-d15}
-  @ vldmia r0!, {d16-d31}
-  @ @ mov r2, r0
-  @ ldmia r0!, {r1}
-  @ @ add r0, r0, #4
-  @ vmsr fpscr, r1
-
-  @ ldmia r0!, {r1}
-  @ mcr p15, 0, r1, c1, c0, 2
-
-  @ cps #FIQ_MODE
-  @ mov r8, #0
-  @ mov r9, #0
-  @ mov r10, #0
-  @ mov r11, #0
-  @ mov r12, #0
-  @ mov sp, #0
-  @ mov lr, #0
-  @ msr spsr_fsxc, #0
+  vldmia r0!, {d0-d15}
+  vldmia r0!, {d16-d31}
+  @ mov r2, r0
+  ldmia r0!, {r1}
+  @ add r0, r0, #4
+  vmsr fpscr, r1
 
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
@@ -542,10 +510,10 @@ _mon_fiq_handler:
   @ ldmfd sp, {r0-r12}^
   @ add 	sp,sp,#(13*4)
 
-  @ pop 	{r0}
-	@ vpop	{d16-d31}
-	@ vpop	{d0-d15}
-	@ vmsr  fpscr, r0
+  pop 	{r0}
+	vpop	{d16-d31}
+	vpop	{d0-d15}
+	vmsr  fpscr, r0
 
   pop {r1}
   @ mov lr, r2
@@ -576,10 +544,10 @@ _mon_scheduler:
   @ stmfd	sp!, {r0,r1}
   @ sub 	sp, sp, #(2*4)
 
-  @ fmrx  r1,  fpscr
-	@ vpush {d0-d15}
-  @ vpush	{d16-d31}
-  @ push	{r1}
+  fmrx  r1,  fpscr
+	vpush {d0-d15}
+  vpush	{d16-d31}
+  push	{r1}
 
   @ cps #MONITOR_MODE
 

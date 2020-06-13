@@ -971,6 +971,7 @@ potrebno dodati poseban adresni prostor koji sadrži datotečni podsustav koji n
 Sve što je potrebno u skripti za memorijsko povezivanje je adresa na kojoj se sprema \textit{Device Tree}, adresa minimalnog
 koda koji predaje parametre jezgri Linuxa i adresu na kojoj se nalazi jezgra. Adrese na kojima su smještene komponente Linuxa
 su prikazane tablicom \ref{adr_space}.
+
 \begin{table}[H]
   \centering
   \begin{tabular}{ | p{3cm} | p{6cm} |}
@@ -987,6 +988,7 @@ su prikazane tablicom \ref{adr_space}.
   \caption{Adresni prostor komponenata Linuxa}
   \label{adr_space}
 \end{table}
+
 Program pokretač se sastoji od jedne funkcije koja predaje potrebne parametre jezgri Linuxa i skače na početnu adresu jezgre.
 Početna funkcija jezgre se može identificirati pomoću alata \textit{arm-none-eabi-objdump} koja ima mogućnost iz binarne
 datoteke ispisati niz asemblerskih instrukcija ili simbola koje sadrži izvršna datoteka. Najjednostavnije je iskoristiti
@@ -1010,6 +1012,7 @@ Prije svega, \textit{Device Tree} mora biti ispravan. U \textit{Device Tree} str
 o memorijskim segmentima i njihovim veličinama koje Linux može koristiti. Navedeni čvor mora sadržavati ispravne informacije
 o memoriji kako bi Linux mogao povezati fizičke i virtualne adrese bez generiranja pogreške. Opis memorijskog čvora korišten
 u ovom projektu dan je slikom \ref{mem_node}. Polje čvora \textit{reg} opisuje lokaciju i veličinu RAM-a dodijeljenu Linuxu.
+
 \begin{figure}[H]
   \lstset{xleftmargin=.1\textwidth}
   \begin{lstlisting}
@@ -1021,6 +1024,7 @@ u ovom projektu dan je slikom \ref{mem_node}. Polje čvora \textit{reg} opisuje 
   \caption{Memorijski \textit{Device Tree} čvor}
   \label{mem_node}
 \end{figure}
+
 Kada bi memorijski čvor ostao kako \textit{PetaLinux} ima izvorno postavljeno (veličina memorijskog prostora od 0x2000000),
 tada bi se pojavila pogreška prilikom rane inicijalizacije jezgre i izvođenje Linuxa bi bilo zaustavljeno.
 Ostali čvorovi moraju sadržavati
@@ -1035,6 +1039,7 @@ SPI, 1 za PPI), drugo polje predstavlja prekidni broj i treće polje opisuje osj
 namijenjen. Upravitelj prekidom dan je \textit{interrupt-parent} svojstvom koji sadrži referencu na drugi čvor u \textit{Device
 Tree} strukturi koji opisuje GIC. Opis izvora takta za uređaj, dan je \textit{clocks} svojstvom uređaja koji sadrži referencu
 na signal takta koji je opisan u SLCR čvoru.
+
 \begin{figure}[H]
   \lstset{xleftmargin=.1\textwidth}
   \begin{lstlisting}
@@ -1050,6 +1055,7 @@ na signal takta koji je opisan u SLCR čvoru.
   \caption{Konfiguracijski čvor globalnog brojila}
   \label{glob_timer}
 \end{figure}
+
 Kod generiranja \textit{Device Tree} strukture, \textit{PetaLinux} automatski opiše sve resurse platforme za koju se
 \textit{Device Tree} generira. Poželjno je iz generirane \textit{Device Tree} strukture izbaciti sve resurse koji se koriste
 kao sigurni uređaji (npr. TTC0) ili barem postaviti njihovo stanje u \textit{status = "disabled";} koje onemogućava korištenje
@@ -1061,6 +1067,7 @@ platforme, radi se o \textit{arch/arm/mach-zynq} direktoriju koji sadrži kod za
 pokretanje Linuxa. Ako se pogleda sadržaj navedenog direktorija, vidi se \textit{slcr.c} datoteka za koju je jasno da su
 potrebne promjene (SLCR je dostupan samo \textit{Sigurnom} svijetu, a nužan je za npr. podešavanje signala takta za razne uređaje).
 Funkcije za pristup SLCR registru, originalno su implementirane kako je prikazano slikom \ref{slcr_orig}.
+
 \begin{figure}[H]
   \begin{lstlisting}
     static int zynq_slcr_write(u32 val, u32 offset)
@@ -1076,12 +1083,13 @@ Funkcije za pristup SLCR registru, originalno su implementirane kako je prikazan
   \caption{Pristup Linuxa SLCR-u}
   \label{slcr_orig}
 \end{figure}
+
 Funkcije \textit{regmap\_write} i \textit{regmap\_read} kao ulazni argument primaju virtualnu adresu koja je povezana s fizičkom
 baznom adresom SLCR registra te se kasnije prevodi u fizičku adresu. Pozivanje ovih funkcija izaziva \textit{external abort}
 zbog pristupanja sigurnoj memoriji. Kako bi se ove funkcije uspješno izvele, potrebno je implementirati funkcije za pristup
 SLCR registru koji će biti izveden intervencijom LTZVisora. LTZVisor već implementira sustavske pozive koji se mogu iskoristiti
-kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom
-\ref{slcr_secure}.
+kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom \ref{slcr_secure}.
+
 \begin{figure}[H]
   \lstset{breaklines=true}
   \begin{lstlisting}
@@ -1100,6 +1108,7 @@ kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje sigurne memorije. Iz
   \caption{Implementirane funkcije za pristup SLCR-u}
   \label{slcr_secure}
 \end{figure}
+
 Za razliku od izvornih funkcija implementiranih za pristup SLCR-u, funkcije \textit{secure\_write} i \textit{secure\_read} kao
 ulazni argument primaju fizičku adresu registra kojem se pristupa. Varijabla \textit{zynq\_slcr\_base} je globalna, te Linux
 prilikom inicijalizacije u nju spremi virtualnu adresu SLCR registra te je potrebno izmijeniti taj dio koda tako da se u
@@ -1119,12 +1128,14 @@ pomoću izbornika koji se pokreće naredbom \textit{petalinux-config -c kernel}.
 Navedene promjene su minimalne za uspješno pokretanje operacijskog sustava Linux kao \textit{Nesigurnog} gosta LTZVisora. Iako se Linux
 uspješno pokreće nakon navedenih promjena, u ispisu kojeg Linux daje vide se neke dodatne pogreške koje se javljaju tokom
 inicijalizacije. Pogreške se mogu vidjeti u isječku ispisa na slici \ref{plnx_errors}.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=400pt]{error_output.png}
   \caption{Pogreške prilikom pokretanja Linuxa}
   \label{plnx_errors}
 \end{figure}
+
 Pogreška koja se odnosi na DMAC (\textit{DMA Controller}) se javlja zbog netočnog opisa DMA upravitelja u \textit{Device
 Tree} strukturi. Naime, \textit{PetaLinux} prilikom generiranja \textit{Device Tree} strukture pretpostavlja \textit{Sigurno} stanje i
 time automatski opisuje DMAC koji pripada \textit{Sigurnom} svijetu (Zynq-7000 platforme imaju poseban DMAC za \textit{Sigurni} i poseban za
@@ -1150,8 +1161,9 @@ Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje
 svijetu. Prilikom podešavanja DMA upravitelja, nužno je da se DMA upravitelj drži u \textit{resetu}. Nakon što je DMA upravitelj
 podešen, mora se pustiti iz \textit{reseta}. Opisane promjene prikazane su slikom \ref{tz_init}.
 Kao što je prikazano, prije upisa u SLCR registre potrebno ga je prije svega otključati te po završetku pristupa zaključati.
-Uz navedene promjene, potrebno je i označiti prekid globalnog brojila kao IRQ, odnosno kao prekid \textit{Nesigurnog} svijeta što se
-dodaje u \textit{ltzvisor\_hw.c} datoteku.
+Uz navedene promjene, potrebno je i označiti prekid globalnog brojila kao IRQ, odnosno kao prekid \textit{Nesigurnog} svijeta
+što se dodaje u \textit{ltzvisor\_hw.c} datoteku.
+
 \begin{figure}[H]
   \lstset{breaklines=true, xleftmargin=.05\textwidth}
   \begin{lstlisting}
@@ -1175,8 +1187,49 @@ dodaje u \textit{ltzvisor\_hw.c} datoteku.
 \end{figure}
 
 \chapter{Operacijski sustav za rad u stvarnom vremenu (RTOS)}
+RTOS ili operacijski sustav za rad u stvarnom vremenu je operacijski sustav namijenjen sustavima s vremenskim ograničenjima
+te je čest odabir kod ugradbenih računala \cite{ppius}. Jezgra RTOS-a predstavlja minimalnu implementaciju operacijskog
+sustava te uključuje:
+\begin{itemize}
+  \item {raspoređivač zadataka}
+  \item{jezgrine objekte (zadatke, sinkronizacijske mehanizme, redove poruka...)}
+  \item{usluge (vremenske, upravljanje resursima, prekidi).}
+\end{itemize}
+Operacijski sustavi koji spadaju u RTOS su QNX, VxWorks, Nucleus, FreeRTOS i drugi. Svima njima su zajedničke sljedeće
+karakteristike:
+\begin{itemize}
+  \item {pouzdanost}
+  \item{mali memorijski otisak u odnosu na GPOS}
+  \item{odziv u stvarnom vremenu}
+  \item{raspoređivanje zadataka je prilagođeno za rad u stvarnom vremenu.}
+\end{itemize}
+RTOS ima prednost u tome što nema posebnih hardverskih zahtjeva (kao što to GPOS ima za npr. MMU jedinicom) te ga je zbog toga
+moguće prilagoditi na velik broj platforma, uključujući i mikrokontrolere. Sama jezgra operacijskog sustava je pogonjena jednim
+brojilom koje je glavni okidač zamjene konteksta između zadataka. Prednost ovakvog operacijskog sustava u odnosu na
+\textit{bare-metal} aplikacije je što postoji mogućnost za istiskivanje zadataka. Ova karakteristika operacijskom sustavu
+pruža da zadaci koji su prioritetniji prije obave potrebni posao od onih koji su nižeg prioriteta što nije moguće kod
+\textit{bare-metal} aplikacija.
+
 \section{FreeRTOS}
+FreeRTOS je operacijski sustav za rad u stvarnom vremenu otvorenog koda. Ovaj operacijski sustav je optimiran prema kriteriju
+malih zahtjeva (memorijske zahtjeve i procesorsku moć) te je prvenstveno namijenjen ugradbenim računalima \cite{osur}. Zbog
+malih zahtjeva, pogodan je za implementaciju na mikrokontrolerima. Otvorenost koda FreeRTOS-a je omogućila da se FreeRTOS
+prilagodi za velik broj platformi, pa se tako može pronaći i FreeRTOS prilagođen za Xilinxov ZedBoard. Verzija FreeRTOS-a
+korištenog u ovom projektu je v10.1.3 koja se može dobiti generiranjem BSP-a \engl{Board Support Package} u Xilinx SDK
+2019.1.
+
 \subsection{Programska podrška za Zynq-7000}
+Programska podrška FreeRTOS-a se sastoji od malog broja datoteka koje u potpunosti implementiraju funkcionalnost RTOS-a.
+U glavnom direktoriju izvornog koda FreeRTOS-a, dobivenog Xilinx SDK alatom, se nalazi četiri datoteke koje su specifične
+baš za ZedBoard. To su \textit{port\_asm\_vectors.S}, \textit{port.c}, \textit{portASM.S} i \textit{portZynq7000.c}. Ostale
+platforme za koje je FreeRTOS prilagođen, također imaju vlastite \textit{port.c} i \textit{portASM.S} datoteke. Ostale
+datoteke se mogu prenositi na druge platforme bez potrebe za ikakvim izmjenama.\\
+Datoteka \textit{port\_asm\_vectors.S} sadrži tablicu prekidnih vektora te kod za konfiguraciju koprocesorskog registra koji
+sadrži početnu adresu tablice prekidnih vektora. U \textit{port.c} se nalaze funkcije koje koriste podatke specifične za
+hardver na kojem se FreeRTOS izvodi. Podaci se odnose na podatke specifične za upravitelja prekidima i upravljanje CPSR
+registrom, kao i početna inicijalizacija konteksta zadatka (početni sadržaj stoga zadatka). Isto tako, datoteka sadrži i
+funkcije za upravljanje prekidima.
+
 \subsection{Prilagodba FreeRTOS-a kao \textit{Sigurnog} gosta LTZVisora}
 
 \chapter{LTZVisor za višejezgrene procesore}
@@ -1398,10 +1451,101 @@ Funkcija \textit{unlock\_cpu0} postavlja potrebnu zastavicu koja će osloboditi 
 gosta. Ako se CPU1 probudi iz WFE stanja i na odgovarajućoj adresi pročita vrijednost 0, procesor se ponovno stavlja u WFE
 stanje. Kad je vrijednost različita od 0, LTZVisor predaje kontrolu \textit{Nesigurnom} gostu skokom na adresu koja je upisana
 na \textit{0xFFFFFFF0} lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja uz skok na odgovarajuću adresu i učita
-vrijednost iz SPSR u CPSR. Kako Linux zahtjeva da se procesori pokreću u \textit{supervisor} način rada, u SPSR-u se mora
+vrijednost iz SPSR u CPSR. Kako Linux zahtjeva da se procesori pokreću u \textit{supervisor} načinu rada, u SPSR-u se mora
 nalaziti ispravna vrijednost te se ta vrijednost postavlja prilikom postavljanja početnog konteksta \textit{Nesigurnog} gosta.
+Kao što je napomenuto, LTZVisor je zadužen za inicijalizaciju upravitelja prekidima te inicijalizira CPU sučelje za svaki
+procesor posebno. Kako se LTZVisor koristi kao \textit{domaćin} SMP \textit{Nesigurnog} gosta, važno je da se odgovarajući
+SGI prekidi označe kao \textit{Nesigurni}. SGI se koriste za sinkronizaciju između jezgra u sustavu te su nužni za ispravno
+funkcioniranje SMP Linuxa. Linux prati preporuke ARM-a za \textit{Nesigurni} svijet te koristi SGI ID0~-~ID7. Navedeni prekidi
+se obavezno moraju naznačiti da će se koristiti za \textit{Nesigurni} svijet. Poznato je da svaki procesor implementira
+vlastiti set SGI prekida te je zbog toga nužno označiti odgovarajuće prekide kao \textit{Nesigurne} na obje jezgre. Kako je
+već navedeno, Linux koristi globalno brojilo kao \textit{tick} operacijskog sustava te je važno napomenuti da globalno brojilo
+pripada PPI prekidima što znači da se i globalno brojilo mora označiti kao \textit{Nesigurno} na obje jezgre.\\
+Zadnje što je potrebno promijeniti za uspješno pokretanje SMP Linuxa je omogućavanje korištenja VFP podrške u
+\textit{Nesigurnom} svijetu. Omogućavanje se sastoji od konfiguriranja dva registra: CPACR i FPEXC \engl{Floating Point
+Exception Register}. FPEXC omogućava korištenje FPU \engl{Floating Point Unit}, a CPACR omogućava korištenje FPU koprocesorskih
+registara u \textit{Nesigurnom} svijetu. Koprocesor CPACR je na CPU0 izvorno podešen tako da dozvoljava \textit{Nesigurno}
+korištenje FPU koprocesorskih registara te ne CPU0 nije potrebno dodatno konfigurirati navedeni koprocesorski registar. Za CPU1
+je izvorno onemogućeno pristupanje FPU koprocesorskim registrima od strane \textit{Nesigurnog} svijeta te se na CPU1, CPACR
+mora konfigurirati.
+
+\subsubsection{Komunikacijski model}
 
 \subsection{Promjene u SMP Linux \textit{Nesigurnom} gostu}
+Promjene u SMP Linuxu su minimalne te se većina prilagodbe izvodi u LTZVisoru. Iako su promjene minimalne, potrebno je detaljno
+poznavanje načina na koji se sekundarni procesor budi i uz to, potrebno je u Linuxu raspoznati gdje se i na koji način izvodi
+buđenje sekundarnog procesora. Prije svega, potrebno je definirati nužne komponente u \textit{Device Tree} strukturi. Kod
+verzije Linuxa koja se gradi za jednu jezgru, dovoljno je u procesorski čvor \textit{Device Tree} strukture staviti opis
+samo one jezgre na kojoj će se Linux izvršavati. Kod SMP verzije je nužno opisati sve procesore koji će se koristiti za
+implementaciju SMP Linuxa. Postavka u \textit{Device Tree} strukturi na koju treba posebno paziti se odnosi na konfiguriranje
+prekida za globalno brojilo za koje je nužno da se označi da je prekid namijenjen jednom i drugom procesoru.\\
+Promjene u jezgri Linuxa se implementiraju u \textit{arch/arm/mach-zynq/platsmp.c} datoteci. Prva funkcija koja se poziva
+kod pokretanja sekundarnog procesora se zove \textit{zynq\_boot\_secondary} u kojoj se prvo provjerava status sekundarnog
+procesora. Status se čita u \textit{eFuse} registru koji je dostupan samo u \textit{Sigurnom} svijetu te je potrebno
+osigurati čitanje iz tog registra. Čitanje je ostvareno već implementiranom funkcijom \textit{secure\_read}. Kad se čitanje
+iz tog registra ne bi osiguralo, Linux ne bi mogao doći do dijela programa gdje se priprema početna adresa za sekundarni
+procesor. Isto tako, treba se osigurati predaja fizičke adrese potrebnog registra \textit{secure\_read} funkciji. Navedeni
+dio koda se može slobodno zakomentirati, pošto je poznato da je sa sekundarnim procesorom sve u redu i da je spreman za
+izvođenje. Iduća funkcija koja se poziva je \textit{zynq\_cpun\_start} koja pokreće sekundarni procesor. Funkcija kao ulazne
+argumente prima početnu adresu i ID procesora za kojeg se početna adresa priprema. Ako se pogleda na koji način se poziva
+navedena funkcija, vidi se da se kao prvi argument predaje \textit{\_\_pa\_symbol(\&secondary\_startup)}. Poznato je da Linux
+koristi virtualne adrese te simbol \textit{\&secondary\_startup} predstavlja virtualnu adresu na kojoj se nalazi početni kod
+za sekundarni procesor. Funkcija \textit{\_\_pa\_symbol} vraća fizičku adresu ulaznog argumenta što znači da je ulazni argument
+\textit{zynq\_cpun\_start} funkcije točno ona adresa koju je potrebno upisati na \textit{0xFFFFFFF0}.\\
+Postupak kojim Linux budi sekundarnu jezgru je sljedeći:
+\begin{enumerate}
+  \item{CPU1 se stavlja u \textit{reset} i onemogućava mu se signal takta}
+  \item{Na adresu \textit{0x00000000} se kopira minimalni kod koji služi za skok na \textit{\&secondary\_startup} adresu}
+  \item{Čisti se \textit{cache} memorija u memorijskom području koje obuhvaća kopirani kod s početnom adresom
+  \textit{0x00000000} (nužno za očuvanje koherencije)}
+  \item{CPU1 se pušta iz \textit{reseta} i omogućava mu se signal takta nakon čega CPU1 automatski skače na adresu
+  \textit{0x00000000}.}
+\end{enumerate}
+Ovakav postupak buđenja sekundarne jezgre je nedopustiv u implementaciji gdje se Linux koristi kao \textit{Nesigurni} gost
+LTZVisora iz razloga što bi se izgubila inicijalizacija sustava za \textit{Nesigurni} gost CPU1 procesora. Navedeni postupak
+je zamijenjen s onim koji odgovara modelu LTZVisora. Prije opisa postupka buđenja, treba napomenuti da se upis na
+\textit{0xFFFFFFF0} lokaciju mora izvesti u \textit{Sigurnom} stanju procesora (lokacija je nedostupna \textit{Nesigurnom}
+svijetu). Postupak kojim je izvedeno pokretanje sekundarne jezgre u \textit{Nesigurnom} gostu LTZVisora je:
+\begin{enumerate}
+  \item {Linux generira zahtjev LTZVisoru za upis odgovarajuće adrese na \textit{0xFFFFFFF0} lokaciju}
+  \item{LTZVisor upisuje početnu adresu za CPU1 na odgovarajuću lokaciju te se vraća kontrola \textit{Nesigurnom} gostu}
+  \item{Linux generira \textit{sev} instrukciju.}
+\end{enumerate}
+U ovom slučaju nema potrebe za rukovanjem \textit{cache} memorijom jer se upis na \textit{0xFFFFFFF0} lokaciju izvodi
+LTZVisorom koji ne koristi \textit{cache} memoriju. Kad bi LTZVisor koristio \textit{cache}, bilo bi potrebno očistiti
+\textit{cache} memoriju prije vraćanja kontrole \textit{Nesigurnom} gostu. Nakon što su implementirane navedene promjene,
+Linux je spreman za pokretanje kao SMP \textit{Nesigurni} gost. Potvrda o tome da je CPU1 uspješno pokrenut se vidi u ispisu
+prilikom pokretanja Linuxa. Isječak koji to opisuje prikazan je slikom \ref{smp_boot_secondary}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=300pt]{cpu1_online}
+  \caption{Isječak ispisa pokretanja SMP Linuxa}
+  \label{smp_boot_secondary}
+\end{figure}
+Kada bi pokretanje CPU1 procesora bilo neuspješno, Linux bi to javio porukom: \textit{CPU1: failed to come online}.
+Dodatna provjera o uspješnosti pokretanja sekundarnog procesora se može izvesti nakon što se Linux pokrene do kraja.
+Informacije o procesorima u sustavu se mogu dobiti naredbom \textit{cat /proc/cpuinfo} što daje ispis prikazan slikom
+\ref{cpuinfo}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=300pt]{cpuinfo}
+  \caption{Sadržaj \textit{/proc/cpuinfo} datoteke}
+  \label{cpuinfo}
+\end{figure}
+Navedena datoteka sadrži informacije o mogućnostima dostupnim procesorima u sustavu. Potvrda o tome da su aktivna oba
+procesora se može dobiti ispisom \textit{/sys/devices/system/cpu/online} datoteke čiji je ispis prikazan slikom \ref{cpuonline}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=300pt]{cpuonline}
+  \caption{Ispis \textit{/sys/devices/system/cpu/online} datoteke}
+  \label{cpuonline}
+\end{figure}
+U ispisu su dani identifikacijski brojevi procesora koji označavaju procesore opisane u \textit{/proc/cpuinfo} datoteci.
+Što se tiče frekvencija na kojima rade procesori, u ispisu na slici \ref{smp_boot_secondary} se vidi ukupna frekvencija
+uzimajući u obzir oba procesora te iznosi oko 1333~MHz, dok se u ispisu \textit{/proc/cpuinfo} datoteke može vidjeti
+frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
+
+\subsubsection{Komunikacijski model}
 
 \chapter{Testiranje SMP LTZVisor rješenja}
 \section{Performanse \textit{Sigurnog} gosta}
