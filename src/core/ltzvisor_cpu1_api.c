@@ -30,6 +30,10 @@ void LTZVisor_CPU1_entry (void)
 	{
 		interrupt_security_config(i, Int_NS);
 	}
+	for(int i = 8; i < 16; i++)
+	{
+		interrupt_security_config(i, Int_S);
+	}
 	printk("      *CPU1 interface initialized!\n\t");
 	asm volatile("isb");
 	ltzvisor_cpu1_nsguest_create();
@@ -137,4 +141,9 @@ void cpu1_prefetch_handler (void)
 void cpu1_fiq_handler (void)
 {
 	printk("CPU1 FIQ Handler\n");
+}
+
+void cpu1_irq_handler (void)
+{
+	printk("CPU1 IRQ Handler\n");
 }

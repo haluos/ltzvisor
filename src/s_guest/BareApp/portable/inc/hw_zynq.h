@@ -51,6 +51,8 @@
 #include<zynq_ttc.h>
 #include<s_isr.h>
 
+#define COMMUNICATE_SGI         9
+
 /**
  * Zynq-specific hardware initialization
  *

@@ -16,6 +16,7 @@
 
 \renewcommand{\labelitemi}{$\bullet$}
 \renewcommand{\labelitemii}{$-$}
+\renewcommand{\betweenauthors}{, }
 
 % TODO: Navedite broj rada.
 \thesisnumber{1995}
@@ -1216,7 +1217,31 @@ malih zahtjeva (memorijske zahtjeve i procesorsku moć) te je prvenstveno namije
 malih zahtjeva, pogodan je za implementaciju na mikrokontrolerima. Otvorenost koda FreeRTOS-a je omogućila da se FreeRTOS
 prilagodi za velik broj platformi, pa se tako može pronaći i FreeRTOS prilagođen za Xilinxov ZedBoard. Verzija FreeRTOS-a
 korištenog u ovom projektu je v10.1.3 koja se može dobiti generiranjem BSP-a \engl{Board Support Package} u Xilinx SDK
-2019.1.
+2019.1. FreeRTOS koristi jedinstven način imenovanja varijabli i funkcija kojeg je zbog urednosti koda poželjno koristiti i
+u razvoju FreeRTOS aplikacija. Na početku imena varijabli, dodaje se posebni identifikator koji govori kakvog tipa je
+varijabla. Funkcije koriste slično imenovanje te njihov identifikator govori o tipu povratne vrijednosti. Identifikatori
+varijabli mogu biti sljedeći:
+\begin{itemize}
+  \item{\textit{c} - \textit{char}}
+  \item{\textit{s} - \textit{short}}
+  \item{\textit{l} - \textit{long}}
+  \item{\textit{u} - \textit{unsigned}}
+  \item{\textit{p} - \textit{pointer}}
+  \item{\textit{e} - \textit{enum}}
+  \item{\textit{v} - \textit{void}}
+  \item{\textit{x} - složeni tip varijable (struktura).}
+\end{itemize}
+Navedeni identifikatori se mogu i međusobno kombinirati. Funkcije mogu imati još jedan dodatan identifikator koji se ne koristi
+kod varijabli, a to je \textit{prv} koji označava privatnu funkciju koja se koristi samo u \textit{.c} datoteci u kojoj je
+definirana. Nadalje, u nazivu funkcije se nalazi i ime datoteke u kojoj je funkcija definirana, npr.
+\textit{vTaskStartScheduler} je funkcija koja vraća \textit{void} vrijednost te je definirana u \textit{task.c} datoteci.
+Prilikom prevođenja izvornog koda, FreeRTOS zahtjeva jednu datoteku u kojoj su upute za izgradnju jezgre operacijskog sustava.
+Datoteka je naziva \textit{FreeRTOSConfig.h} te prilikom razvoja FreeRTOS aplikacija mora uvijek biti prisutna. U navedenoj
+datoteci se nalaze razne definicije konstanti koje upućuju jezgru koje dijelove treba uključiti u jezgru ili koje dijelove
+izbaciti iz jezgre. Konfiguriranje ove datoteke odgovara postupku konfiguriranja Linuxove jezgre, samo što konfiguriranje
+jezgre Linuxa ima predviđeno sučelje za to (koje se pokreće naredbom \textit{petalinux-config}). FreeRTOS zadaci se često
+implementiraju kao funkcije s beskonačnom petljom i koje dobrovoljno prepuštaju procesorsko vrijeme zadacima nižeg prioriteta
+korištenjem zahtjeva za odgađanjem \engl{delay}.
 
 \subsection{Programska podrška za Zynq-7000}
 Programska podrška FreeRTOS-a se sastoji od malog broja datoteka koje u potpunosti implementiraju funkcionalnost RTOS-a.
@@ -1228,9 +1253,98 @@ Datoteka \textit{port\_asm\_vectors.S} sadrži tablicu prekidnih vektora te kod 
 sadrži početnu adresu tablice prekidnih vektora. U \textit{port.c} se nalaze funkcije koje koriste podatke specifične za
 hardver na kojem se FreeRTOS izvodi. Podaci se odnose na podatke specifične za upravitelja prekidima i upravljanje CPSR
 registrom, kao i početna inicijalizacija konteksta zadatka (početni sadržaj stoga zadatka). Isto tako, datoteka sadrži i
-funkcije za upravljanje prekidima.
+funkcije za upravljanje prekidima koje se koriste za ostvarenje kritičnih sekcija. Obrada prekida u FreeRTOS-u je izvedena
+tako da se u svakoj obradi provjerava ima li koji prioritetniji zadatak spreman za izvođenje od onog koji se je prekinuo te
+ako ima izvodi se zamjena konteksta i počinje se izvoditi prioritetniji zadatak. Navedena obrada je implementirana u
+\textit{portASM.S} datoteci. Kako je FreeRTOS pogonjen brojilom čiji period označava jedan otkucaj \engl{tick}, većina
+zamjene konteksta će se izvesti prilikom obrade prekida toga brojila. Prilikom obrade prekida, moguće je pozvati i dodatnu,
+korisnički definiranu funkciju koja se poziva u \textit{vApplicationIRQHandler} funkciji. Ova funkcija je izvorno definirana
+u \textit{portZynq7000.c} datoteci. Funkcija koja obrađuje prekid otkucaja se naziva \textit{FreeRTOS\_Tick\_Handler} te
+je zadužena za povećanje broja otkucaja i mora biti pozvana prilikom svake obrade prekida otkucaja. Navedena funkcija je
+definirana u \textit{port.c} datoteci. Konfiguriranje brojila koji generira otkucaje se izvodi funkcijom
+\textit{FreeRTOS\_SetupTickInterrupt} koja je definirana u \textit{portZynq7000.c} datoteci.\\
+Zamjena konteksta koja je okinuta dobrovoljnim prepuštanjem procesorskog vremena drugom zadatku se izvodi pomoću
+\textit{supervisor} iznimke koja se generira \textit{portYIELD} makroom definiranim u \textit{portmacro.h} datoteci.
+Obrada iznimke se sastoji od spremanja konteksta trenutno izvođenog zadatka, odabirom zadatka koji će se izvoditi slijedeći
+i obnovom konteksta zadatka čije izvođenje će započeti izlaskom iz obrade iznimke. Funkcija koja bira slijedeći zadatak
+se zove \textit{vTaskSwitchContext} koja je definirana u \textit{task.c} datoteci i gotovo cijela funkcija je izvedena kao
+kritična sekcija (nužno je da funkcija ne bude prekinuta). U svakom trenutku izvođenja FreeRTOS aplikacije mora biti aktivan
+barem jedan zadatak te se stoga prilikom pokretanja raspoređivača zadataka stvara \textit{idle} zadatak koji se aktivira
+kad više nema nijednog korisničkog zadatka spremnog za izvođenje. Funkcija \textit{idle} zadatka je implementirana u
+\textit{port.c} datoteci, pod imenom \textit{portTASK\_FUNCTION}. Korisnička aplikacija koja se poziva u navedenoj funkciji
+je \textit{vApplicationIdleHook} koja je početno definirana u \textit{portZynq7000.c} datoteci. Izvođenje korisničkih zadataka
+na ZedBoard platformi odgovara izvođenju programa u sustavskom načinu rada.
 
 \subsection{Prilagodba FreeRTOS-a kao \textit{Sigurnog} gosta LTZVisora}
+FreeRTOS je izvorno implementiran kao operacijski sustav koji kao izvor prekida koristi IRQ. Poznato je da dizajn LTZVisora
+zahtjeva FIQ kao izvor prekida \textit{Sigurnog} svijeta te se prilagođenje \textit{Sigurnog} FreeRTOS-a odnosi na
+prilagođenje jezgre da koristi FIQ umjesto IRQ. Prvo što je potrebno promijeniti je funkciju koja se poziva prilikom pojave
+FIQ prekida u tablici prekidnih vektora \textit{Sigurnog} svijeta. Kao funkciju za obradu FIQ prekida treba se postaviti
+funkcija za obradu prekida u \textit{portASM.S} datoteci. Kako se u \textit{portASM.S} datoteci pretpostavlja obrada IRQ
+prekida, u obradi prekida postoji dio koda gdje se način rada procesora mijenja iz \textit{supervisor} u IRQ način rada.
+Navedeni dio koda je potrebno promijeniti tako da se način rada promijeni u FIQ. Kao što je već spomenuto,
+\textit{vTaskSwitchContext} funkcija je većinom izvedena kao kritična sekcija te je potrebno implementirati promjene u
+jezgri FreeRTOS-a koje će omogućiti takvu funkciju obzirom na FIQ prekide. Kritična sekcija se obično implementira
+maskiranjem odgovarajućeg prekida, za FIQ to znači da je potrebno maskirati FIQ prekida u CPSR registru. Za Cortex-A procesore
+postoji posebna oznaka koja govori o tome je li FIQ prekid moguće maskirati. Cortex-A9 sadrži navedeni podatak u NMFI
+\engl{Nonmaskable FIQ Interrupt} bit u SCTLR registru. Navedeni bit je predviđen samo za čitanje i ne može ga se
+softverski konfigurirati te indicira na to da se FIQ ne može softverski maskirati. Poznato je da se FIQ automatski maskiraju
+generiranje FIQ prekida te se ta činjenica iskoristila za implementaciju kritične sekcije potrebne za
+\textit{vTaskSwitchContext} funkciju.
+\newpage
+Navedena funkcija se koristi u dva slučaja:
+\begin{enumerate}
+  \item {Kod obrade FIQ prekida}
+  \item{Kod obrade \textit{supervisor} iznimke.}
+\end{enumerate}
+Jasno je da prvi slučaj zadovoljava potrebe implementacije kritične sekcije te je potrebno pobrinuti se za implementaciju
+kritične sekcije drugog slučaja. Kako je već rečeno, ulazak u \textit{supervisor} iznimku se okida pozivom \textit{portYIELD}
+makroa te je on izmijenjen tako da se umjesto \textit{supervisor} iznimke generira SGI FIQ prekid. Nova implementacija
+\textit{portYIELD} funkcije prikazana je slikom \ref{portyield}.
+\begin{figure}[H]
+  \begin{lstlisting}
+  #define portYIELD()                               \
+              interrupt_IPI_generate(8,1);          \
+              __asm volatile( "dsb\n"               \
+                              "isb")
+  \end{lstlisting}
+  \caption{Implementacija \textit{portYIELD} funkcije}
+  \label{portyield}
+\end{figure}
+Poziv funkcije \textit{interrupt\_IPI\_generate(8,1);} generira SGI prekidnog broja 8, za CPU0 sučelje. U funkciji za
+obradu prekida u \textit{portASM.S} datoteci se treba dodati dio koji će obraditi navedeni SGI. Nakon što se u navedenoj
+funkciji pročita prekidni broj generiranog prekida, potrebno je dodati kod prikazan slikom \ref{sgi}.
+\begin{figure}[H]
+  \lstset{breaklines=true, xleftmargin=.05\textwidth}
+  \begin{lstlisting}
+    CMP		r0, #8
+    BNE		1f
+    LDR 	r4, ulICCEOIRConst
+    LDR		r4, [r4]
+    STR		r0, [r4]
+    POP		{r0-r4, r12}
+    CPS		#FIQ_MODE
+    POP		{LR}
+    MSR		SPSR_cxsf, LR
+    POP		{LR}
+    B		FreeRTOS_SWI_Handler
+  \end{lstlisting}
+  \caption{Obrada SGI prekida}
+  \label{sgi}
+\end{figure}
+Labela \textit{1} odgovara kodu koji se izvorno nalazi nakon čitanja prekidnog broja FIQ-a. Dio koda prikazanog
+slikom \ref{sgi} služi za obnovu konteksta u prekidu i poziv funkcije koja je služila za obradu \textit{supervisor} iznimke.
+Na kraju, nužna promjena za ispravan rad FreeRTOS-a je postavljanje inicijalnog SPSR-a zadataka koji mora biti u obliku u
+kojem su IRQ prekidi maskirani. Navedeno se postiže izmjenom \textit{portINITIAL\_SPSR} varijable definirane u \textit{port.c}
+datoteci.
+Dodatna promjena koja se je implementira tiče se brojila za otkucaje. Izvorno, FreeRTOS za Zedboard koristi privatno brojilo
+za otkucaje, a u ovom radu se koristi TTC0. Da bi se TTC0 mogao koristiti kao brojilo otkucaja, potrebno je izmijeniti
+\textit{FreeRTOS\_SetupTickInterrupt} i \textit{FreeRTOS\_ClearTickInterrupt} koje konfiguriraju TTC0 kao brojilo otkucaja,
+odnosno brišu aktivno stanje prekida nakon obrade TTC0 prekida. Kod implementacije \textit{FreeRTOS\_SetupTickInterrupt}
+važno je imati na umu da prioritet brojila otkucaja mora biti najmanji mogući (31).
+Uz navedene promjene u \textit{Sigurnom} FreeRTOS-u, zamjena konteksta LTZVisora se morala modificirati na način da se
+FIQ ne obrađuje u nadglednom načinu rada, nego u \textit{Sigurnom} gostu te se kontekst \textit{Sigurnog} gosta dodatno
+proširio.
 
 \chapter{LTZVisor za višejezgrene procesore}
 Predstavljeni dizajn LTZVisora ima jedan nedostatak, a to je situacija u kojoj \textit{Sigurni} gost ne prepušta procesorsko
@@ -1380,7 +1494,7 @@ dodijeljen TTC0, a \textit{Nesigurnom} gostu je dodijeljeno globalno brojilo.
 \subsubsection{Memorijski podsustav}
 \textit{Sigurni} gost je implementiran kao \textit{bare-metal} aplikacija kojoj LTZVisor dodjeljuje 64~MB, dok
 \textit{Nesigurni} gost implementira SMP Linux operacijski sustav te mu je dodijeljena preostala memorija koja iznosi 448~MB.
-\textit{Sigurni} gost, zbog očuvanja jednostavnosti i predvidljivosti implementacije, ne koristi MMU ni L1 i L2 \textit{cache}
+\textit{Sigurni} gost, zbog očuvanja jednostavnosti i predvidljivosti implementacije, ne koristi MMU ni L1 ni L2 \textit{cache}
 memorije. Uz to, ne koriste se ni polja za predviđanje grananja. Poznato je da Linux zahtjeva korištenje MMU jedinice za
 ispravno funkcioniranje te se podrazumijeva da će se \textit{Nesigurne} MMU tablice za prevođenje koristiti. Isto tako, Linux
 spada u sustave opće namjene te je nepredvidljivost do neke razine dozvoljena. Stoga, Linux koristi i L1 i L2 \textit{cache} te
@@ -1548,8 +1662,6 @@ frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
 \subsubsection{Komunikacijski model}
 
 \chapter{Testiranje SMP LTZVisor rješenja}
-\section{Performanse \textit{Sigurnog} gosta}
-\section{Performanse \textit{Nesigurnog} gosta}
 
 \chapter{Budući rad}
 
@@ -1566,7 +1678,7 @@ Sažetak na hrvatskom jeziku.
 \end{sazetak}
 
 % TODO: Navedite naslov na engleskom jeziku.
-\engtitle{Extending LTZVisor to multicore}
+\engtitle{Extending LTZVisor Hypervisor to Multicore Processors}
 \begin{abstract}
 Abstract.
 

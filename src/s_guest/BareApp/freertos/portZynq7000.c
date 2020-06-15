@@ -145,8 +145,8 @@ void FreeRTOS_ClearTickInterrupt( void )
 }
 /*-----------------------------------------------------------*/
 
-// void vApplicationIRQHandler( uint32_t ulICCIAR )
-void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
+void vApplicationIRQHandler( uint32_t ulICCIAR )
+// void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
 {
 extern const XScuGic_Config XScuGic_ConfigTable[];
 static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;
@@ -252,3 +252,46 @@ volatile char *pcOverflowingTaskName = pcTaskName;
 	portDISABLE_INTERRUPTS();
 	for( ;; );
 }
+
+#if (configUSE_TICKLESS_IDLE != 0)
+void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
+{
+	eSleepModeStatus eSleepStatus;
+
+	ttc_disable(TTC0,TTCx_2);
+
+	eSleepStatus = eTaskConfirmSleepModeStatus();
+
+	if( eSleepStatus == eAbortSleep )
+	{
+		ttc_enable(TTC0,TTCx_2);
+	}
+	else
+	{
+		if( eSleepStatus == eNoTasksWaitingTimeout )
+		{
+			// printk("Yield forever\n");
+			asm volatile(".arch_extension sec\n");
+			asm volatile("ldr r0, =0x0ffffff1\n");
+			asm volatile("smc #0");
+		}
+		else
+		{
+			ttc_request(TTC1, TTCx_2, xSleepTime * 10000);
+			ttc_enable(TTC1, TTCx_2);
+			// printk("Yield\n");
+			asm volatile(".arch_extension sec\n");
+			asm volatile("ldr r0, =0x0ffffff1\n");
+			asm volatile("smc #0");
+			ttc_disable(TTC1,TTCx_2);
+			// printk("Disable TTC1\n");
+			vTaskStepTick(xSleepTime+1);
+		}
+		// printk("Reset TTC0\n");
+		ttc_request(TTC0, TTCx_2, 1 * 10000);
+		ttc_enable(TTC0,TTCx_2);
+	}
+	// printk("Sleep for %d\n", xSleepTime);
+	// YIELD();
+}
+#endif

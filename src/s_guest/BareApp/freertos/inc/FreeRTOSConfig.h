@@ -98,7 +98,7 @@
 
 #define configCHECK_FOR_STACK_OVERFLOW 2
 
-#define configUSE_TASK_FPU_SUPPORT 2
+#define configUSE_TASK_FPU_SUPPORT 1
 
 #define configQUEUE_REGISTRY_SIZE 10
 
@@ -128,7 +128,7 @@
 #define portTICK_TYPE_IS_ATOMIC 1
 #define configMESSAGE_BUFFER_LENGTH_TYPE uint32_t
 #define configSTACK_DEPTH_TYPE uint32_t
-#define configMAX_API_CALL_INTERRUPT_PRIORITY (1)
+#define configMAX_API_CALL_INTERRUPT_PRIORITY (18)
 
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 

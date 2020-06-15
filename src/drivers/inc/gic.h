@@ -294,6 +294,8 @@ uint32_t interrupt_acknowledge(void);
  */
 void interrupt_clear(uint32_t interrupt, uint32_t target);
 
+void interrupt_clear_ack(uint32_t ack_reg);
+
 /**
  * Configure all interrupts' security
  *

@@ -45,11 +45,66 @@
 */
 
 #include<hw_zynq.h>
+#include <printk.h>
 
 // extern tHandler* sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED];
+extern uint32_t toggle;
+uint8_t toggle_mode;
 
 void tick_handler(){
 	 ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+}
+
+void sgi_communicate_handler (void)
+{
+	uint32_t led;
+	uint32_t *message = (uint32_t*) 0x2010000;
+	led = *message & 0xf;
+	toggle_mode = 0;
+	if(led == 0x0)
+	{
+		toggle = 0x00;
+	}
+	else if(led == 0xf)
+	{
+		toggle = 0xff;
+	}
+	else if((led > 0) && (led < 9))
+	{
+		toggle = 0x1 << (led-1);
+	}
+	else
+	{
+		toggle_mode = 1;
+		toggle = 0x00;
+	}
+	// printk("Message from NS in SGI: 0x%x\n", *message);
+}
+
+void cpu1_sgi_communicate_handler (void)
+{
+	uint32_t led;
+	uint32_t *message = (uint32_t*) 0x2010000;
+	led = *message & 0xf;
+	toggle_mode = 0;
+	if(led == 0x0)
+	{
+		toggle = 0x00;
+	}
+	else if(led == 0xf)
+	{
+		toggle = 0xff;
+	}
+	else if((led > 0) && (led < 9))
+	{
+		toggle = (0x1 << (led-1)) ^ 0xff;
+	}
+	else
+	{
+		toggle_mode = 1;
+		toggle = 0x00;
+	}
+	// printk("Message from CPU1 NS in SGI: 0x%x\n", *message);
 }
 
 /**
@@ -60,6 +115,7 @@ void tick_handler(){
  * @retval
  */
 void hw_init( void ){
+	toggle_mode = 1;
 
 	/** Initialize TTC0_2 as S Tick */
 	ttc_init(TTC0,TTCx_2,INTERVAL);
@@ -69,7 +125,8 @@ void hw_init( void ){
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT,6);
 	register_handler(TTC0_TTCx_2_INTERRUPT, tick_handler);
-
+	register_handler(COMMUNICATE_SGI, sgi_communicate_handler);
+	register_handler(10,cpu1_sgi_communicate_handler);
 }
 
 /**

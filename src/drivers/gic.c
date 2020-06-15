@@ -391,6 +391,11 @@ void interrupt_clear(uint32_t interrupt, uint32_t target){
 	cpu_inter->ICCEOIR = ( target << 10) | interrupt;
 }
 
+void interrupt_clear_ack(uint32_t ack_reg)
+{
+	cpu_inter->ICCEOIR = ack_reg;
+}
+
 /**
  * Configure all interrupts' security
  *
@@ -482,5 +487,9 @@ void interrupt_critical_exit() {
 void interrupt_IPI_generate(uint32_t id, uint32_t target){
 	/* Software Generated Interrupt Register */
    	int_dist->ICDSGIR = (target << IPI_TARGET_SHIFT) | id;
-		// int_dist->ICDSGIR = (target << 24) | (1 << IPI_TARGET_SHIFT) | id;
+}
+
+void interrupt_IPI_generate_CPU1(uint32_t id, uint32_t target){
+	/* Software Generated Interrupt Register */
+   	int_dist->ICDSGIR = (target << 24) | id;
 }

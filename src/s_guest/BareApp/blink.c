@@ -52,77 +52,16 @@
 
 void led_blink( void * pvParameters );
 void vHwSetup(void);
+void secure_yield(void);
 
 struct sys_regs s_context;
 
-void vApplicationIdleHook( void )
-{
-	// printk("yield\n");
-	YIELD();
-}
-
-void secure_yield()
-{
-	while(1){
-		YIELD();
-		asm volatile("dsb\n"
-									"isb");
-		// vTaskDelay(1000/portTICK_RATE_MS);
-	}
-}
-
-#if (configUSE_TICKLESS_IDLE != 0)
-void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
-{
-	eSleepModeStatus eSleepStatus;
-
-	ttc_disable(TTC0,TTCx_2);
-
-	eSleepStatus = eTaskConfirmSleepModeStatus();
-
-	if( eSleepStatus == eAbortSleep )
-	{
-		ttc_enable(TTC0,TTCx_2);
-	}
-	else
-	{
-		if( eSleepStatus == eNoTasksWaitingTimeout )
-		{
-			// printk("Yield forever\n");
-			YIELD();
-		}
-		else
-		{
-			ttc_request(TTC1, TTCx_2, xSleepTime * 10000);
-			ttc_enable(TTC1, TTCx_2);
-			// printk("Yield\n");
-			YIELD();
-			ttc_disable(TTC1,TTCx_2);
-			// printk("Disable TTC1\n");
-			vTaskStepTick(xSleepTime+1);
-		}
-		// printk("Reset TTC0\n");
-		ttc_request(TTC0, TTCx_2, 1 * 10000);
-		ttc_enable(TTC0,TTCx_2);
-	}
-	// printk("Sleep for %d\n", xSleepTime);
-	// YIELD();
-}
-#endif
+uint32_t toggle;
+extern uint8_t toggle_mode;
 
 void print_warning(uint32_t arg)
 {
 	printk("Arg 0x%x\n", arg);
-}
-
-void print_restore (uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5)
-{
-	printk("Restore:\nR0: 0x%x, R1: 0x%x, R2: 0x%x,\n R3: 0x%x, R4: 0x%x, R5: 0x%x\n", r0, r1, r2, r3, r4, r5);
-}
-
-void print_save (uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5)
-{
-	printk("Save:\nR0: 0x%x, R1: 0x%x, R2: 0x%x,\n R3: 0x%x, R4: 0x%x, R5: 0x%x\n", r0, r1, r2, r3, r4, r5);
 }
 
 int main() {
@@ -157,15 +96,21 @@ int main() {
  * @retval
  */
 void led_blink( void * parameters ){
-
-	static uint32_t toggle;
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
 	uint32_t state;
 
 	for( ;; ){
-		toggle ^=0xF;
-		*ptr = toggle;
+		if(toggle_mode)
+		{
+			toggle ^=0xFF;
+			*ptr = toggle;
+		}
+		else
+		{
+			*ptr = toggle;
+		}
+
 		YIELD();
 		// vTaskDelay( 1000 / portTICK_RATE_MS);
 	}
@@ -179,4 +124,20 @@ void vHwSetup (void)
 	interrupt_enable(TTC1_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,31);
+}
+
+void secure_yield()
+{
+	while(1){
+		YIELD();
+		asm volatile("dsb\n"
+									"isb");
+		// vTaskDelay(1000/portTICK_RATE_MS);
+	}
+}
+
+void vApplicationIdleHook( void )
+{
+	// printk("yield\n");
+	YIELD();
 }

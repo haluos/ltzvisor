@@ -195,11 +195,11 @@
   @ stmia r0, {sp, lr}^
   @ add r0, r0, #(2*4)
 
-  fmrx r1, fpscr
-  vstmia r0!, {d0-d15}
-  vstmia r0!, {d16-d31}
-  @ mov r2, r0
-  stmia r0!, {r1}
+  @ fmrx r1, fpscr
+  @ vstmia r0!, {d0-d15}
+  @ vstmia r0!, {d16-d31}
+  @ @ mov r2, r0
+  @ stmia r0!, {r1}
 
 	cps #MONITOR_MODE
 .endm
@@ -246,12 +246,12 @@
   @ ldmia r0, {sp, lr}^
   @ add r0, r0, #(2*4)
 
-  vldmia r0!, {d0-d15}
-  vldmia r0!, {d16-d31}
-  @ mov r2, r0
-  ldmia r0!, {r1}
-  @ add r0, r0, #4
-  vmsr fpscr, r1
+  @ vldmia r0!, {d0-d15}
+  @ vldmia r0!, {d16-d31}
+  @ @ mov r2, r0
+  @ ldmia r0!, {r1}
+  @ @ add r0, r0, #4
+  @ vmsr fpscr, r1
 
 	cps 	#MONITOR_MODE
 	pop	{r0, r1}
@@ -442,8 +442,20 @@ _secondary_wake_cpu1:
   @ rfefd sp!
 
 communicate:
-  call_c_function_arg print_message
-  exception_return_arg
+  push {r0-r12,lr}
+  bl flush_icache_and_dcache
+  bl cachel2_invalidate
+  bl cachel2_clean
+  pop {r0-r12,lr}
+  @ call_c_function_arg print_message
+  @ exception_return_arg
+  push {r0-r2,lr}
+  mov r0, #9
+  mov r1, #1
+  bl interrupt_IPI_generate
+  pop {r0-r2,lr}
+  movs pc, lr
+
 
 
 /**
@@ -457,12 +469,6 @@ communicate:
 	/** Monitor - FIQ handler */
 _mon_fiq_handler:
 	sub	lr, lr, #4			@ Adjust LR
-
-  push {r1}
-  mov 	r1,#0
-	mcr	p15, 0, r1, c7, c5, 6
-  mcr 	p15, 0, r1, c8, c3, 0
-  pop {r1}
 
   SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
   @ dsb
@@ -510,10 +516,10 @@ _mon_fiq_handler:
   @ ldmfd sp, {r0-r12}^
   @ add 	sp,sp,#(13*4)
 
-  pop 	{r0}
-	vpop	{d16-d31}
-	vpop	{d0-d15}
-	vmsr  fpscr, r0
+  @ pop 	{r0}
+	@ vpop	{d16-d31}
+	@ vpop	{d0-d15}
+	@ vmsr  fpscr, r0
 
   pop {r1}
   @ mov lr, r2
@@ -544,10 +550,10 @@ _mon_scheduler:
   @ stmfd	sp!, {r0,r1}
   @ sub 	sp, sp, #(2*4)
 
-  fmrx  r1,  fpscr
-	vpush {d0-d15}
-  vpush	{d16-d31}
-  push	{r1}
+  @ fmrx  r1,  fpscr
+	@ vpush {d0-d15}
+  @ vpush	{d16-d31}
+  @ push	{r1}
 
   @ cps #MONITOR_MODE
 

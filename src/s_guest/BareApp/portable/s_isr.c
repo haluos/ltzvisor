@@ -47,6 +47,7 @@
 #include <gic.h>
 #include <s_isr.h>
 #include <printk.h>
+#include <zynq_ttc.h>
 
 uint32_t interrupt;
 
@@ -54,6 +55,8 @@ fiq_handler sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {NULL};
 
 extern uint8_t ttc_flag;
 uint8_t monitor_flag;
+
+extern void cpu1_sgi_communicate_handler (void);
 
 /**
  * Generic FIQ handler
@@ -75,13 +78,23 @@ uint8_t monitor_flag;
 void sFIQ_handler(void){
 
 	// printk("FIQ\n");
+	uint32_t int_ack = interrupt_acknowledge();
 
-	uint32_t irq_num = interrupt_acknowledge();
+	uint32_t irq_num = int_ack & 0x3ff;
 
 	if (sfiq_handlers[irq_num])
-		sfiq_handlers[irq_num]();
+	{
+		// if(irq_num == 10)
+		// {
+		// 	cpu1_sgi_communicate_handler();
+		// }
+		// else
+		// {
+			sfiq_handlers[irq_num]();
+		// }
+	}
 
-	interrupt_clear(irq_num , 0);
+	interrupt_clear_ack(int_ack);
 }
 
 void register_handler(uint32_t interrupt, fiq_handler handler){
@@ -144,28 +157,4 @@ void irq_exception(void)
 	// asm volatile("pop {lr}");
 	// asm volatile("subs pc, lr, #8");
 	while(1);
-}
-
-void undef_yield(void)
-{
-	printk("Undef yield!\n");
-	#undef YIELD
-	#define YIELD()\
-		do{\
-			printk("Wait flag\n");\
-			while(!ttc_flag);\
-			ttc_flag = 0;\
-		}while(0)
-}
-
-void redef_yield(void)
-{
-	printk("Redef yield\n");
-	#undef YIELD
-	#define YIELD() \
-	do{ \
-			asm volatile(".arch_extension sec\n");\
-			asm volatile("ldr r0, =0x0ffffff1\n");\
-			asm volatile("smc #0");\
-	}while(0)
 }

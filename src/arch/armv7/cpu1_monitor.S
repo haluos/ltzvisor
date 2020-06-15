@@ -242,7 +242,7 @@ _smc_handler:
 	cmp r0, r3
 	beq _cpu1_ns_wfi
 	cmp r0, #0x9
-  beq communicate
+  beq cpu1_communicate
 	movs pc, lr
 
 @ .globl cpu1_board_smc
@@ -292,9 +292,18 @@ _cpu1_ns_wfi:
 	wfi
 	movs pc, lr
 
-communicate:
-  cpu1_call_c_function_arg print_message
-  cpu1_exception_return_arg
+cpu1_communicate:
+  push {r0-r12,lr}
+	bl flush_icache_and_dcache
+  bl cachel2_invalidate
+  bl cachel2_clean
+	mov r0, #10
+  mov r1, #1
+  bl interrupt_IPI_generate
+  pop {r0-r12,lr}
+  @ cpu1_call_c_function_arg print_message
+  @ cpu1_exception_return_arg
+  movs pc, lr
 
 .globl _prefetch_handler
 _prefetch_handler:
@@ -312,15 +321,10 @@ _abort_handler:
 
 .globl _irq_handler
 _irq_handler:
-	mrs r3, cpsr
-	orr r3, #0x80
-	msr cpsr_c, r3
-	CLEAR_SCR_NS
-	GET_CPU1_NS_CONTEXT
-	SET_SCR_NS
-	isb
-	dsb
-	movs pc, lr
+	push {r0-r12,lr}
+	bl cpu1_irq_handler
+	pop {r0-r12,lr}
+	b .
 
 .globl _fiq_handler
 _fiq_handler:
