@@ -246,7 +246,6 @@ uint32_t ttc_reset (uint32_t ttc_num, uint32_t timer_num)
 {
 	Zynq_Ttc * ptr_ttc = NULL;
 	uint32_t cnt_cntrl = 0;
-	uint32_t clk_cntrl = 0;
 
 	/**  Check Arguments  */
 	if( (ttc_num > TTC1) || (timer_num > TTCx_2)){

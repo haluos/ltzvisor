@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.1.1
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.0.1
+ * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,9 +31,7 @@
 #ifdef __cplusplus
 	extern "C" {
 #endif
-
-/* BSP includes. */
-#include "xil_types.h"
+#include <gic.h>
 
 /*-----------------------------------------------------------
  * Port specific definitions.
@@ -61,6 +59,10 @@ typedef unsigned long UBaseType_t;
 typedef uint32_t TickType_t;
 #define portMAX_DELAY ( TickType_t ) 0xffffffffUL
 
+/* 32-bit tick type on a 32-bit architecture, so reads of the tick count do
+not need to be guarded with a critical section. */
+#define portTICK_TYPE_IS_ATOMIC 1
+
 /*-----------------------------------------------------------*/
 
 /* Hardware specifics. */
@@ -83,14 +85,11 @@ extern uint32_t ulPortYieldRequired;			\
 	}											\
 }
 
-extern void interrupt_IPI_generate(uint32_t id, uint32_t target);
-
 #define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
 // #define portYIELD() __asm volatile ( "SWI 0" ::: "memory" );
 #define portYIELD()	interrupt_IPI_generate(8,1);\
-						__asm volatile("dsb\n"\
-														"isb")
-
+						__asm volatile("nop\n"\
+														"nop")
 
 /*-----------------------------------------------------------
  * Critical section control
@@ -108,6 +107,8 @@ interrupts that have a priority below configMAX_API_CALL_INTERRUPT_PRIORITY. */
 #define portEXIT_CRITICAL()			vPortExitCritical();
 #define portDISABLE_INTERRUPTS()	ulPortSetInterruptMask()
 #define portENABLE_INTERRUPTS()		vPortClearInterruptMask( 0 )
+#define portSET_INTERRUPT_MASK_FROM_ISR()		ulPortSetInterruptMask()
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vPortClearInterruptMask(x)
 
 /*-----------------------------------------------------------*/
 
@@ -120,57 +121,6 @@ macros is used. */
 /* Prototype of the FreeRTOS tick handler.  This must be installed as the
 handler for whichever peripheral is used to generate the RTOS tick. */
 void FreeRTOS_Tick_Handler( void );
-
-/*
- * Installs pxHandler as the interrupt handler for the peripheral specified by
- * the ucInterruptID parameter.
- *
- * ucInterruptID:
- *
- * The ID of the peripheral that will have pxHandler assigned as its interrupt
- * handler.  Peripheral IDs are defined in the xparameters.h header file, which
- * is itself part of the BSP project.
- *
- * pxHandler:
- *
- * A pointer to the interrupt handler function itself.  This must be a void
- * function that takes a (void *) parameter.
- *
- * pvCallBackRef:
- *
- * The parameter passed into the handler function.  In many cases this will not
- * be used and can be NULL.  Some times it is used to pass in a reference to
- * the peripheral instance variable, so it can be accessed from inside the
- * handler function.
- *
- * pdPASS is returned if the function executes successfully.  Any other value
- * being returned indicates that the function did not execute correctly.
- */
-BaseType_t xPortInstallInterruptHandler( uint8_t ucInterruptID, XInterruptHandler pxHandler, void *pvCallBackRef );
-
-/*
- * Enables the interrupt, within the interrupt controller, for the peripheral
- * specified by the ucInterruptID parameter.
- *
- * ucInterruptID:
- *
- * The ID of the peripheral that will have its interrupt enabled in the
- * interrupt controller.  Peripheral IDs are defined in the xparameters.h header
- * file, which is itself part of the BSP project.
- */
-void vPortEnableInterrupt( uint8_t ucInterruptID );
-
-/*
- * Disables the interrupt, within the interrupt controller, for the peripheral
- * specified by the ucInterruptID parameter.
- *
- * ucInterruptID:
- *
- * The ID of the peripheral that will have its interrupt disabled in the
- * interrupt controller.  Peripheral IDs are defined in the xparameters.h header
- * file, which is itself part of the BSP project.
- */
-void vPortDisableInterrupt( uint8_t ucInterruptID );
 
 /* If configUSE_TASK_FPU_SUPPORT is set to 1 (or left undefined) then tasks are
 created without an FPU context and must call vPortTaskUsesFPU() to give

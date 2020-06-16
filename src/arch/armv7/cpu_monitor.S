@@ -597,6 +597,6 @@ _mon_scheduler:
 
 	/* Set NS bit and go NS world */
   SCR_NS_SET
-	isb
+  isb
 	dsb
 	movs    pc, lr

@@ -330,5 +330,7 @@ void interrupt_critical_exit();
 
 void scheduling_point_IPI(uint32_t id, uint32_t target);
 
+void interrupt_IPI_generate(uint32_t id, uint32_t target);
+
 
 #endif /* __GIC_H */

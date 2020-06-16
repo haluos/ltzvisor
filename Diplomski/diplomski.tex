@@ -47,11 +47,11 @@ Izlaskom M profila nove ARMv8 arhitekture, pojavila se i posebno razvijena \text
 podrška Cortex-M procesora. Iako je \textit{TrustZone-M} sigurnosna ekstenzija razvijena ispočetka konkretno
 za mikrokontrolere, krajnja funkcionalnost je slična onoj koju pruža \textit{TrustZone} ekstenzija Cortex-A
 procesora.\\
-U ovom radu će biti opisana \textit{TrustZone} sigurnosna ekstenzija ZedBoard platforme koja implementira
-Cortex-A9 procesor s dvije jezgre te sustav za procesiranje (engl. \textit{Processing System}, PS) i programabilnu
-logiku (PL). Kao primjer maksimalnog iskorištenja \textit{TrustZone} sigurnosne
+U ovom radu bit će opisana \textit{TrustZone} sigurnosna ekstenzija ZedBoard platforme koja implementira
+Cortex-A9 procesor s dvije jezgre te sustavom za procesiranje (engl. \textit{Processing System}, PS) i programabilnom
+logikom (PL). Kao primjer maksimalnog iskorištenja \textit{TrustZone} sigurnosne
 ekstenzije, bit će prikazan LTZVisor monitor virtualnih strojeva (engl. \textit{hypervisor} ili engl.
-\textit{Virtual Machine Monitor}). LTZVisor omogućava virtualizaciju u ugradbenim računalima, odnosno konkurentno
+\textit{Virtual Machine Monitor}). LTZVisor omogućuje virtualizaciju u ugradbenim računalima, odnosno konkurentno
 izvođenje dva operacijska sustava na jednoj jezgri procesora. Pojavom IoT uređaja u industriji, pojavila
 se i sve veća potreba za virtualizacijom zbog potrebe za karakteristikama operacijskih sustava za rad u stvarnom
 vremenu i operacijskih sustava opće namjene. Specifičnije, karakteristike operacijskog sustava za rad u
@@ -71,9 +71,9 @@ memorija nije dijeljena između procesora te svaki procesor implementira odvojen
 L1 \textit{cache} memoriju od 32~kB. Platforma ima potpunu podršku sustava virtualne memorije ARMv7 arhitekture kojoj
 pripadaju procesori ZedBoard platforme. Procesori podržavaju 32-bitne ARM i Thumb instrukcijske setove te 16-bitne
 Thumb instrukcije i 8-bitne Java bajt kodove. Prisutna je i SCU (engl. \textit{Snoop Control Unit}) koja je nužna za održavanje
-koherencije za L1 \textit{cache} memoriju između dva procesora. Komunikacija između PL-a i APU je ostvarena
+koherencije L1 \textit{cache} memorije između dva procesora. Komunikacija između PL-a i APU je ostvarena
 pomoću ACP (engl. \textit{Accelerator Coherency Port}). Ispitivanje i kontrola procesora se odvija pomoću DAP-a
-(engl. \textit{Debug Access Port}). Procesori podržavaju različite načine radova, uključujući \textit{supervisor},
+(engl. \textit{Debug Access Port}). Procesori podržavaju različite načine rada, uključujući \textit{supervisor},
 sustavski (engl. \textit{system}) i korisnički (engl. \textit{user}) način rada što omogućava različite razine
 zaštite na aplikacijskoj razini. \textit{TrustZone} ekstenzija procesora omogućava razvoj sigurnog okruženja za
 izvođenje aplikacija i čuvanje njihovog sadržaja. Kako bi se minimizirao utjecaj strojnih ciklusa koji su potrebni
@@ -131,7 +131,7 @@ Korisnička aplikacija mora sadržavati postupak CPU inicijalizacije, koji je sl
   \item{Postaviti stog}
   \item{Učitati adresu tablice stranica u registar tablica za prevođenje}
   \item{Postaviti MMU bit u kontrolnom registru sustava}
-  \item{Inicijalizirati i omogućiti L2 \textit{cahce} memoriju}
+  \item{Inicijalizirati i omogućiti L2 \textit{cache} memoriju}
   \item{Omogućiti L1 \textit{cache} memoriju u kontrolnom registru sustava}
   \item{Skočiti na početak korisničke aplikacije.}
 \end{enumerate}
@@ -182,9 +182,9 @@ Kod višeprocesorskih sustava, GIC implementira dva modela obrade prekida u slu�
 ili svim procesorima u sustavu. Prvi model je 1-N, gdje N procesora mogu obraditi prekid, ali se GIC pobrine da samo
 jedan procesor u sustavu obradi prekid. Ostali procesori u sustavu prime nepredvidljivi (engl. \textit{spurious}) prekid.
 Drugi model je N-N, gdje jedan procesor obrađuje prekid, a ostalima je prikazano stanje čekanja na obradu prekida.
-Kod takvog modela se koriste određeni protokoli kako bi prekid bio obrađen jednom. U sklopu GIC-a postoji više kopija
-prekida u sustavu, odnosno postoji više prekida s istim prekidnim brojem, za svaki procesor u sustavu postoji jedan prekidni
-broj. GIC se može podijeliti na dvije logičke cjeline:
+Kod takvog modela se koriste određeni protokoli kako bi prekid bio obrađen jednom. Oba procesora platforme imaju određen
+broj prekida koji pripadaju skupini prekida s dupliciranim prekidnim brojem (PPI i SGI). To znači da oba procesora mogu u
+istom trenutku obrađivati prekid s jednakim prekidnim brojem bez konflikta. GIC se može podijeliti na dvije logičke cjeline:
 \begin{itemize}
   \item{jedan blok distributera}
   \item{jedan ili više blokova CPU sučelja.}
@@ -200,8 +200,9 @@ Obrada prekida se odvija sljedećim redosljedom:
 \end{enumerate}
 
 \subsubsection{Distributer}
-Distributer je dio GIC-a koji prikuplja sve izvore prekida te određuje prioritet svakog prekida. Za svako CPU sučelje u
-sustavu prosljeđuje prekid najvišeg prioriteta. Distributer pruža sljedeće mogućnosti:
+Distributer je dio GIC-a koji prikuplja sve izvore prekida te određuje prioritet svakog prekida. Za svaku skupinu aktivnih
+prekida, distributer izabire prekid najvećeg prioriteta kojeg prosljeđuje odgovarajućem CPU sučelju. Distributer pruža
+sljedeće mogućnosti:
 \begin{itemize}
   \item{globalno dozvoljavanje prosljeđivanja prekida CPU sučeljima}
   \item{omogućavanje i onemogućavanje svakog prekida}
@@ -230,7 +231,7 @@ Acknowledge Register}). Mogućnosti CPU sučelja su sljedeće:
   \item{omogućavanje signaliziranja prekida procesoru}
   \item{potvrde prekida}
   \item{označavanje kraja obrade prekida}
-  \item{postavljanje maskiranja prekidnog prioriteta}
+  \item{postavljanje maskiranja prioriteta prekida}
   \item{definiranje postupka istiskivanja za procesor}
   \item{određivanje najvišeg prioriteta prekida koji čeka na obradu.}
 \end{itemize}
@@ -240,7 +241,7 @@ ARM implementira koprocesorsku podršku koja proširuje funkcionalnosti ARM proc
 CP0~-~CP15 \cite{arch_man}. Posebne namjene koprocesora su:
 \begin{itemize}
   \item{CP15: ima funkcionalnost kontrole nad sustavom, služi za identifikaciju arhitekture i mogućnosti platforme. Drži
-  kontrolu, status informacija i konfiguraciju sustava}
+  kontrolu, status i konfiguraciju sustava}
   \item{CP14: sadrži sustav za ispitivanje, kontrolu nad Thumb okruženjem izvođenja koda i konfiguraciju izvršavanja Java
   bajt kodova}
   \item{CP10 i CP11: zajedno podržavaju \textit{floating-point} operacije i operacije s vektorima}
@@ -310,9 +311,9 @@ Komunikaciju između dvije jezgre je moguće ostvariti pomoću prekida između p
 (engl. \textit{inter-processor interrupt}), dijeljene memorije ili razmijene poruka. Prekidi između procesora
 na ovoj platformi se implementiraju pomoću softverski generiranih prekida (SGI). Za bolje razumijevanje
 višejezgrenih konfiguracija, u nastavku su dani jednostavni primjeri razvoja aplikacije za dvije različite
-konfiguracije. Obje aplikacije su razvijene pomoću skupa alata arm-none-eabi i Xilinx SDK 2019 (engl.
+konfiguracije. Obje aplikacije su razvijene pomoću skupa alata \textit{arm-none-eabi} i Xilinx SDK 2019 (engl.
 \textit{Software Development Kit}) uz zadanu konfiguraciju hardvera (bez potrebe za generiranjem
-novog dizajna hardvera). Za potrebe generiranja datoteke za pokretanje sustava korišten je već gotov FSBL projekt
+novog dizajna hardvera). Za potrebe generiranja datoteke za pokretanje sustava, korišten je već gotov FSBL projekt
 kojeg nudi XSDK koji ima mogućnost učitavanja više izvornih datoteka odjednom. Datoteka za pokretanje sustava je
 generirana pomoću alata Bootgen kojeg nudi XSDK.
 
@@ -407,8 +408,8 @@ aplikacija CPU1 procesora. Da bi se ostvario potrebni odmak, poduzeti su sljede�
   \item{U skriptu za memorijsko povezivanje, dodana je adresa na kojoj će se nalaziti CPU1 aplikacija}
   \item{U skriptu za memorijsko povezivanje, dodana je nova sekcija koje će sadržavati sav CPU1 kod (ili minimalno asemblerski
   kod tablice prekidnih vektora CPU1)}
-  \item{U asemblerski kod tablice prekidnih vektora CPU1, dodana je direktiva .org 0 koja osigurava da se kod smjesti na
-  početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije).}
+  \item{U asemblerski kod tablice prekidnih vektora CPU1, dodana je direktiva \textit{.org 0} koja osigurava da se kod smjesti
+  na početak odabrane sekcije (odmak 0x00 od početka memorijskog segmenta sekcije).}
 \end{enumerate}
 Važno je napomenuti i da CPU1 treba imati poseban stog namijenjen CPU1 procesoru te je stog potrebno dodati u skriptu za
 memorijsko povezivanje. Uz to, u skriptu za pokretanje je potrebno navesti odgovarajući stog CPU1 procesora.
@@ -527,7 +528,7 @@ virtualnu MMU jedinicu, gdje je jedna virtualna MMU jedinica zadužena za jedan 
 sadrži NS polje koje dozvoljava \textit{Sigurnom} softveru pristupanje \textit{Sigurnoj} i \textit{Nesigurnoj} tablici, a onemogućava pristup \textit{Sigurnoj}
 tablici od strane \textit{Nesigurnog} softvera. Uz MMU, L1 \textit{cache} memorija se također dijeli na \textit{Sigurnu} i \textit{Nesigurnu}.\\
 Softver nadglednog načina rada je zadužen za prijelaz između \textit{Sigurnog} i \textit{Nesigurnog} stanja te osigurava spremanje konteksta
-svijeta iz kojeg prelazi i točnog povratka konteksta svijeta u koji se vraća. Za jednostavnost implementacije, preporučuje
+svijeta iz kojeg prelazi i točnu obnovu konteksta svijeta u koji se vraća. Za jednostavnost implementacije, preporučuje
 se isključivanje prekida prilikom izvođenja nadglednog softvera. Sigurno stanje registara treba pospremiti u \textit{Sigurnu} memoriju
 gdje \textit{Nesigurni} svijet ne može pristupiti \textit{Sigurnom} kontekstu. Implementacija \textit{yield} funkcije se izvodi pomoću SMC
 instrukcije koja može nositi i korisnu informaciju te u tom slučaju nadgledni način rada ne radi potpunu zamjenu konteksta.
@@ -654,7 +655,7 @@ Jedna od zadaća monitora virtualnih strojeva je konfiguriranje memorije, prekid
 \section{Raspoređivanje \textit{Sigurnog} i \textit{Nesigurnog} svijeta}
 Dodatna zadaća monitora virtualnih strojeva, a veže se uz raspoređivanje \textit{Sigurnog} i \textit{Nesigurnog} gosta, je upravljanje s
 VMCB (engl. \textit{Virtual Machine Control Block}) blokovima koji su zaduženi za pohranjivanje stanja virtualnih strojeva.
-VMCB blok \textit{Nesigurnog} gosta sastoji se od 13 registara opće namjene (R0~-~-R12) i SP (engl. \textit{Stack Pointer}), LR
+VMCB blok \textit{Nesigurnog} gosta sastoji se od 13 registara opće namjene (R0~-~R12) i SP (engl. \textit{Stack Pointer}), LR
 (engl. \textit{Link Register}) i SPSR (engl. \textit{Saved Processor State Register}) za \textit{supervisor}, sustavski,
 \textit{abort} i \textit{undefined} način rada. Registre koji su vezani za FIQ i IRQ nije potrebno posebno spremati jer su
 uzajamno isključivi za \textit{Sigurni} i \textit{Nesigurni} virtualni stroj (FIQ je korišten samo u \textit{Sigurnom} svijetu, a IRQ u \textit{Nesigurnom}).
@@ -724,7 +725,7 @@ vritualni stroj neaktivan. LTZVisor implementira stvarno vrijeme koje je osigura
 Counter}) i \textit{Nesigurnim} TTC1 te je LTZVisor konfiguriran tako da \textit{Sigurni} gost ne propusti nijedan \textit{tick}.\\
 Komunikacija je implementirana na asinkroni način koji se sastoji od podatkovnog puta (dijeljeni blok memorije koji je
 konfiguriran kao \textit{Nesiguran}) i puta događaja koji je generiran pomoću SGI namijenjenim LTZVisoru. Komunikacija je temeljena
-na zahtjevima Virtualnih strojeva prema LTZVisoru pomoću SMC instrukcije. Svaki zahtjev se sprema u FIFO (engl. \textit{First
+na zahtjevima virtualnih strojeva prema LTZVisoru pomoću SMC instrukcije. Svaki zahtjev se sprema u FIFO (engl. \textit{First
 In First Out}) spremnik te LTZVisor prilikom zamjene konteksta generira SGI odgovarajućem gostu. Prednost takve komunikacije
 je da je pouzdana zato što je upravljana monitorom virtualnih strojeva.
 
@@ -737,11 +738,11 @@ izostavljen \textit{inc} direktorij koji sadrži odgovarajuća C zaglavlja.
 ovom direktoriju napisana je u asembleru. U direktoriju se nalazi \textit{cpu\_entry.S} datoteka koja sadrži početnu
 inicijalizaciju CPU0 procesora. Inicijalizacija se sastoji od podešavanja koprocesorskih registara, stoga \textit{Sigurnog} gosta,
 stoga nadglednog načina rada procesora, tablice prekidnih vektora \textit{Sigurnog} gosta i nadglednog načina rada te konfigurira
-\textit{cache} i MMU koji su nisu omogućeni. Ključni dio za funkcioniranje sustava s dva svijeta je u podešavanju NSACR, SCR
-i MVBAR (engl. \textit{Monitor Vector Base Address Register}) registara, gdje NSACR definira dozvole pristupa \textit{Nesigurnom} svijetu
+\textit{cache} i MMU koji su onemogućeni. Ključni dio za funkcioniranje sustava s dva svijeta je u podešavanju NSACR, SCR
+i MVBAR (engl. \textit{Monitor Vector Base Address Register}) registara, gdje NSACR definira dozvole pristupa \textit{Nesigurnog} svijeta
 određenim procesorskim resursima. U MVBAR se sprema početna adresa tablice prekidnih vektora nadglednog načina rada procesora
-koja je ključna za funkcioniranje raspoređivača sustava. Uz to, u direktoriju je sadržan i asemblerski kod koji je namijenjen
-zamjeni konteksta.
+koja je ključna za funkcioniranje raspoređivača dva svijeta. Uz to, u direktoriju je sadržan i asemblerski kod koji je
+namijenjen zamjeni konteksta.
 
 \begin{figure}[H]
   \centering
@@ -781,7 +782,7 @@ zamjeni konteksta.
   \label{srcdir}
 \end{figure}
 
-Direktorij \textit{boards} sadrži skriptu za memorijsko povezivanje i kod koji je specifičan sad određenu platformu te služi
+Direktorij \textit{boards} sadrži skriptu za memorijsko povezivanje i kod koji je specifičan za određenu platformu te služi
 podešavanju sigurnosti uređaja (npr. TTC, UART, globalno brojilo), SLCR registra (podešavanje sigurnosti memorijskih
 segmenata, sigurnosti DMA, \textit{Etherneta}, OCM...) i upravljačke programe uređaja koji se koriste (TTC i UART). Isto tako,
 sadrži i inicijalizaciju GIC-a. Slijedeći direktorij, \textit{core}, sadrži jezgru LTZVisora koja je zadužena za postavljanje
@@ -943,13 +944,13 @@ određene komponente iz Linuxa. Još jedna korisna postavka koju nudi \textit{Pe
 izvora Linuxovog koda što je posebno važno kod aplikacija koje zahtijevaju izmjenu izvornog koda jezgre.\\
 Uz instalacijski paket \textit{PetaLinuxa}, preuzmu se i razni predlošci koji olakšavaju stvaranje inicijalnog
 \textit{PetaLinux} projekta za odgovarajuću platformu s inicijalnim postavkama koje su valjane za odabranu platformu. Nakon
-izgradnje sustava, slika jezgre Linuxa za Zynq-7000 platforme je naziva \textit{zImage} te je slika komprimirana. Ako se
+izgradnje sustava, slika jezgre Linuxa za Zynq-7000 platforme je naziva \textit{zImage} koja je komprimirana. Ako se
 za datotečni podsustav odabere \textit{initramfs}, komprimirana slika datotečnog podsustava je automatski sadržana u
 \textit{zImage} slici. Binarni oblik \textit{Device Tree} strukture je generiran u datoteku naziva \textit{system.dtb}.
 
 \section{Prilagođenje Linuxa kao \textit{Nesigurnog} gosta LTZVisora}
 Preporuka ARM-a je da složeniji operacijski sustavi budu namijenjeni \textit{Nesigurnom} svijetu, jer je kod sustava s većom
-količinom koda veća vjerojatnost pronalaženja prolaza do probijanja sigurnosti. Zbog toga razloga, autori LTZVisora također
+količinom koda veća vjerojatnost pronalaženja prolaza do probijanja sigurnosti. Zbog tog razloga, autori LTZVisora također
 preporučuju implementaciju GPOS-a kao \textit{Nesigurnog} gosta. Prilagođenje kompleksnog sustava kao što je to Linux za \textit{Nesigurni}
 svijet \textit{TrustZone} platforme je posao koji zahtjeva vrlo dobro poznavanje arhitekture jezgre operacijskog sustava, kao
 i detaljno poznavanje platforme za koju se Linux prilagođava. Pristup prilagođenju može biti sljedeći: ako se Linux priprema
@@ -963,7 +964,7 @@ i od pripreme LTZVisora za Linux te su postupci prilagodbe dani u nastavku.
 Arhitektura LTZVisora zahtjeva jednu izvršnu datoteku \textit{Nesigurnog} gosta, dok se Linux sastoji od više slika sustava (datotečnog
 podsustava, \textit{Device Tree} strukture i jezgre). Uz to, Linux zahtjeva i program pokretač koji će pripremiti jezgru za
 početak izvršavanja. Jasno je da je potrebno sve slike sustava Linux i program pokretač povezati u jednu izvršnu datoteku
-koju će LTZVisor kasnije učitati u RAM. Jedan od intuitivnih načina na koji to postići je pomoću skripte za memorijsko
+koju će LTZVisor kasnije učitati u RAM. Jedan od intuitivnih načina na koji se to može postići je pomoću skripte za memorijsko
 povezivanje u kojoj su naznačene adrese za svaku komponentu operacijskog sustava Linux. U ovom radu se je iskoristila mogućnost
 koju nudi \textit{PetaLinux}, a tiče se vrste datotečnog podsustava. Kao vrsta datotečnog podsustava odabrao se
 \textit{initramfs} zbog mogućnosti da je takav datotečni podsustav odmah uključen u sliku jezgre Linuxa što doprinosi smanjenju
@@ -1030,16 +1031,9 @@ Kada bi memorijski čvor ostao kako \textit{PetaLinux} ima izvorno postavljeno (
 tada bi se pojavila pogreška prilikom rane inicijalizacije jezgre i izvođenje Linuxa bi bilo zaustavljeno.
 Ostali čvorovi moraju sadržavati
 točne informacije o uređajima koje Linux koristi te se u strukturi moraju nalaziti uređaji koje Linux koristi (primjer takvog
-uređaja je globalno brojilo koji služi kao \textit{tick} OS-a). Uređaji koje Linux koristi, u \textit{Device Tree} strukturi moraju sadržavati informaciju da
+uređaja je globalno brojilo koje služi kao \textit{tick} OS-a). Uređaji koje Linux koristi, u \textit{Device Tree} strukturi moraju sadržavati informaciju da
 je uređaj dostupan što se postiže dodavanjem \textit{status = "okay";} u čvor uređaja. Primjer ispravno konfiguriranog čvora
-globalnog brojila prikazan je slikom \ref{glob_timer}. Polje \textit{compatible} služi kao uputa Linuxu da pronađe odgovarajući
-upravljački program za čvor. Slično kao kod memorijskog čvora, polje \textit{reg} opisuje baznu adresu globalnog brojila i
-veličinu registarskog područja brojila. Svaki čvor mora sadržavati i informacije o prekidima te se one opisuju svojstvima
-čvora \textit{interrupts} i \textit{interrupt-parent}. Tip prekida opisan je prvim poljem svojstva \textit{interrupts} (0 za
-SPI, 1 za PPI), drugo polje predstavlja prekidni broj i treće polje opisuje osjetljivost prekida i koji procesorima je prekid
-namijenjen. Upravitelj prekidom dan je \textit{interrupt-parent} svojstvom koji sadrži referencu na drugi čvor u \textit{Device
-Tree} strukturi koji opisuje GIC. Opis izvora takta za uređaj, dan je \textit{clocks} svojstvom uređaja koji sadrži referencu
-na signal takta koji je opisan u SLCR čvoru.
+globalnog brojila prikazan je slikom \ref{glob_timer}.
 
 \begin{figure}[H]
   \lstset{xleftmargin=.1\textwidth}
@@ -1057,6 +1051,14 @@ na signal takta koji je opisan u SLCR čvoru.
   \label{glob_timer}
 \end{figure}
 
+Polje \textit{compatible} služi kao uputa Linuxu da pronađe odgovarajući
+upravljački program za čvor. Slično kao kod memorijskog čvora, polje \textit{reg} opisuje baznu adresu globalnog brojila i
+veličinu registarskog područja brojila. Svaki čvor mora sadržavati i informacije o prekidima te se one opisuju svojstvima
+čvora \textit{interrupts} i \textit{interrupt-parent}. Tip prekida opisan je prvim poljem svojstva \textit{interrupts} (0 za
+SPI, 1 za PPI), drugo polje predstavlja prekidni broj i treće polje opisuje osjetljivost prekida i kojim procesorima je prekid
+namijenjen. Upravitelj prekidom dan je \textit{interrupt-parent} svojstvom koji sadrži referencu na drugi čvor u \textit{Device
+Tree} strukturi koji opisuje GIC. Opis izvora takta za uređaj, dan je \textit{clocks} svojstvom uređaja koji sadrži referencu
+na signal takta koji je opisan u SLCR čvoru.
 Kod generiranja \textit{Device Tree} strukture, \textit{PetaLinux} automatski opiše sve resurse platforme za koju se
 \textit{Device Tree} generira. Poželjno je iz generirane \textit{Device Tree} strukture izbaciti sve resurse koji se koriste
 kao sigurni uređaji (npr. TTC0) ili barem postaviti njihovo stanje u \textit{status = "disabled";} koje onemogućava korištenje
@@ -1087,9 +1089,9 @@ Funkcije za pristup SLCR registru, originalno su implementirane kako je prikazan
 
 Funkcije \textit{regmap\_write} i \textit{regmap\_read} kao ulazni argument primaju virtualnu adresu koja je povezana s fizičkom
 baznom adresom SLCR registra te se kasnije prevodi u fizičku adresu. Pozivanje ovih funkcija izaziva \textit{external abort}
-zbog pristupanja sigurnoj memoriji. Kako bi se ove funkcije uspješno izvele, potrebno je implementirati funkcije za pristup
+zbog pristupanja \textit{Sigurnoj} memoriji. Kako bi se ove funkcije uspješno izvele, potrebno je implementirati funkcije za pristup
 SLCR registru koji će biti izveden intervencijom LTZVisora. LTZVisor već implementira sustavske pozive koji se mogu iskoristiti
-kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje sigurne memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom \ref{slcr_secure}.
+kao zahtjev \textit{Nesigurnog} gosta za čitanje i pisanje \textit{Sigurne} memorije. Izmijenjene funkcije za pristup SLCR-u prikazane su slikom \ref{slcr_secure}.
 
 \begin{figure}[H]
   \lstset{breaklines=true}
@@ -1120,7 +1122,7 @@ uspješan pristup SLCR-u, a manje od 0 ako je pristup bio neuspješan te je ovdj
 Za stvarnu informaciju o uspješnosti pristupa trebalo bi promijeniti implementaciju sustavskih poziva u LTZVisoru.
 Uz pristup SLCR-u, Linux pristupa i jednom od koprocesorskih registara koji je zadužen za upravljanje snagom u koji se može
 upisivati samo u \textit{Sigurnom} svijetu. Za uspješno konfiguriranje registra za upravljanje snagom također je implementirana posebna
-funkcija koja pomoću SMC instrukcije od LTZVisora zahtjeva siguran upis u registar. ACTLR je također registar koji je dostupan
+funkcija koja pomoću SMC instrukcije od LTZVisora zahtjeva \textit{Siguran} upis u registar. ACTLR je također registar koji je dostupan
 samo \textit{Sigurnom} svijetu, ali nema potrebe za implementacijom posebnog poziva LTZVisoru za upis u ACTLR jer su Linuxovi upisi u
 registar zadovoljeni postavljanjem početnog konteksta \textit{Nesigurnog} gosta.
 Uz promjene u izvornom kodu jezgre Linuxa, potrebno je i isključiti VFP (engl. \textit{Vector Floating Point}) podršku da se
@@ -1158,7 +1160,7 @@ promjena u ovoj funkciji obuhvaća dopuštanje Linuxu da koristi globalno brojil
 Dopuštanje korištenja globalnog brojila sastoji se od upisa u dva registra SACR (engl. \textit{Secure Access Control Register})
 i NSACR (engl. \textit{Non-Secure Access Control Register}) koji služe za konfiguraciju dozvole pristupa \textit{Nesigurnog} svijeta
 privatnom i globalnom brojilu.\\
-Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje DMA upravitelja da će se koristiti u \textit{Nesigurnom}
+Dodatna promjena se odnosi na podešavanje DMA upravitelja, odnosno označavanje da će se DMA upravitelj koristiti u \textit{Nesigurnom}
 svijetu. Prilikom podešavanja DMA upravitelja, nužno je da se DMA upravitelj drži u \textit{resetu}. Nakon što je DMA upravitelj
 podešen, mora se pustiti iz \textit{reseta}. Opisane promjene prikazane su slikom \ref{tz_init}.
 Kao što je prikazano, prije upisa u SLCR registre potrebno ga je prije svega otključati te po završetku pristupa zaključati.
@@ -1207,8 +1209,8 @@ karakteristike:
 RTOS ima prednost u tome što nema posebnih hardverskih zahtjeva (kao što to GPOS ima za npr. MMU jedinicom) te ga je zbog toga
 moguće prilagoditi na velik broj platforma, uključujući i mikrokontrolere. Sama jezgra operacijskog sustava je pogonjena jednim
 brojilom koje je glavni okidač zamjene konteksta između zadataka. Prednost ovakvog operacijskog sustava u odnosu na
-\textit{bare-metal} aplikacije je što postoji mogućnost za istiskivanje zadataka. Ova karakteristika operacijskom sustavu
-pruža da zadaci koji su prioritetniji prije obave potrebni posao od onih koji su nižeg prioriteta što nije moguće kod
+\textit{bare-metal} aplikacije je što postoji mogućnost istiskivanja zadataka. Ova karakteristika operacijskom sustavu
+pruža da zadaci koji su prioritetniji obave potrebni posao prije od onih koji su nižeg prioriteta što nije moguće kod
 \textit{bare-metal} aplikacija.
 
 \section{FreeRTOS}
@@ -1252,10 +1254,10 @@ datoteke se mogu prenositi na druge platforme bez potrebe za ikakvim izmjenama.\
 Datoteka \textit{port\_asm\_vectors.S} sadrži tablicu prekidnih vektora te kod za konfiguraciju koprocesorskog registra koji
 sadrži početnu adresu tablice prekidnih vektora. U \textit{port.c} se nalaze funkcije koje koriste podatke specifične za
 hardver na kojem se FreeRTOS izvodi. Podaci se odnose na podatke specifične za upravitelja prekidima i upravljanje CPSR
-registrom, kao i početna inicijalizacija konteksta zadatka (početni sadržaj stoga zadatka). Isto tako, datoteka sadrži i
+registrom, kao i početnu inicijalizaciju konteksta zadatka (početni sadržaj stoga zadatka). Isto tako, datoteka sadrži i
 funkcije za upravljanje prekidima koje se koriste za ostvarenje kritičnih sekcija. Obrada prekida u FreeRTOS-u je izvedena
 tako da se u svakoj obradi provjerava ima li koji prioritetniji zadatak spreman za izvođenje od onog koji se je prekinuo te
-ako ima izvodi se zamjena konteksta i počinje se izvoditi prioritetniji zadatak. Navedena obrada je implementirana u
+ako ima, izvodi se zamjena konteksta i počinje se izvoditi prioritetniji zadatak. Navedena obrada je implementirana u
 \textit{portASM.S} datoteci. Kako je FreeRTOS pogonjen brojilom čiji period označava jedan otkucaj \engl{tick}, većina
 zamjene konteksta će se izvesti prilikom obrade prekida toga brojila. Prilikom obrade prekida, moguće je pozvati i dodatnu,
 korisnički definiranu funkciju koja se poziva u \textit{vApplicationIRQHandler} funkciji. Ova funkcija je izvorno definirana
@@ -1268,7 +1270,7 @@ Zamjena konteksta koja je okinuta dobrovoljnim prepuštanjem procesorskog vremen
 Obrada iznimke se sastoji od spremanja konteksta trenutno izvođenog zadatka, odabirom zadatka koji će se izvoditi slijedeći
 i obnovom konteksta zadatka čije izvođenje će započeti izlaskom iz obrade iznimke. Funkcija koja bira slijedeći zadatak
 se zove \textit{vTaskSwitchContext} koja je definirana u \textit{task.c} datoteci i gotovo cijela funkcija je izvedena kao
-kritična sekcija (nužno je da funkcija ne bude prekinuta). U svakom trenutku izvođenja FreeRTOS aplikacije mora biti aktivan
+kritična sekcija (nužno je da funkcija ne bude prekinjena). U svakom trenutku izvođenja FreeRTOS aplikacije mora biti aktivan
 barem jedan zadatak te se stoga prilikom pokretanja raspoređivača zadataka stvara \textit{idle} zadatak koji se aktivira
 kad više nema nijednog korisničkog zadatka spremnog za izvođenje. Funkcija \textit{idle} zadatka je implementirana u
 \textit{port.c} datoteci, pod imenom \textit{portTASK\_FUNCTION}. Korisnička aplikacija koja se poziva u navedenoj funkciji
@@ -1288,8 +1290,8 @@ jezgri FreeRTOS-a koje će omogućiti takvu funkciju obzirom na FIQ prekide. Kri
 maskiranjem odgovarajućeg prekida, za FIQ to znači da je potrebno maskirati FIQ prekida u CPSR registru. Za Cortex-A procesore
 postoji posebna oznaka koja govori o tome je li FIQ prekid moguće maskirati. Cortex-A9 sadrži navedeni podatak u NMFI
 \engl{Nonmaskable FIQ Interrupt} bit u SCTLR registru. Navedeni bit je predviđen samo za čitanje i ne može ga se
-softverski konfigurirati te indicira na to da se FIQ ne može softverski maskirati. Poznato je da se FIQ automatski maskiraju
-generiranje FIQ prekida te se ta činjenica iskoristila za implementaciju kritične sekcije potrebne za
+softverski konfigurirati te indicira na to da se FIQ ne može softverski maskirati. Poznato je da se FIQ automatski maskira
+generiranjem FIQ prekida te se ta činjenica iskoristila za implementaciju kritične sekcije potrebne za
 \textit{vTaskSwitchContext} funkciju.
 \newpage
 Navedena funkcija se koristi u dva slučaja:
@@ -1377,7 +1379,7 @@ originalnog LTZVisora.
 \subsection{Arhitektura AMP LTZVisora}
 AMP LTZVisor u potpunosti uklanja mogućnost pojave izgladnjivanja procesora od strane \textit{Sigurnog} softvera. Jedna jezgra
 u sustavu izvodi softver \textit{Sigurnog} svijeta, odnosno zadužena je za izvođenje privilegiranog softvera. Druga jezgra
-izvod softver \textit{Nesigurnog} svijeta, odnosno zadužena je za izvođenje neprivilegiranog softvera. Pravilo na kojem je
+izvodi softver \textit{Nesigurnog} svijeta, odnosno zadužena je za izvođenje neprivilegiranog softvera. Pravilo na kojem je
 temeljen model je da jedna jezgra implementira jedan svijet u jednom sigurnosnom stanju. Arhitektura AMP LTZVisora može se
 vidjeti na slici \ref{amp_ltzvisor}.
 \begin{figure}[H]
@@ -1404,13 +1406,13 @@ Jezgra LTZVisora je zadužena za sve ključne zadatke kao što su to konfigurira
 svakom gost virtualnom stroju uz pružanje podrške za komunikaciju između procesora, odnosno gost virtualnih strojeva.
 Sloj usluga je minimalna implementacija nadglednog načina rada procesora koji je zadužen za obradu i prosljeđivanje iznimaka,
 kao i kontrolu nad komunikacijom između procesora. Iako se oba gosta izvode u privilegiranom načinu rada (\textit{supervisor})
-\textit{Sigurni} svijet ostaje u potpunosti izoliran od privilegiranog softvera \textit{Nesigurnog} softvera. Dakle,
+\textit{Sigurni} svijet ostaje u potpunosti izoliran od privilegiranog softvera \textit{Nesigurnog} svijeta. Dakle,
 \textit{Nesigurni} softver ne može pristupiti niti mijenjati resurse koji su dodijeljeni \textit{Sigurnom} gostu. Svaki pristup
 \textit{Nesigurnog} gosta \textit{Sigurnom} generira iznimku sloju usluga koji je zadužen za prosljeđivanje iznimke jezgri
 LTZVisora.\\
 Na početku izvođenja, LTZVisor svakom gostu dodijeli jednu jezgru, odnosno CPU. Za GPOS je odabran Linux te je njemu
 zbog jednostavnosti dodijeljen CPU0 (Linux je izvorno namijenjen primarnoj jezgri procesora). Svaki OS ima MMU i L1
-\textit{cache} memoriju dodijeljeni odgovarajućim jezgrama. L2 \textit{cache} memorija je dijeljena između procesora, ali zbog
+\textit{cache} memoriju dodijeljene odgovarajućim jezgrama. L2 \textit{cache} memorija je dijeljena između procesora, ali zbog
 arhitekture \textit{TrustZone} ekstenzije, postoji \textit{Sigurna} i \textit{Nesigurna} L2 \textit{cache} memorije te zbog
 toga nije potrebno voditi brigu o koherenciji (koherencija je automatski očuvana hardverom). Uređajima direktno upravljaju gost
 particije te su na početku statički dodijeljeni \textit{Sigurnom} ili \textit{Nesigurnom} svijetu da bi se očuvala izolacija
@@ -1482,7 +1484,7 @@ LTZVisora se odvija po sljedećem modelu:
 Pogledom na prekidni model SMP LTZVisora može se odmah uočiti jedna mana ovakvog modela, a to je da FIQ koji se pojavi na CPU1
 ostaje neobrađen, što u svakom slučaju nije poželjno. Ovakav model zahtjeva opreznu implementaciju \textit{Sigurnog} softvera
 što se tiče prekidnog podsustava (prekidi moraju biti konfigurirani da se prosljeđuju samo CPU sučelju na kojem se izvodi
-\textit{Sigurni} softver). Ovaj problem se može riješiti i na elegantniji način, npr. prilikom pojave FIQ-a na CPU1 LTZVisor
+\textit{Sigurni} softver). Ovaj problem se može riješiti i na elegantniji način, npr. prilikom pojave FIQ-a na CPU1, LTZVisor
 može rekonfigurirati prekid tako da se prekid prosljeđuje samo ispravnom CPU sučelju ili samo javiti poruku o grešci
 \textit{Sigurnom} gostu i prepustiti odluku o prekidu \textit{Sigurnom} gostu. LTZVisor je zadužen za konfiguraciju prekida
 i dodjeljivanje uređaja gost virtualnim strojevima za oba CPU sučelja. Uređaji su statički dodijeljeni virtualnim strojevima
@@ -1503,6 +1505,14 @@ polja za predviđanje grananja. Ključna činjenica koja omogućava ovakvu konfi
 \textit{Nesigurnog} gosta.
 
 \subsubsection{Komunikacijski model}
+Za SMP LTZVisor, razvijena je jednostavna jednosmjerna komunikacija. Implementirani model omogućava slanje poruka od
+\textit{Nesigurnog} gosta prema \textit{Sigurnom}. Komunikacija je razvijena kao aplikacija koja se pokreće pomoću Linuxove
+ljuske. Pomoću aplikacije, željeni podatak se može upisati na određenu memorijsku lokaciju koja je označena kao
+\textit{Nesigurna}. Nakon što je podatak upisan na danu adresu, Linuxova aplikacija pomoću sustavskog poziva generira
+SMC poziv LTZVisoru s odgovarajućim identifikatorom koji signalizira da \textit{Nesgiurni} gost želi predati poruku
+\textit{Sigurnom} gostu. LTZVisor dalje signalizira \textit{Sigurnom} gostu da postoji nepročitani podatak na odgovarajućoj
+lokaciji pomoću SGI prekida. \textit{Sigurni} gost interpretira poruku \textit{Nesigurnog} gosta u obradi SGI prekida.
+Ovisno o tome s kojeg procesora se poruka šalje, LTZVisor generira SGI s različitim prekidnim brojevima.
 
 \subsection{Promjene u nadglednom načinu rada procesora}
 Prvo što je potrebno kod razvoja SMP aplikacija je početna adresa aplikacije koja će se izvoditi na sekundarnom procesoru.
@@ -1538,8 +1548,8 @@ inicijalizacija CPU1 sustava, CPU0 se blokira skokom na funkciju \textit{wait\_t
 postavi zastavica koju postavlja CPU1 točno prije nego se CPU1 ponovno stavi u WFE stanje. Kad je za CPU0 sigurno da krene
 s daljnjim izvođenjem, skače se na \textit{ltzvisor\_kickoff} funkciju iz koje se poziva \textit{Sigurni} gost te iz navedene
 funkcije nema povratka.\\
-WFE stanje CPU1 procesora je isto kao i početno WFE stanje u kojem se je nalazi CPU1 prije pokretanja LTZVisora na njemu.
-Nakon što je LTZVisor završio s inicijalizacijom, na adresu \textit{0xFFFFFFF0} se upisuje 0 te CPU1 čeka događaj sustava i
+WFE stanje CPU1 procesora je isto kao i početno WFE stanje u kojem se CPU1 nalazi prije pokretanja LTZVisora na njemu.
+Nakon što je LTZVisor završio s inicijalizacijom, na adresu 0xFFFFFFF0 se upisuje 0 te CPU1 čeka događaj sustava i
 vrijednost različitu od 0 na navedenoj adresi. Opisani postupak implementiran je kodom prikazanim slikom \ref{cpu1_wfe}.
 \begin{figure}[H]
   \centering
@@ -1564,13 +1574,13 @@ vrijednost različitu od 0 na navedenoj adresi. Opisani postupak implementiran j
 Funkcija \textit{unlock\_cpu0} postavlja potrebnu zastavicu koja će osloboditi CPU0, čime započinje izvođenje \textit{Sigurnog}
 gosta. Ako se CPU1 probudi iz WFE stanja i na odgovarajućoj adresi pročita vrijednost 0, procesor se ponovno stavlja u WFE
 stanje. Kad je vrijednost različita od 0, LTZVisor predaje kontrolu \textit{Nesigurnom} gostu skokom na adresu koja je upisana
-na \textit{0xFFFFFFF0} lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja uz skok na odgovarajuću adresu i učita
+na 0xFFFFFFF0 lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja uz skok na odgovarajuću adresu i učita
 vrijednost iz SPSR u CPSR. Kako Linux zahtjeva da se procesori pokreću u \textit{supervisor} načinu rada, u SPSR-u se mora
 nalaziti ispravna vrijednost te se ta vrijednost postavlja prilikom postavljanja početnog konteksta \textit{Nesigurnog} gosta.
 Kao što je napomenuto, LTZVisor je zadužen za inicijalizaciju upravitelja prekidima te inicijalizira CPU sučelje za svaki
 procesor posebno. Kako se LTZVisor koristi kao \textit{domaćin} SMP \textit{Nesigurnog} gosta, važno je da se odgovarajući
 SGI prekidi označe kao \textit{Nesigurni}. SGI se koriste za sinkronizaciju između jezgra u sustavu te su nužni za ispravno
-funkcioniranje SMP Linuxa. Linux prati preporuke ARM-a za \textit{Nesigurni} svijet te koristi SGI ID0~-~ID7. Navedeni prekidi
+funkcioniranje SMP Linuxa. Linux prati preporuke ARM-a za \textit{Nesigurni} svijet te koristi SGI s prekidnim brojevima: ID0~-~ID7. Navedeni prekidi
 se obavezno moraju naznačiti da će se koristiti za \textit{Nesigurni} svijet. Poznato je da svaki procesor implementira
 vlastiti set SGI prekida te je zbog toga nužno označiti odgovarajuće prekide kao \textit{Nesigurne} na obje jezgre. Kako je
 već navedeno, Linux koristi globalno brojilo kao \textit{tick} operacijskog sustava te je važno napomenuti da globalno brojilo
@@ -1584,6 +1594,54 @@ je izvorno onemogućeno pristupanje FPU koprocesorskim registrima od strane \tex
 mora konfigurirati.
 
 \subsubsection{Komunikacijski model}
+Dodatne promjene LTZVisora su bile potrebne kako bi bilo moguće implementirati komunikaciju između virtualnih strojeva.
+Kako je već napomenuto, ovisno o tome s kojeg CPU-a dolazi poruka, LTZVisor generira SGI različitih prekidnih brojeva.
+Tako se SGI s prekidnim brojem 9 koristi za signaliziranje \textit{Sigurnom} gostu da poruka dolazi s CPU0
+\textit{Nesigurnog} gosta, dok se prekidni broj 10 koristi za signaliziranje CPU1 \textit{Nesigurne} poruke. Kako Linux
+koristi \textit{cache}, moguće je da se na odgovarajućoj lokaciji neće nalaziti najnoviji podatak (potrebni podatak će se
+nalaziti u \textit{cache} memoriji) te je potrebno isprazniti \textit{cache} memoriju. Rukovanje \textit{cache} memorijom
+u korisničkim aplikacijama Linuxa je nepraktično te je navedeno potrebno izvesti pomoću sustavskog poziva jezgri Linuxa.
+Iz tog razloga rukovanje \textit{cacheom} se obavlja u LTZVisoru koji ima mogućnost pristupa \textit{Sigurnom} i
+\textit{Nesigurnom cacheu}. Opisano prosljeđivanje CPU0 poruke prikazano je slikom \ref{sgi_communicate}.
+
+\begin{figure}[H]
+  \lstset{numbers=left, numbersep=2pt, numberstyle=\tiny, breaklines=true, xleftmargin=.2\textwidth}
+  \begin{lstlisting}
+    communicate:
+      push {r0-r12,lr}
+      bl flush_icache_and_dcache
+      bl cachel2_invalidate
+      bl cachel2_clean
+      pop {r0-r12,lr}
+      push {r0-r2,lr}
+      mov r0, #9
+      mov r1, #1
+      bl interrupt_IPI_generate
+      pop {r0-r2,lr}
+      movs pc, lr
+  \end{lstlisting}
+  \caption{Prosljeđivanje \textit{Nesigurne} poruke \textit{Sigurnom} gostu}
+  \label{sgi_communicate}
+\end{figure}
+
+Ovime su napravljene sve potrebne izmjene u nadglednom načinu rada za uspješnu uspostavu komunikacije između virtualnih
+strojeva. U nastavku su dane i promjene napravljene u \textit{Sigurnom} gostu. Promjene u \textit{Sigurnom} gostu
+obuhvaćaju dodatne funkcije koje služe za obradu SGI prekida generiranih dolaskom \textit{Nesigurne} poruke. Za
+demonstraciju ispravnog funkcioniranja komunikacije, odabrala se aplikacija koja preko \textit{Nesigurnog} gosta upravlja
+LED diodama platforme čija stanja se mijenjaju u \textit{Sigurnom} softveru. ZedBoard sveukupno sadrži 8 LED dioda te
+razvijena aplikacija ima mogućnost upravljanja svakom LED diodom posebno. \textit{Sigurni} softver u prekidnoj rutini
+osvježava vrijednost koja će se sljedeća koristiti kao novo stanje LED dioda. Ako poruka dolazi s CPU0 \textit{Nesigurnog}
+gosta, ponašanje LED dioda ovisno o poslanoj vrijednosti je sljedeće:
+\begin{itemize}
+  \item{poslana vrijednost: 0x0 - sve LED diode će biti ugašene}
+  \item{poslana vrijednost: 0xf - sve LED diode će biti upaljene}
+  \item{poslana vrijednost: između 0x0 i 0x9 - LED dioda čiji redni broj na platformi odgovara poslanoj vrijednosti će biti
+  upaljena}
+  \item{sve ostalo će izazvati početno ponašanje LED dioda \engl{blinky}.}
+\end{itemize}
+Ako poruka dolazi s CPU1 \textit{Nesigurnog} gosta, ponašanje će biti isto kao i kad poruka dolazi s CPU0 za sve slučajeve
+osim za vrijednosti u itervalu od 0x1 do 0x8. Za navedenu iznimku ponašanje je obrnuto: odgovarajuća LED dioda će biti
+ugašena, dok će sve ostale svijetliti.
 
 \subsection{Promjene u SMP Linux \textit{Nesigurnom} gostu}
 Promjene u SMP Linuxu su minimalne te se većina prilagodbe izvodi u LTZVisoru. Iako su promjene minimalne, potrebno je detaljno
@@ -1605,27 +1663,27 @@ argumente prima početnu adresu i ID procesora za kojeg se početna adresa pripr
 navedena funkcija, vidi se da se kao prvi argument predaje \textit{\_\_pa\_symbol(\&secondary\_startup)}. Poznato je da Linux
 koristi virtualne adrese te simbol \textit{\&secondary\_startup} predstavlja virtualnu adresu na kojoj se nalazi početni kod
 za sekundarni procesor. Funkcija \textit{\_\_pa\_symbol} vraća fizičku adresu ulaznog argumenta što znači da je ulazni argument
-\textit{zynq\_cpun\_start} funkcije točno ona adresa koju je potrebno upisati na \textit{0xFFFFFFF0}.\\
+\textit{zynq\_cpun\_start} funkcije točno ona adresa koju je potrebno upisati na 0xFFFFFFF0.\\
 Postupak kojim Linux budi sekundarnu jezgru je sljedeći:
 \begin{enumerate}
   \item{CPU1 se stavlja u \textit{reset} i onemogućava mu se signal takta}
-  \item{Na adresu \textit{0x00000000} se kopira minimalni kod koji služi za skok na \textit{\&secondary\_startup} adresu}
+  \item{Na adresu 0x00000000 se kopira minimalni kod koji služi za skok na \textit{\&secondary\_startup} adresu}
   \item{Čisti se \textit{cache} memorija u memorijskom području koje obuhvaća kopirani kod s početnom adresom
-  \textit{0x00000000} (nužno za očuvanje koherencije)}
+  0x00000000 (nužno za očuvanje koherencije)}
   \item{CPU1 se pušta iz \textit{reseta} i omogućava mu se signal takta nakon čega CPU1 automatski skače na adresu
-  \textit{0x00000000}.}
+  0x00000000.}
 \end{enumerate}
 Ovakav postupak buđenja sekundarne jezgre je nedopustiv u implementaciji gdje se Linux koristi kao \textit{Nesigurni} gost
 LTZVisora iz razloga što bi se izgubila inicijalizacija sustava za \textit{Nesigurni} gost CPU1 procesora. Navedeni postupak
 je zamijenjen s onim koji odgovara modelu LTZVisora. Prije opisa postupka buđenja, treba napomenuti da se upis na
-\textit{0xFFFFFFF0} lokaciju mora izvesti u \textit{Sigurnom} stanju procesora (lokacija je nedostupna \textit{Nesigurnom}
+0xFFFFFFF0 lokaciju mora izvesti u \textit{Sigurnom} stanju procesora (lokacija je nedostupna \textit{Nesigurnom}
 svijetu). Postupak kojim je izvedeno pokretanje sekundarne jezgre u \textit{Nesigurnom} gostu LTZVisora je:
 \begin{enumerate}
-  \item {Linux generira zahtjev LTZVisoru za upis odgovarajuće adrese na \textit{0xFFFFFFF0} lokaciju}
+  \item {Linux generira zahtjev LTZVisoru za upis odgovarajuće adrese na 0xFFFFFFF0 lokaciju}
   \item{LTZVisor upisuje početnu adresu za CPU1 na odgovarajuću lokaciju te se vraća kontrola \textit{Nesigurnom} gostu}
   \item{Linux generira \textit{sev} instrukciju.}
 \end{enumerate}
-U ovom slučaju nema potrebe za rukovanjem \textit{cache} memorijom jer se upis na \textit{0xFFFFFFF0} lokaciju izvodi
+U ovom slučaju nema potrebe za rukovanjem \textit{cache} memorijom jer se upis na 0xFFFFFFF0 lokaciju izvodi
 LTZVisorom koji ne koristi \textit{cache} memoriju. Kad bi LTZVisor koristio \textit{cache}, bilo bi potrebno očistiti
 \textit{cache} memoriju prije vraćanja kontrole \textit{Nesigurnom} gostu. Nakon što su implementirane navedene promjene,
 Linux je spreman za pokretanje kao SMP \textit{Nesigurni} gost. Potvrda o tome da je CPU1 uspješno pokrenut se vidi u ispisu

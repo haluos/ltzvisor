@@ -55,7 +55,8 @@
 GPOS0_start:
 	#ifdef CONFIG_NS_BM
   @ .incbin "./ns_guest/zynq/ns_guest.bin";
-  .incbin "./ns_guest/zynq/zcomposite.bin";
+  .incbin "./ns_guest/zynq/smplinux/zcomposite.bin";
+  @ .incbin "./ns_guest/zynq/linux/zcomposite.bin";
 	#else
     .incbin "./ns_guest/zynq/ns_guest.bin";
 		/* include OS binary here */

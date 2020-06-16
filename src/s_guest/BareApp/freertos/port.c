@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.1.1
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.0.1
+ * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,9 +31,6 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
-
-/* Xilinx includes. */
-#include "xscugic.h"
 
 #ifndef configINTERRUPT_CONTROLLER_BASE_ADDRESS
 	#error configINTERRUPT_CONTROLLER_BASE_ADDRESS must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
@@ -97,7 +94,7 @@ context. */
 #define portNO_FLOATING_POINT_CONTEXT	( ( StackType_t ) 0 )
 
 /* Constants required to setup the initial task context. */
-#define portINITIAL_SPSR				( ( StackType_t ) 0x1f | 0x80 ) /* System mode, ARM mode, IRQ enabled FIQ enabled. */
+#define portINITIAL_SPSR				( ( StackType_t ) 0x1f | 0x80 )  //( ( StackType_t ) 0x1f ) /* System mode, ARM mode, IRQ enabled FIQ enabled. */
 #define portTHUMB_MODE_BIT				( ( StackType_t ) 0x20 )
 #define portINTERRUPT_ENABLE_BIT		( 0x80UL )
 #define portTHUMB_MODE_ADDRESS			( 0x01UL )
@@ -151,16 +148,6 @@ registers, plus a 32-bit status register. */
 /*-----------------------------------------------------------*/
 
 /*
- * Initialise the interrupt controller instance.
- */
-static int32_t prvInitialiseInterruptController( void );
-
-/* Ensure the interrupt controller instance variable is initialised before it is
- * used, and that the initialisation only happens once.
- */
-static int32_t prvEnsureInterruptControllerIsInitialised( void );
-
-/*
  * Starts the first task executing.  This function is necessarily written in
  * assembly code so is implemented in portASM.s.
  */
@@ -170,12 +157,6 @@ extern void vPortRestoreTaskContext( void );
  * Used to catch tasks that attempt to return from their implementing function.
  */
 static void prvTaskExitError( void );
-
-/*
- * The instance of the interrupt controller used by this port.  This is required
- * by the Xilinx library API functions.
- */
-extern XScuGic xInterruptController;
 
 /*
  * If the application provides an implementation of vApplicationIRQHandler(),
@@ -217,13 +198,6 @@ volatile uint32_t ulPortYieldRequired = pdFALSE;
 /* Counts the interrupt nesting depth.  A context switch is only performed if
 if the nesting depth is 0. */
 volatile uint32_t ulPortInterruptNesting = 0UL;
-/*
- * Global counter used for calculation of run time statistics of tasks.
- * Defined only when the relevant option is turned on
- */
-#if (configGENERATE_RUN_TIME_STATS==1)
-volatile uint32_t ulHighFrequencyTimerTicks;
-#endif
 
 /* Used in the asm file. */
 __attribute__(( used )) const uint32_t ulICCIAR = portICCIAR_INTERRUPT_ACKNOWLEDGE_REGISTER_ADDRESS;
@@ -294,17 +268,6 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	*pxTopOfStack = ( StackType_t ) pvParameters; /* R0 */
 	pxTopOfStack--;
 
-	// *pxTopOfStack = ( StackType_t ) 0x06060606;	/* R12_fiq */
-	// pxTopOfStack--;
-	// *pxTopOfStack = ( StackType_t ) 0x05050505;	/* R11_fiq */
-	// pxTopOfStack--;
-	// *pxTopOfStack = ( StackType_t ) 0x04040404;	/* R10_fiq */
-	// pxTopOfStack--;
-	// *pxTopOfStack = ( StackType_t ) 0x03030303;	/* R9_fiq */
-	// pxTopOfStack--;
-	// *pxTopOfStack = ( StackType_t ) 0x02020202;	/* R8_fiq */
-	// pxTopOfStack--;
-
 	/* The task will start with a critical nesting count of 0 as interrupts are
 	enabled. */
 	*pxTopOfStack = portNO_CRITICAL_NESTING;
@@ -349,104 +312,6 @@ static void prvTaskExitError( void )
 	configASSERT( ulPortInterruptNesting == ~0UL );
 	portDISABLE_INTERRUPTS();
 	for( ;; );
-}
-/*-----------------------------------------------------------*/
-
-BaseType_t xPortInstallInterruptHandler( uint8_t ucInterruptID, XInterruptHandler pxHandler, void *pvCallBackRef )
-{
-int32_t lReturn;
-
-	/* An API function is provided to install an interrupt handler */
-	lReturn = prvEnsureInterruptControllerIsInitialised();
-	if( lReturn == pdPASS )
-	{
-		lReturn = XScuGic_Connect( &xInterruptController, ucInterruptID, pxHandler, pvCallBackRef );
-	}
-	if( lReturn == XST_SUCCESS )
-	{
-		lReturn = pdPASS;
-	}
-	configASSERT( lReturn == pdPASS );
-
-	return lReturn;
-}
-/*-----------------------------------------------------------*/
-
-static int32_t prvEnsureInterruptControllerIsInitialised( void )
-{
-static int32_t lInterruptControllerInitialised = pdFALSE;
-int32_t lReturn;
-
-	/* Ensure the interrupt controller instance variable is initialised before
-	it is used, and that the initialisation only happens once. */
-	if( lInterruptControllerInitialised != pdTRUE )
-	{
-		// lReturn = prvInitialiseInterruptController();
-		lReturn = pdPASS;
-
-		if( lReturn == pdPASS )
-		{
-			lInterruptControllerInitialised = pdTRUE;
-		}
-	}
-	else
-	{
-		lReturn = pdPASS;
-	}
-
-	return pdPASS;
-}
-/*-----------------------------------------------------------*/
-
-static int32_t prvInitialiseInterruptController( void )
-{
-BaseType_t xStatus;
-XScuGic_Config *pxGICConfig;
-
-	/* Initialize the interrupt controller driver. */
-	pxGICConfig = XScuGic_LookupConfig( XPAR_SCUGIC_SINGLE_DEVICE_ID );
-	xStatus = XScuGic_CfgInitialize( &xInterruptController, pxGICConfig, pxGICConfig->CpuBaseAddress );
-		if( xStatus == XST_SUCCESS )
-		{
-			xStatus = pdPASS;
-		}
-		else
-		{
-			xStatus = pdFAIL;
-		}
-	configASSERT( xStatus == pdPASS );
-
-	return xStatus;
-}
-/*-----------------------------------------------------------*/
-
-void vPortEnableInterrupt( uint8_t ucInterruptID )
-{
-int32_t lReturn;
-
-	/* An API function is provided to enable an interrupt in the interrupt
-	controller. */
-	lReturn = prvEnsureInterruptControllerIsInitialised();
-	if( lReturn == pdPASS )
-	{
-		XScuGic_Enable( &xInterruptController, ucInterruptID );
-	}
-	configASSERT( lReturn );
-}
-/*-----------------------------------------------------------*/
-
-void vPortDisableInterrupt( uint8_t ucInterruptID )
-{
-int32_t lReturn;
-
-	/* An API function is provided to disable an interrupt in the interrupt
-	controller. */
-	lReturn = prvEnsureInterruptControllerIsInitialised();
-	if( lReturn == pdPASS )
-	{
-		XScuGic_Disable( &xInterruptController, ucInterruptID );
-	}
-	configASSERT( lReturn );
 }
 /*-----------------------------------------------------------*/
 
@@ -508,7 +373,7 @@ uint32_t ulAPSR;
 			not execute	while the scheduler is being started.  Interrupts are
 			automatically turned back on in the CPU when the first task starts
 			executing. */
-			// portCPU_IRQ_DISABLE();
+			portCPU_IRQ_DISABLE();
 
 			/* Start the timer that generates the tick ISR. */
 			configSETUP_TICK_INTERRUPT();
@@ -538,11 +403,8 @@ void vPortEndScheduler( void )
 
 void vPortEnterCritical( void )
 {
-	// extern uint32_t printk(const char *fmt, ...);
 	/* Mask interrupts up to the max syscall interrupt priority. */
-	// printk("Enter critical\n");
 	ulPortSetInterruptMask();
-	// printk("Interrupt\n");
 
 	/* Now interrupts are disabled ulCriticalNesting can be accessed
 	directly.  Increment ulCriticalNesting to keep a count of how many times
@@ -583,19 +445,6 @@ void vPortExitCritical( void )
 
 void FreeRTOS_Tick_Handler( void )
 {
-	/*
-	 * The Xilinx implementation of generating run time task stats uses the same timer used for generating
-	 * FreeRTOS ticks. In case user decides to generate run time stats the tick handler is called more
-	 * frequently (10 times faster). The timer/tick handler uses logic to handle the same. It handles
-	 * the FreeRTOS tick once per 10 interrupts.
-	 * For handling generation of run time stats, it increments a pre-defined counter every time the
-	 * interrupt handler executes.
-	 */
-#if (configGENERATE_RUN_TIME_STATS == 1)
-	ulHighFrequencyTimerTicks++;
-	if (!(ulHighFrequencyTimerTicks % 10))
-#endif
-	{
 	/* Set interrupt mask before altering scheduler structures.   The tick
 	handler runs at the lowest priority, so interrupts cannot already be masked,
 	so there is no need to save and restore the current mask value.  It is
@@ -612,7 +461,6 @@ void FreeRTOS_Tick_Handler( void )
 	{
 		ulPortYieldRequired = pdTRUE;
 	}
-	}
 
 	/* Ensure all interrupt priorities are active again. */
 	portCLEAR_INTERRUPT_MASK();
@@ -624,14 +472,14 @@ void FreeRTOS_Tick_Handler( void )
 
 	void vPortTaskUsesFPU( void )
 	{
-	uint32_t ulInitialFPSCR = 0;
+	// uint32_t ulInitialFPSCR = 0;
 
 		/* A task is registering the fact that it needs an FPU context.  Set the
 		FPU flag (which is saved as part of the task context). */
 		ulPortTaskHasFPUContext = pdTRUE;
 
 		/* Initialise the floating point status register. */
-		__asm volatile ( "FMXR 	FPSCR, %0" :: "r" (ulInitialFPSCR) : "memory" );
+		//__asm volatile ( "FMXR 	FPSCR, %0" :: "r" (ulInitialFPSCR) : "memory" );
 	}
 
 #endif /* configUSE_TASK_FPU_SUPPORT */
@@ -712,24 +560,3 @@ void vApplicationFPUSafeIRQHandler( uint32_t ulICCIAR )
 	( void ) ulICCIAR;
 	configASSERT( ( volatile void * ) NULL );
 }
-
-#if( configGENERATE_RUN_TIME_STATS == 1 )
-/*
- * For Xilinx implementation this is a dummy function that does a redundant operation
- * of zeroing out the global counter.
- * It is called by FreeRTOS kernel.
- */
-void xCONFIGURE_TIMER_FOR_RUN_TIME_STATS (void)
-{
-	ulHighFrequencyTimerTicks = 0;
-}
-/*
- * For Xilinx implementation this function returns the global counter used for
- * run time task stats calculation.
- * It is called by FreeRTOS kernel task handling logic.
- */
-uint32_t xGET_RUN_TIME_COUNTER_VALUE (void)
-{
-	return ulHighFrequencyTimerTicks;
-}
-#endif

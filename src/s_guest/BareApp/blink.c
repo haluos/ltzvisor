@@ -54,8 +54,6 @@ void led_blink( void * pvParameters );
 void vHwSetup(void);
 void secure_yield(void);
 
-struct sys_regs s_context;
-
 uint32_t toggle;
 extern uint8_t toggle_mode;
 
@@ -65,6 +63,8 @@ void print_warning(uint32_t arg)
 }
 
 int main() {
+
+	toggle_mode = 1;
 
 	/** Initialize hardware */
 	hw_init();
@@ -79,7 +79,7 @@ int main() {
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
-	// xTaskCreate( led_blink, "task", 1024, NULL, 2, NULL );
+	// xTaskCreate( led_blink, "task", 700, NULL, 2, NULL );
 	// xTaskCreate( secure_yield, "task", 1024, NULL, 1, NULL );
 	// vTaskStartScheduler();
 
@@ -98,7 +98,6 @@ int main() {
 void led_blink( void * parameters ){
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
-	uint32_t state;
 
 	for( ;; ){
 		if(toggle_mode)
@@ -130,8 +129,6 @@ void secure_yield()
 {
 	while(1){
 		YIELD();
-		asm volatile("dsb\n"
-									"isb");
 		// vTaskDelay(1000/portTICK_RATE_MS);
 	}
 }
