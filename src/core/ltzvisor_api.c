@@ -153,6 +153,7 @@ uint32_t ltzvisor_nsguest_create( struct nsguest_conf_entry *g )
 	/* lr = start_addr & spsr=supervisor */
 	// NS_Guest.core.vcpu_regs_core.lr_mon = g->gce_bin_load;
 	NS_Guest.core.vcpu_regs_core.lr_mon = 0x2007000;
+	// NS_Guest.core.vcpu_regs_core.lr_mon = 0x1aff100;
 	// NS_Guest.core.vcpu_regs_core.lr_mon = 0x100000;
 	NS_Guest.core.vcpu_regs_core.spsr_mon = 0x193;
 	printk("      * NS_Guest core registers - OK  \n\t");

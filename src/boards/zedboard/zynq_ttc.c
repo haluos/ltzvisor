@@ -262,6 +262,13 @@ uint32_t ttc_reset (uint32_t ttc_num, uint32_t timer_num)
 	return TRUE;
 }
 
+uint32_t ttc_read_counter (uint32_t ttc_num, uint32_t timer_num)
+{
+	Zynq_Ttc * ptr_ttc = NULL;
+	ptr_ttc = Ptr_Ttc[ttc_num];
+	return ptr_ttc->cnt_value[timer_num];
+}
+
 /**
  * TTC interrupt clear
  *

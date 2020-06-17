@@ -56,6 +56,7 @@ void secure_yield(void);
 
 uint32_t toggle;
 extern uint8_t toggle_mode;
+uint32_t end_counter_value;
 
 void print_warning(uint32_t arg)
 {
@@ -68,13 +69,14 @@ int main() {
 
 	/** Initialize hardware */
 	hw_init();
+	ttc_init(TTC1,TTCx_2,INTERVAL);
 	// vHwSetup();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
 	// extern uint32_t _heap;
 
 	/** Generate tick every 1s */
-	tick_set(1000000);
+	tick_set(100000);
 
 	/* Calling Blinking Task (LED blink at 1s) */
 	led_blink((void*)0);
@@ -109,8 +111,11 @@ void led_blink( void * parameters ){
 		{
 			*ptr = toggle;
 		}
+		// printk("Ending counter value: %d\n", end_counter_value);
+		// print_ttc_value();
 
 		YIELD();
+		// setup_ttc_context();
 		// vTaskDelay( 1000 / portTICK_RATE_MS);
 	}
 }
@@ -137,4 +142,16 @@ void vApplicationIdleHook( void )
 {
 	// printk("yield\n");
 	YIELD();
+}
+
+void setup_ttc_context (void)
+{
+	ttc_request(TTC1,TTCx_2,1000);
+	ttc_enable(TTC1,TTCx_2);
+}
+
+void print_ttc_value (void)
+{
+	end_counter_value = ttc_read_counter(TTC1, TTCx_2);
+	printk("Ending counter value: %d\n", end_counter_value);
 }

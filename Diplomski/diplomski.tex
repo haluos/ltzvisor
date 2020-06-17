@@ -7,12 +7,14 @@
 % \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{tikz}
+\usepackage{pgfplots}
 \usetikzlibrary{trees}
 
 \begin{document}
 
 \tikzstyle{every node}=[anchor=west]
 \lstset{language=c, xrightmargin=0.001\textwidth}
+\pgfplotsset{width=400pt, height=200pt, compat=1.15}
 
 \renewcommand{\labelitemi}{$\bullet$}
 \renewcommand{\labelitemii}{$-$}
@@ -1720,6 +1722,42 @@ frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
 \subsubsection{Komunikacijski model}
 
 \chapter{Testiranje SMP LTZVisor rješenja}
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel=$\mu$s,
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=10,
+    	ybar=9pt,
+      bar width = 8pt,
+      ytick align = outside,
+      nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+    ]
+    \addplot
+    	coordinates {(1,1.586) (2,2.054)
+    		 (3,2.126) (4,6.018)
+         (5,2.306) (6,6.631)
+         (7,1.297) (8,2.162)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(1,1.802) (2,2.955)
+    		(3,2.64) (4,7.964)
+        (5,3.279) (6,9.477)
+        (7,1.910) (8,2.991)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Performanse SMP LTZVisora}
+  \label{ltzvisor_performance}
+\end{figure}
 
 \chapter{Budući rad}
 

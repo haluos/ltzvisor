@@ -368,6 +368,16 @@ _mon_smc_handler:
    * @retval
    */
 board_smc:
+  @ push {r0-r12,lr}
+  @ bl setup_ttc_context
+  @ pop {r0-r12,lr}
+  @ push {r0,r1}
+  @ ldr r0, =0xf8002010
+  @ ldr r1, [r0]
+  @ orr r1,r1,#(1<<4) @reset TTC1
+  @ bic r1,r1,#1 @enable TTC1
+  @ str r1, [r0]
+  @ pop {r0,r1}
 	@ call_c_function_arg board_handler
 	@ exception_return_arg
   @ srsfd sp!, #MONITOR_MODE
@@ -395,6 +405,15 @@ board_smc:
   isb
 smc_handler_end:
   SCR_NS_SET
+  @ push {r0,r1}
+  @ ldr r0, =0xf8002010
+  @ ldr r1, [r0]
+  @ orr r1,r1,#1 @stop TTC1
+  @ str r1, [r0]
+  @ pop {r0,r1}
+  @ push {r0-r12,lr}
+  @ bl print_ttc_value
+  @ pop {r0-r12,lr}
   movs pc, lr
 	@ rfefd sp!
 
@@ -473,6 +492,7 @@ _mon_fiq_handler:
   SCR_NS_CLEAR				@ Disable NS bit and route FIQs in mon
   @ dsb
   @ isb
+
 	NSWORLD_CONTEXT_SAVE
 
   @ ldr r0, =monitor_flag
@@ -485,10 +505,6 @@ _mon_fiq_handler:
 	ldmfd    r0!, {r1, sp, lr}
 	msr		spsr, r1
 	ldmfd 	r0!, {r8-r12}
-
-	@ cps #IRQ_MODE
-	@ ldmfd   r0!, {r1, sp, lr}
-	@ msr	 	spsr, r1
 
 	cps #UNDEFINED_MODE
 	ldmfd   r0!, {r1, sp, lr}
@@ -508,13 +524,7 @@ _mon_fiq_handler:
 
 	cps #MONITOR_MODE
 
-  @ ldmfd r0, {sp, lr}^
-  @ add r0, r0, #(2*4)
-
 	mov sp, r0
-
-  @ ldmfd sp, {r0-r12}^
-  @ add 	sp,sp,#(13*4)
 
   @ pop 	{r0}
 	@ vpop	{d16-d31}
@@ -559,12 +569,6 @@ _mon_scheduler:
 
 	mov r0, sp
 
-  @ stmfd r0, {r0-r12}^
-  @ sub 	r0, r0, #(13*4)
-  @
-  @ stmfd r0, {sp, lr}^
-  @ sub r0, r0, #(2*4)
-
 	cps #SUPERVISOR_MODE
 	mrs	 r1, spsr
 	stmfd    r0!, {r1, sp, lr}
@@ -580,10 +584,6 @@ _mon_scheduler:
 	cps #UNDEFINED_MODE
 	mrs	 r1, spsr
 	stmfd    r0!, {r1, sp, lr}
-
-	@ cps #IRQ_MODE
-	@ mrs	 r1, spsr
-  @ stmfd    r0!, {r1, sp, lr}
 
 	cps #FIQ_MODE
   stmfd 	 r0!, {r8-r12}

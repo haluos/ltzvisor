@@ -50,9 +50,12 @@
 // extern tHandler* sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED];
 extern uint32_t toggle;
 uint8_t toggle_mode;
+extern uint32_t end_counter_value;
 
 void tick_handler(){
+	// end_counter_value = ttc_read_counter(TTC1, TTCx_2);
 	 ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
+	 // ttc_request(TTC1,TTCx_2,1000000);
 }
 
 void sgi_communicate_handler (void)

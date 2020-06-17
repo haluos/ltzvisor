@@ -183,6 +183,8 @@ uint32_t ttc_request(uint32_t ttc_num, uint32_t timer_num, uint32_t useconds);
 
 uint32_t ttc_reset (uint32_t ttc_num, uint32_t timer_num);
 
+uint32_t ttc_read_counter (uint32_t ttc_num, uint32_t timer_num);
+
 /**
  * TTC interrupt clear
  *

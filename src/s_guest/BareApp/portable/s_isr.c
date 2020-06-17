@@ -79,6 +79,7 @@ void sFIQ_handler(void){
 
 	// printk("FIQ\n");
 	uint32_t int_ack = interrupt_acknowledge();
+	// ttc_disable(TTC1,TTCx_2);
 
 	uint32_t irq_num = int_ack & 0x3ff;
 
