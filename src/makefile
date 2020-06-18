@@ -191,7 +191,7 @@ nm=			$(CROSS_COMPILE)nm
 size=		$(CROSS_COMPILE)size
 
 # cflags= -O0 -Wall -fno-common -msoft-float -mno-thumb-interwork -marm -nostdlib -fno-short-enums
-cflags= -O0 -Wall -fno-common -mfpu=vfpv3 -mfloat-abi=hard -mno-thumb-interwork -marm -nostdlib -fno-short-enums
+cflags= -O0 -Wall -fno-common -mfpu=vfpv3 -mfloat-abi=softfp -mno-thumb-interwork -marm -nostdlib -fno-short-enums
 ifeq ($(DEBUG), y)
 	cflags += -g
 endif

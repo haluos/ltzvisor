@@ -1720,8 +1720,113 @@ uzimajući u obzir oba procesora te iznosi oko 1333~MHz, dok se u ispisu \textit
 frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
 
 \subsubsection{Komunikacijski model}
+Za potrebe komunikacije između virtualnih strojeva, za Linux se je razvila korisnička aplikacija koja se poziva na zahtjev
+korisnika putem Linuxove ljuske. Aplikacija prima dva ulazna argumenta, prvi označava fizičku adresu na koju se želi
+pohraniti željeni podatak, a drugi argument predstavlja vrijednost koja se želi pohraniti. Kod razvoja aplikacija za Linux
+ovakvog tipa, treba imati na umu da Linux radi s virtualnim adresama te je potrebno osigurati da se podatak upiše na ispravnu
+fizičku lokaciju. Kako korisnik odabire željenu fizičku lokaciju, aplikacija se mora pobrinuti da izabranu fizičku lokaciju
+poveže s virtualnom adresom. Navedeno je izvedeno pomoću \textit{mmap} funkcije koja zauzima određeno memorijsko područje u
+kojem je sadržana željena fizička adresa. Memorijsko područje koje se zauzima \textit{mmap} funkcijom mora biti barem
+veličine jedne stranice. Kolika je veličina jedne stranice koju koristi Linux, korisnik može saznati pomoću sustavskog
+poziva \textit{sysconf} te se vrijednost dobivena navedenim sustavskim pozivom može koristiti za poziv \textit{mmap}
+funkcije. Obzirom da se za odabranu fizičku adresu dobije jedno memorijsko područje određene veličine, odabrana fizička
+lokacija se ne mora nalaziti na početku zauzetog memorijskog odjeljka. Iz tog se razloga potrebna virtualna memorija mora
+izračunati tako da se podatak upiše na ispravnu fizičku lokaciju.\\
+Odabrani model komunikacije zahtjeva da se nakon upisa podatka na odgovarajuću memorijsku lokaciju generira SMC instrukcija
+kojom će LTZVisor biti obavješten o postojanju novih poruka za \textit{Sigurnog} gosta. Korisničke aplikacije Linuxa
+se izvode u neprivilegiranom načinu rada procesora, odnosno u korisničkom načinu rada. Generiranje SMC instrukcije kada
+se procesor nalazi u korisničkom načinu rada izaziva \textit{undefined} iznimku te je za potrebe generiranja SMC
+instrukcije potrebno implementirati sustavski poziv. Sustavski poziv obrađuje jezgra operacijskog sustava koja se izvršava
+u privilegiranom načinu rada te se zbog toga može iskoristiti za potrebe generiranja SMC instrukcije. Navedeni sustavski
+poziv je definiran u \textit{arch/arm/kernel/sys\_arm.c} datoteci te je njegova implementacija prikazana slikom \ref{sendm}.
+
+\begin{figure}[H]
+  \lstset{numbers=left, numbersep=2pt, numberstyle=\tiny, breaklines=true, xleftmargin=.1\textwidth}
+  \begin{lstlisting}[showstringspaces=false]
+    asmlinkage long sys_sendm_to_secure(void)
+    {
+      asm volatile(".arch_extension sec\n"
+                    "ldr r0, =0x9\n"
+                    "smc #0\n");
+      return 0;
+    }
+  \end{lstlisting}
+  \caption{Definicija sustavskog poziva za slanje poruke \textit{Sigurnom} gostu}
+  \label{sendm}
+\end{figure}
+
+Vrijednost 0x9 služi kao identifikator LTZVisoru po kojem LTZVisor prepoznaje koju akciju poduzeti za primljenu iznimku.
+Deklaracija sustavskog poziva se mora nalaziti u \textit{include/linux/syscall.h} datoteci. Uz to, potrebno je definirati
+i broj sustavskog poziva koji služi kao identifikacijski broj sustavskog poziva jezgri operacijskog sustava. To je moguće
+dodavanjem linija prikazanih slikom \ref{sc_num} u \textit{include/uapi/asm-generic/unistd.h} datoteku.
+
+\begin{figure}[H]
+  \begin{lstlisting}
+    #define __NR_sendm_to_secure 294
+    __SYSCALL(__NR_sendm_to_secure, sys_sendm_to_secure)
+  \end{lstlisting}
+  \caption{Definicija broja novog sustavskog poziva}
+  \label{sc_num}
+\end{figure}
+
+Prilikom dodavanja novog broja sustavskog poziva, treba voditi brigu o tome da se ukupni broj sustavskih poziva treba
+osvježiti. To se izvodi redefiniranjem \textit{\_\_NR\_syscalls} konstante koja je definirana u
+\textit{include/uapi/asm-generic/unistd.h} datoteci. Navedene promjene su dovoljne da je sustavski poziv dostupan jezgri
+operacijskog sustava, no ovim promjenama implementirani sustavski poziv još uvijek nije dostupan korisničkoj aplikaciji.
+Sustavski pozivi dostupni korisniku definiraju se u tablici sustavskih poziva koja se može pronaći u
+\textit{arch/arm/tools/syscall.tbl}. Dodavanjem linije prikazane slikom \ref{user_sc}, sustavski poziv postaje dostupan
+korisniku te ga je moguće pozvati s \textit{syscall(400);}, gdje je 400 broj sustavskog poziva koji je rezerviran za
+korisnika.
+
+\begin{figure}[H]
+  \begin{lstlisting}
+    400 common  sendm_to_secure   sys_sendm_to_secure
+  \end{lstlisting}
+  \caption{Sustavski poziv dostupan korisniku}
+  \label{user_sc}
+\end{figure}
 
 \chapter{Testiranje SMP LTZVisor rješenja}
+Nad implementiranim rješenjem, provedena su mjerenja, odnosno testiranja vremena izvođenja nužnih dijelova koda LTZVisora.
+Mjerenja su provedena pomoću očitanja stanja TTC1 brojila u odgovarajućim trenucima. Rezultati mjerenja su početno u obliku
+broja koji predstavlja broj otkucaja brojila na određenoj frekvenciji. TTC1 brojilo se je podesilo da broji $1~ms$ od
+početka odsječka kojeg se promatra te se na kraju odsječka zaustavilo. Vrijeme ekvivalentno broju otkucaja brojila se dobije
+pomoću:
+\begin{equation}
+  \label{ttc_eq}
+  T=\frac{N}{f}
+\end{equation}
+U (\ref{ttc_eq}), $T$ je vremenski period u kojem je brojilo bilo aktivno nakon zadnjeg postavljanja, $N$ broj otkucaja
+i $f$ frekvencija na kojoj radi brojilo. Frekvencija na kojoj radi TTC1 iznosi $27.75~MHz$. \textit{Sigurni} gost se je
+podesio tako da se svakih $100~ms$ okida prekid. Jednaka mjerenja su se provela na modificiranoj verziji implementiranog
+LTZVisora koja ne budi CPU1 s Linuxom građenim za jednu jezgru i na SMP LTZVisor verziji s SMP Linux \textit{Nesigurnim}
+gostom. Mjerenja koja su provedena su:
+\begin{enumerate}
+  \item{Obrada SMC iznimke: obrada se odnosi na SMC iznimke generirane od strane \textit{Nesigurnog} gosta prilikom
+  inicijalizacije sustava. TTC1 se postavlja i omogućava na ulasku u tablicu prekidnih vektora te se zaustavlja prije
+  povratka u \textit{Nesigurni} gost (na kraju obrade).}
+  \item{Spremanje konteksta \textit{Sigurnog} gosta: TTC1 se postavlja i omogućava na ulasku u SMC iznimku rezerviranu
+  za LTZVisorov raspoređivač zadataka te se zaustavlja po završetku spremanja \textit{Sigurnog} konteksta.}
+  \item{Obnova konteksta \textit{Nesigurnog} gosta: TTC1 se omogućava prije dohvaćanja adrese globalne varijable u kojoj
+  se nalazi \textit{Nesigurni} kontekst i zaustavlja se po završetku obnove konteksta.}
+  \item{Potvrda FIQ-a: TTC1 se omogućava na ulasku u tablicu prekidnih vektora nadglednog načina rada (konkretno za
+  FIQ prekid) i zaustavlja se nakon što se pročita vrijednost iz registra za potvrdu prekida u FIQ prekidnoj rutini.}
+  \item{Spremanje konteksta \textit{Nesigurnog} gosta: TTC1 se omogućava prije dohvaćanja adrese globalne varijable u kojoj
+  je pohranjen \textit{Nesigurni} gost i zaustavlja se nakon što je kontekst spremljen u varijablu.}
+  \item{FIQ obrada: TTC1 se omogućava prije skoka u \textit{Sigurni} gost i zaustavlja se nakon upisa u registar za
+  označavanje kraja obrade prekida.}
+  \item{Obnova konteksta \textit{Sigurnog} gosta: TTC1 se omogućava nakon spremanja konteksta \textit{Nesigurnog} gosta
+  i nakon što se \textit{Sigurni} kontekst obnovi.}
+  \item{Vrijeme od početka izvođenja \textit{Sigurnog} zadatka do ulaska u raspoređivač LTZVisora: TTC1 se omogući
+  nakon poziva LTZVisorovog raspoređivača i zaustavlja se na ulasku u SMC obradu.}
+\end{enumerate}
+Testiranja su provedena na procesorima koji rade na $667 MHz$. Za svako mjerenje određena je maksimalna vrijednost
+koja se je dobila mjerenjem za oba slučaja. Svako mjerenje se je ponovilo 10 puta te je od 10 slučajeva izabrana
+maksimalna dobivena vrijednost. U svakom mjerenju se je prikupilo 400 uzoraka, osim za prvi slučaj u kojem se je u
+obzir uzelo 200 uzoraka iz razloga što se prilikom inicijalizacije \textit{Nesigurnog} gosta SMC pozove oko 200 puta.
+Rezultati su prikazani slikom \ref{max_perf}. Koordinatna
+os $x$ sadrži brojeve koji odgovaraju rednim brojevima prethodno nabrojenih tipova mjerenja, a $y$ os sadrži vremensko
+trajanje izvođenja određenog koda u $\mu s$.
 
 \begin{figure}[H]
   \begin{tikzpicture}
@@ -1729,7 +1834,7 @@ frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
     \begin{axis}[
     	x tick label style={
     		/pgf/number format/1000 sep=},
-    	ylabel=$\mu$s,
+    	ylabel={t $[\mu s]$},
     	enlargelimits=0.1,
     	legend style={at={(0.5,-0.15)},
     	anchor=north,legend columns=-1},
@@ -1742,27 +1847,104 @@ frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
       y tick label style={rotate=0,anchor=east},
     ]
     \addplot
-    	coordinates {(1,1.586) (2,2.054)
-    		 (3,2.126) (4,6.018)
-         (5,2.306) (6,6.631)
-         (7,1.297) (8,2.162)};
+    	coordinates {(1,1.658) (2,2.090)
+    		 (3,2.126) (4,6.054)
+         (5,2.306) (6,6.523)
+         (7,1.946) (8,2.955)};
     % [black!70!white,fill=black!20!white]
     \addplot[green!30!black!80!white, fill=green!65!black!20!white]
-    	coordinates {(1,1.802) (2,2.955)
-    		(3,2.64) (4,7.964)
-        (5,3.279) (6,9.477)
-        (7,1.910) (8,2.991)};
+    	coordinates {(1,1.802) (2,3.495)
+    		(3,2.811) (4,8.757)
+        (5,3.892) (6,9.982)
+        (7,2.919) (8,4.432)};
     \legend{NS Linux, SMP NS Linux}
     \end{axis}
   \end{tikzpicture}
-  \caption{Performanse SMP LTZVisora}
-  \label{ltzvisor_performance}
+  \caption{Maksimalno vrijeme izvođenja određenih odjeljaka SMP LTZVisora}
+  \label{max_perf}
 \end{figure}
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel={t $[\mu s]$},
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=10,
+    	ybar=13pt,
+      bar width = 8pt,
+      ytick align = outside,
+      nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+    ]
+    \addplot
+    	coordinates {(1,1.117) (2,1.874)
+    		 (3,1.910) (4,5.802)
+         (5,2.126) (6,6.234)
+         (7,1.730) (8,2.595)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(1,1.117) (2,1.946)
+    		(3,1.910) (4,5.946)
+        (5,2.126) (6,6.306)
+        (7,2.054) (8,2.703)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Srednja vrijednost vremena izvođenja određenih odjeljaka SMP LTZVisora}
+  \label{avg_perf}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel={t $[\mu s]$},
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=10,
+    	ybar=13pt,
+      bar width = 8pt,
+      ytick align = outside,
+      nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+    ]
+    \addplot
+    	coordinates {(1,0.541) (2,0.216)
+    		 (3,0.216) (4,0.252)
+         (5,0.18) (6,0.289)
+         (7,0.216) (8,0.36)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(1,0.685) (2,1.549)
+    		(3,0.901) (4,2.811)
+        (5,1.766) (6,3.676)
+        (7,0.865) (8,1.729)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Odstupanje maksimalne od srednje vrijednosti vremena izvođenja SMP LTZVisora}
+  \label{dev_perf}
+\end{figure}
+
 
 \chapter{Budući rad}
 
 \chapter{Zaključak}
 Zaključak.
+
+% \begin{appendix}
+% \chapter{}
+% \end{appendix}
 
 \bibliography{literatura}
 \bibliographystyle{unsrtnat}

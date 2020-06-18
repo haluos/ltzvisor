@@ -74,12 +74,14 @@ extern void cpu1_sgi_communicate_handler (void);
 //
 // 	interrupt_clear(irq_num , 0);
 // }
+extern void print_ttc_value (void);
 
 void sFIQ_handler(void){
 
 	// printk("FIQ\n");
 	uint32_t int_ack = interrupt_acknowledge();
 	// ttc_disable(TTC1,TTCx_2);
+	// print_ttc_value();
 
 	uint32_t irq_num = int_ack & 0x3ff;
 

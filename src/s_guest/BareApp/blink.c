@@ -53,10 +53,12 @@
 void led_blink( void * pvParameters );
 void vHwSetup(void);
 void secure_yield(void);
+void setup_ttc_context (void);
 
 uint32_t toggle;
 extern uint8_t toggle_mode;
 uint32_t end_counter_value;
+uint32_t measures, average_value, counts, max_count;
 
 void print_warning(uint32_t arg)
 {
@@ -66,6 +68,10 @@ void print_warning(uint32_t arg)
 int main() {
 
 	toggle_mode = 1;
+	average_value = 0;
+	counts = 0;
+	measures = 0;
+	max_count = 0;
 
 	/** Initialize hardware */
 	hw_init();
@@ -100,6 +106,7 @@ int main() {
 void led_blink( void * parameters ){
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
+	unsigned int i = 0;
 
 	for( ;; ){
 		if(toggle_mode)
@@ -112,7 +119,9 @@ void led_blink( void * parameters ){
 			*ptr = toggle;
 		}
 		// printk("Ending counter value: %d\n", end_counter_value);
-		// print_ttc_value();
+		// if(i != 0)
+		// 	print_ttc_value();
+		// i++;
 
 		YIELD();
 		// setup_ttc_context();
@@ -152,6 +161,17 @@ void setup_ttc_context (void)
 
 void print_ttc_value (void)
 {
-	end_counter_value = ttc_read_counter(TTC1, TTCx_2);
-	printk("Ending counter value: %d\n", end_counter_value);
+	float res;
+	if(measures < 500)
+	{
+		end_counter_value = ttc_read_counter(TTC1, TTCx_2);
+		if(max_count < end_counter_value)
+		{
+			max_count = end_counter_value;
+		}
+		measures++;
+		counts += end_counter_value;
+		// average_value =(unsigned int) counts/measures;
+		printk("Complete value of %d counts: %d\nMax value: %d\n", measures, counts, max_count);
+	}
 }

@@ -368,6 +368,9 @@ _mon_smc_handler:
    * @retval
    */
 board_smc:
+	@ call_c_function_arg board_handler
+	@ exception_return_arg
+  @ srsfd sp!, #MONITOR_MODE
   @ push {r0-r12,lr}
   @ bl setup_ttc_context
   @ pop {r0-r12,lr}
@@ -378,9 +381,6 @@ board_smc:
   @ bic r1,r1,#1 @enable TTC1
   @ str r1, [r0]
   @ pop {r0,r1}
-	@ call_c_function_arg board_handler
-	@ exception_return_arg
-  @ srsfd sp!, #MONITOR_MODE
   SCR_NS_CLEAR
   cmp r0, #-30        @ Read handler
   bne 1f
@@ -552,6 +552,7 @@ _mon_fiq_handler:
 _mon_scheduler:
   @ srsfd sp!, #MONITOR_MODE
   @ cps #MONITOR_MODE
+
   push {r0-r12,lr}
 
   mrs r1, spsr

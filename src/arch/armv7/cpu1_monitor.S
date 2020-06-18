@@ -255,6 +255,16 @@ cpu1_board_smc:
 	@ call_c_function_arg board_handler
 	@ exception_return_arg
 	@ srsfd sp!, #MONITOR_MODE
+	@ push {r0-r12,lr}
+  @ bl setup_ttc_context
+  @ pop {r0-r12,lr}
+  @ push {r0,r1}
+  @ ldr r0, =0xf8002010
+  @ ldr r1, [r0]
+  @ orr r1,r1,#(1<<4) @reset TTC1
+  @ bic r1,r1,#1 @enable TTC1
+  @ str r1, [r0]
+  @ pop {r0,r1}
 	CLEAR_SCR_NS
   cmp r0, #-30        @ Read handler
   bne 1f
@@ -277,6 +287,15 @@ cpu1_board_smc:
   isb
 smc_handler_end:
 	SET_SCR_NS
+	@ push {r0,r1}
+  @ ldr r0, =0xf8002010
+  @ ldr r1, [r0]
+  @ orr r1,r1,#1 @stop TTC1
+  @ str r1, [r0]
+  @ pop {r0,r1}
+  @ push {r0-r12,lr}
+  @ bl print_ttc_value
+  @ pop {r0-r12,lr}
 	movs pc, lr
 	@ rfefd sp!
 
