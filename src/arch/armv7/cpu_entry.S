@@ -95,6 +95,12 @@ __setup_CPU:
 	ldr	r0, =_monitor_vector_table		@ Read the Monitor Vector Table's Base Address
 	mcr	p15, 0, r0, c12, c0, 1			@ Write MVBAR
 
+	/*set scu enable bit in scu*/
+	ldr	r7, =0xf8f00000
+	ldr	r0, [r7]
+	orr	r0, r0, #0x1
+	str	r0, [r7]
+
 
 	/** Setup Stacks for all CPU modes */
 __setup_stacks:

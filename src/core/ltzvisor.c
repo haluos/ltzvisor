@@ -87,9 +87,9 @@ void ltzvisor_main(void){
 	// ltzvisor_sguest_create(&sguest_config);
 
 	printk(" -> CPUs: Waking up CPU1\n\t");
-	// lock_cpu0();
-	// _wake_cpu1();
-	// wait_till_cpu1_boots();
+	lock_cpu0();
+	_wake_cpu1();
+	wait_till_cpu1_boots();
 
 	/** Kick off LTZVisor and start running Guests */
 	// printk(" -> LTZVisor: kicking off ... \n\t", ARCH);

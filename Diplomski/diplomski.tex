@@ -1816,7 +1816,7 @@ gostom. Mjerenja koja su provedena su:
   \item{FIQ obrada: TTC1 se omogućava prije skoka u \textit{Sigurni} gost i zaustavlja se nakon upisa u registar za
   označavanje kraja obrade prekida.}
   \item{Obnova konteksta \textit{Sigurnog} gosta: TTC1 se omogućava nakon spremanja konteksta \textit{Nesigurnog} gosta
-  i nakon što se \textit{Sigurni} kontekst obnovi.}
+  i zaustavlja nakon što se \textit{Sigurni} kontekst obnovi.}
   \item{Vrijeme od početka izvođenja \textit{Sigurnog} zadatka do ulaska u raspoređivač LTZVisora: TTC1 se omogući
   nakon poziva LTZVisorovog raspoređivača i zaustavlja se na ulasku u SMC obradu.}
 \end{enumerate}
@@ -1864,6 +1864,27 @@ trajanje izvođenja određenog koda u $\mu s$.
   \label{max_perf}
 \end{figure}
 
+Na slici se vidi kako su maksimalne vrijednosti trajanja odgovarajućih odsječaka koda SMP LTZVisora veće od vrijednosti
+koje daje LTZVisor za jednu jezgru. Višestrukim ponavljanjem mjerenja utvrđeno je da se navedene maksimalne vrijednosti
+SMP LTZVisora pojavljuju nakon pokretanja inicijalne skripte datotečnog podsustava SMP Linuxa. Navedeni dio inicijalizacije
+je jedini dio u kojem se pojavljuju ovako visoke vrijednosti. Ovakvo ponašanje nije očekivano niti poželjno te treba ukloniti
+razlog tome (još je nepoznat). Ovakvo ponašanje nije prisutno kod obrade SMC iznimke izazvane \textit{Nesigurnim} gostom
+iz razloga što su svi zahtjevi generirani prije početka izvođenja inicijalne skripte datotečnog podsustava.
+Ponavljanjem mjerenja, bilo je moguće uočiti i da se maksimalne vrijednosti svakog mjerenja međusobno razlikuju kod
+SMP LTZVisor rješenja. Npr. kod mjerenja potrebnog za priznanje FIQ prekida, zabilježene maksimalne vrijednosti od 10
+mjerenja su u rasponu od $7.532~\mu s$ do $8.757~\mu s$. Ovakav rezultat mjerenja ukazuje na određenu mjeru
+nepredvidljivosti, koja bi mogla biti uzrokovana \textit{cacheom}, TLB-ovima, predviđanjem grananja ili uranjenim
+dohvatom \engl{prefetch}. Svim ovim resursima je zajedničko da je, ako su resursi omogućeni, potrebna oprezna implementacija
+kod korištenja više procesora u sustavu.
+Kako su \textit{cache}, MMU i predviđanje grananja isključeni u \textit{Sigurnom} gostu, izvor
+problema bi mogao biti uranjeni dohvat. Uranjenim dohvatom se upravlja ACTLR registrom koji je zajednički
+\textit{Nesigurnom} i \textit{Sigurnom} gostu te je moguće rješenje za uklanjanje navedenog problema dodavanje ACTLR
+registra u kontekst virtualnih strojeva.
+Ponavljanjem mjerenja za LTZVisor koji je implementiran za jednu jezgru, maksimalne vrijednosti su približno jednake,
+što pokazuje da nepredvidljivost nije prisutna u navedenoj verziji LTZVisora.
+Kako bi se pokazalo da se prikazane maksimalne vrijednosti pojavljuju rijetko, od
+prikupljenih uzoraka se je izračunala srednja vrijednost te su navedeni rezultati prikazani slikom \ref{avg_perf}.
+
 \begin{figure}[H]
   \begin{tikzpicture}
     \centering
@@ -1900,6 +1921,10 @@ trajanje izvođenja određenog koda u $\mu s$.
   \label{avg_perf}
 \end{figure}
 
+Na slici se jasno vidi da su srednje vrijednosti trajanja odsječaka koda za obje verzije LTZVisora približno jednake,
+što je očekivano ponašanje.
+Odstupanje maksimalnih vrijednosti od srednjih prikazano je slikom \ref{dev_perf}.
+
 \begin{figure}[H]
   \begin{tikzpicture}
     \centering
@@ -1935,12 +1960,221 @@ trajanje izvođenja određenog koda u $\mu s$.
   \caption{Odstupanje maksimalne od srednje vrijednosti vremena izvođenja SMP LTZVisora}
   \label{dev_perf}
 \end{figure}
+Na slici se vidi da su kod SMP LTZVisor rješenja prisutna dosta velika odstupanja maksimalnih vrijednosti od srednjih
+vrijednosti vremena izvođenja, dok LTZVisor koji se izvršava na jednoj jezgri ima vrlo mala odstupanja.
 
+\section{Performanse SMP Linux \textit{Nesigurnog} gosta}
+Za procjenu performansi \textit{Nesigurnog} gosta LTZVisora, koristio se LMBench alat koji služi za testiranje raznih
+aspekata sustava, uključujući latenciju i memorijsku širinu pojasa. U ovom radu su se provela dva različita testiranja:
+\begin{itemize}
+  \item {\textit{lat\_ops} - mjeri latenciju aritmetičkih operacija te može poslužiti kao općeniti uvid u
+  performanse CPU-a}
+  \item{\textit{bw\_mem} - određuje memorijsku širinu pojasa \engl{memory bandwidth}.}
+\end{itemize}
+Memorijska širina pojasa je određena za razne veličine memorijskih prostora: $2~kB$, $128~kB$ i $4~MB$.
+Način na koji \textit{bw\_mem} mjeri memorijsku širinu pojasa ovisi o parametru predanom od korisnika, a može biti
+neki od:
+\begin{itemize}
+  \item{\textit{rd} - mjeri vrijeme potrebno da se pročitaju podaci konstantne vrijednosti te se podaci zbrajaju u
+  konačnu sumu uz to da se pristupa svakoj četvrtoj riječi.}
+  \item{\textit{wr} - mjeri vrijeme potrebno da se podaci konstantne vrijednosti upišu u polje cijelih brojeva,
+  uz pristup svakoj četvrtoj riječi.}
+  \item{\textit{rdwr} - mjeri vrijeme potrebno da se pročita podatak iz određene memorijske lokacije i da se upiše
+  u tu istu memorijsku lokaciju. Sve pročitane vrijednosti se dodaju u sumu. Pristupa se svakoj četvrtoj riječi.}
+  \item{\textit{cp} - Vrijeme potrebno da se podaci premjeste s jedne lokacije na drugu, uz pristup svakoj četvrtoj riječi.}
+  \item{\textit{frd} - isto kao i \textit{rd}, ali se pristupa svakoj riječi.}
+  \item{\textit{fwr} - isto kao i \textit{wr}, ali se pristupa svakoj riječi.}
+  \item{\textit{fcp} - isto kao i \textit{cp}, ali se pristupa svakoj riječi.}
+  \item{\textit{bzero} - koliko se brzo izvodi \textit{bzero} funkcija (za brisanje memorije).}
+  \item{\textit{bcopy} - koliko se brzo izvodi \textit{bcopy} funkcija (za kopiranje memorije).}
+\end{itemize}
+Testiranje pristupa memoriji je izvedeno na SMP verziji LTZVisora te je uspoređeno s rezultatima dobivenim testiranjem
+LTZVisora za jednu jezgru. Svaka verzija je bila testirana pomoću opcije da se za svaki test stvore dva procesa koja
+izvode jednako testiranje te se izvode paralelno. Rezultati za $2~kB$, $128~kB$ i $4~MB$ dani su slikama \ref{mem_bwdt},
+\ref{mem_bwdt_128} i \ref{mem_bwdt_4m}. Koordinatna os $y$ prikazuje memorijsku širinu pojasa u $MBps$.
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel={B [MBps]},
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=20000,
+    	ybar=13pt,
+      bar width = 8pt,
+      ytick align = outside,
+      % nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+      symbolic x coords = {rd,wr,rdwr,cp,frd,fwr,fcp,bzero,bcopy},
+    ]
+    \addplot
+    	coordinates {(rd,7669) (wr,8408)
+    		(rdwr,4860) (cp,5182)
+        (frd,2098) (fwr,2278)
+        (fcp,1248) (bzero,2514) (bcopy,2178)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(rd,15202) (wr,16833)
+    		(rdwr,9736) (cp,10368)
+        (frd,4232) (fwr,4482)
+        (fcp,2558) (bzero,5707) (bcopy,3956)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Širina pojasa memorijskih operacija za $2~kB$}
+  \label{mem_bwdt}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel={B [MBps]},
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=1500,
+    	ybar=13pt,
+      bar width = 8pt,
+      ytick align = outside,
+      % nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+      symbolic x coords = {rd,wr,rdwr,cp,frd,fwr,fcp,bzero,bcopy},
+    ]
+    \addplot
+    	coordinates {(rd,745) (wr,524)
+    		(rdwr,540) (cp,382)
+        (frd,477) (fwr,692)
+        (fcp,437) (bzero,693) (bcopy,428)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(rd,1259) (wr,651)
+    		(rdwr,645) (cp,402)
+        (frd,519) (fwr,650)
+        (fcp,415) (bzero,655) (bcopy,626)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Širina pojasa memorijskih operacija za $128~kB$}
+  \label{mem_bwdt_128}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+    	x tick label style={
+    		/pgf/number format/1000 sep=},
+    	ylabel={B [MBps]},
+    	enlargelimits=0.1,
+    	legend style={at={(0.5,-0.15)},
+    	anchor=north,legend columns=-1},
+      ymax=1500,
+    	ybar=13pt,
+      bar width = 8pt,
+      ytick align = outside,
+      % nodes near coords,
+      x tick label style={rotate=0,anchor=north},
+      y tick label style={rotate=0,anchor=east},
+      symbolic x coords = {rd,wr,rdwr,cp,frd,fwr,fcp,bzero,bcopy},
+    ]
+    \addplot
+    	coordinates {(rd,729) (wr,531)
+    		(rdwr,541) (cp,377)
+        (frd,483) (fwr,670)
+        (fcp,450) (bzero,672) (bcopy,425)};
+    % [black!70!white,fill=black!20!white]
+    \addplot[green!30!black!80!white, fill=green!65!black!20!white]
+    	coordinates {(rd,1237) (wr,634)
+    		(rdwr,636) (cp,406)
+        (frd,499) (fwr,601)
+        (fcp,416) (bzero,602) (bcopy,613)};
+    \legend{NS Linux, SMP NS Linux}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Širina pojasa memorijskih operacija za $4~MB$}
+  \label{mem_bwdt_4m}
+\end{figure}
+
+Na prikazanim rezultatima, vidi se da SMP Linux u SMP LTZVisoru ima gotovo dvostruko bolje performanse od Linuxa na
+jednoj jezgri (može napraviti dvostruko više pristupa memoriji od Linuxa na jednoj jezgri u jednakoj jedinici vremena).
+Isto tako, vidi se da porastom testirane memorije performanse obje verzije Linuxa padaju. Takvo ponašanje ima smisla zato
+što Linux koristi L1 i L2 \textit{cache} memorije. U dokumentaciji \textit{bw\_mem} stoji kako navedeni alat alocira
+dvostruko više memorije od zadane. Dakle, ako se je za prvi slučaj zadalo $2~kB$, \textit{bw\_mem} alocira ukupno $4~kB$
+za jedan proces, dok za dva procesa sveukupno zauzme $8~kB$. Navedenih $8~kB$ stane u \textit{cache} memoriju procesora
+(L1 od $32~kB$ i L2 od $512~kB$). Poznato je da je \textit{cache} brza memorija te su zbog toga navedeni rezultati
+očekivani (povećanjem testirane memorije, povećava se i količina memorije koja se ne nalazi u \textit{cacheu}). Isto tako,
+za prvi slučaj je logično i da će SMP Linux biti vrlo visokih performansi obzirom na to da svaki procesor implementira
+vlastitu L1 \textit{cache} memoriju od $32~kB$. Pad performansi SMP Linuxa u odnosu Linuxa na jednoj jezgri za memoriju
+veliku $4~MB$ je također razumljivo iz razloga što za razliku od L1 \textit{cache} memorije, L2 \textit{cache} memorija
+je dijeljena između procesora te je na takvu količinu memorije vjerojatnije da će biti potrebno više operacija rukovanja
+L2 \textit{cache} memorijom što smanjuje performanse sustava.\\
+Idući rezultati se odnose na latenciju (trajanje) aritmetičkih operacija koji su dobiveni pomoću \textit{lat\_ops}
+testa. Test izvodi mjerenja nad raznim vrstama operacija: zbrajanje, množenje i dijeljenje različitih vrsta podataka
+(cijelih i realnih brojeva od 4 ili 8 bajta). Uz navedene operacije, test služi i za određivanje trajanja operacija
+s vektorima u kojima se vidi jedina razlika između Linuxa za jednu jezgru i SMP Linuxa. Prilikom izvođenja testa,
+VFP jedinica je omogućena. Tablica \ref{vect_ops} prikazuje rezultate mejerenja operacija nad vektorima.
+
+\begin{table}[H]
+  \centering
+  \caption{Trajanje operacija nad vektorima}
+  \label{vect_ops}
+  \begin{tabular}{|| p{6cm} | p{3cm} | p{3cm} ||}
+    \hline
+    \textbf{Operacija nad vektorima} & \textbf{Trajanje u~Linuxu} & \textbf{Trajanje u SMP Linuxu} \\
+    \hline\hline
+    Podaci duljine 4 bajta & $41.74~ns$ & $20.94~ns$\\
+    \hline
+    Podaci duljine 8 bajta & $70.84~ns$ & $35.58~ns$\\
+    \hline
+  \end{tabular}
+\end{table}
+
+Iz rezultata je vidljivo kako SMP Linux daje dvostruko bolje rezultate od Linuxa građenog za jednu jezgru.
 
 \chapter{Budući rad}
+Da bi SMP LTZVisor rješenje bilo kvalitetno, potrebno je ukloniti mane opisane implementacije koje su već sada uočene.
+Prva mana se odnosi na obradu FIQ prekida koji se može pojaviti na CPU1. Trenutno rješenje ne nudi nikakvu obradu FIQ-a
+ako se pojavi na sekundarnoj jezgri te bi bilo dobro poželjno da FIQ bude obrađen. Daljnjim istraživanjem SMP LTZVisor
+rješenja moći će se utvrditi koji mehanizam rješavanja pojave FIQ-a na CPU1 bi bio najbolji. Sljedeće što je potrebno
+za uvjerljivu demonstraciju virtualizacije pomoću LTZVisora je implementirati SMP LTZVisor s FreeRTOS-om kao
+\textit{Sigurni} gost i SMP Linuxom kao \textit{Nesigurni} gost. Nakon što bi se navedeno implementiralo, bilo bi
+potrebno i ponoviti mjerenja koja procjenjuju performanse SMP LTZVisora. Isto tako, prije ponavljanja mjerenja, trebalo
+bi obratiti pažnju na uklanjanje izvora nepredvidljivosti koji je prikazan u prethodnom poglavlju. Jedan ključan element
+u virtualizaciji je komunikacija između virtualnih strojeva. Ovim radom je prikazan jednostavan model kojeg bi trebalo
+proširiti. Za te potrebe, trebalo bi proširiti implementirani sustavski poziv koji generira SMC tako da bi se
+\textit{Sigurnom} gostu moglo predati i više od jednog podatka (npr. uz SMC, LTZVisoru predati i dodatne parametre koji
+bi označavali početnu adresu podataka i broj podataka koje \textit{Sigurni} gost treba pročitati). Uz to, bilo poželjno
+i da komunikacija bude dvosmjerna, tako da i \textit{Sigurni} gost može proslijediti poruku \textit{Nesigurnom} gostu.\\
+Predstavljeno rješenje SMP LTZVisora pripada jednom od modela predloženih od ARM-a za razvoj \textit{TrustZone} aplikacija.
+Drugi model je kompleksnije za implementirati, ali takav model bi imao poseban doprinos \textit{Nesigurnom} gostu koji
+bi takvim modelom imao mogućnost poboljšati efikasnost raspoređivanja zadataka.
 
 \chapter{Zaključak}
-Zaključak.
+Ovim radom bilo je prikazano kako \textit{TrustZone} doprinosi izolaciji između operacijskih sustava te kako se
+mogu zaštititi osjetljivi podaci. LTZVisor je, iskorištavajući \textit{TrustZone} ekstenziju, predstavio virtualizaciju
+koja nema potrebe za dodatnim virtualizacijskim ekstenzijama. Implementacija LTZVisora je također doprinijela
+implementaciji dvaju operacijskih sustava koji se izvode konkurentno na jednom procesoru uz potpunu izolaciju
+operacijskih sustava. Kao što je već bilo prikazano, korištenje više procesora može znatno poboljšati karakteristike
+implementiranog rješenja. Tako je AMP LTZVisor poboljšao originalnu verziju LTZVisora na način da se uklonila mogućnost
+da \textit{Nesigurni} gost ne dobije dovoljno procesorskog vremena od \textit{Sigurnog} gosta.\\
+Predstavljeno rješenje za SMP LTZVisor je, slikovito rečeno, jedan okvir kojeg je potrebno popunit dodatnim mehanizmima
+i kvalitetnijom implementacijom. Iako je rješenje nepotpuno, u prethodnim poglavljima su bile prikazane prednosti
+ovakve implementacije u odnosu na originalni LTZVisor. Dakle, bilo je prikazano kako SMP LTZVisor efikasno rješava
+operacije s vektorima što ga čini dobrim rješenjem za aplikacije koje zahtijevaju izolaciju između dva operacijska
+sustava uz primjenu za obradu signala. Isto tako, bilo je prikazano kako SMP LTZVisor može pristupati memoriji efikasnije
+od originalnog LTZVisora. Iako je navedeno istina, vidjelo se i da to nije točno u svim slučajevima, što ukazuje na to
+da je rješenje potrebno detaljno poznavati prije nego se krene u implementaciju neke od primjena. SMP LTZVisor
+je još uvijek nepotpuno rješenje i ima prostora za raznim poboljšanjima, ali je dovoljno dobro da bude temelj za
+daljnja istraživanja, nadogradnju i optimizaciju.
 
 % \begin{appendix}
 % \chapter{}
@@ -1950,7 +2184,10 @@ Zaključak.
 \bibliographystyle{unsrtnat}
 
 \begin{sazetak}
-Sažetak na hrvatskom jeziku.
+\textit{TrustZone} je sigurnosna ekstenzija koja već dugi niz godina pruža sigurnosnu podršku Cortex-A procesorima.
+Navedena ekstenzija pruža koncept \textit{Sigurnog} \engl{Secure} i \textit{Nesigunog} \engl{Non-Secure} svijeta.
+Svaki svijet se može izvršavati na jednom procesoru metodom vremenske podijele, što omogućava implementaciju
+dvaju operacijskih sustava.
 
 \kljucnerijeci{Ključne riječi, odvojene zarezima.}
 \end{sazetak}
