@@ -52,7 +52,7 @@
 
 void led_blink( void * pvParameters );
 void vHwSetup(void);
-void secure_yield(void);
+void secure_yield( void * pvParameters );
 void setup_ttc_context (void);
 
 uint32_t toggle;
@@ -74,22 +74,22 @@ int main() {
 	max_count = 0;
 
 	/** Initialize hardware */
-	hw_init();
-	ttc_init(TTC1,TTCx_2,INTERVAL);
+	// hw_init();
+	// ttc_init(TTC1,TTCx_2,INTERVAL);
 	// vHwSetup();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
 	// extern uint32_t _heap;
 
 	/** Generate tick every 1s */
-	tick_set(100000);
+	// tick_set(100000);
 
 	/* Calling Blinking Task (LED blink at 1s) */
-	led_blink((void*)0);
+	// led_blink((void*)0);
 	// printk("led blink addr: 0x%x\n", &_heap);
-	// xTaskCreate( led_blink, "task", 700, NULL, 2, NULL );
+	xTaskCreate( led_blink, "task", 700, NULL, 2, NULL );
 	// xTaskCreate( secure_yield, "task", 1024, NULL, 1, NULL );
-	// vTaskStartScheduler();
+	vTaskStartScheduler();
 
 	/* This point will never be reached */
 	for( ;; );
@@ -123,9 +123,9 @@ void led_blink( void * parameters ){
 		// 	print_ttc_value();
 		// i++;
 
-		YIELD();
+		// YIELD();
 		// setup_ttc_context();
-		// vTaskDelay( 1000 / portTICK_RATE_MS);
+		vTaskDelay( 1000 / portTICK_RATE_MS);
 	}
 }
 
@@ -139,7 +139,7 @@ void vHwSetup (void)
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,31);
 }
 
-void secure_yield()
+void secure_yield( void * pvParameters )
 {
 	while(1){
 		YIELD();

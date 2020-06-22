@@ -88,8 +88,8 @@ extern uint32_t ulPortYieldRequired;			\
 #define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
 // #define portYIELD() __asm volatile ( "SWI 0" ::: "memory" );
 #define portYIELD()	interrupt_IPI_generate(8,1);\
-						__asm volatile("nop\n"\
-														"nop")
+						__asm volatile("dsb");\
+						__asm volatile("isb");
 
 /*-----------------------------------------------------------
  * Critical section control

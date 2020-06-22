@@ -102,8 +102,8 @@ _secure_vector_table:
 @ .align 4
 .globl sFIQ_handler
 _fiq:
-  .word sFIQ_handler
-  @ .word   FreeRTOS_IRQ_Handler
+  @ .word sFIQ_handler
+  .word   FreeRTOS_IRQ_Handler
 
 @ .align 4
 _svc:

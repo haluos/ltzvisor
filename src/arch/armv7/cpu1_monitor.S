@@ -209,6 +209,8 @@ put_cpu1_back_to_sleep:
 	ldr r1, =0
 	str r1, [r0]
 	bl unlock_cpu0
+	dsb
+	isb
 wait:
 	wfe
 	ldr r0, =0xfffffff0

@@ -125,6 +125,7 @@ const uint8_t ucRisingEdge = 3;
 
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
+	// interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 0x7F & (portLOWEST_USABLE_INTERRUPT_PRIORITY << portPRIORITY_SHIFT));
 	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 31);
 
 	FreeRTOS_ClearTickInterrupt();

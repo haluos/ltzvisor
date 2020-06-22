@@ -2,12 +2,13 @@
 bin/*
 Diplomski/*
 !Diplomski/literatura.bib
-!Diplomski/diplomski.tex
+!Diplomski/DR2020_MagdalenaHalusek.tex
 !Diplomski/fer.bst
 !Diplomski/fer.cls
 src/ns_guest/zynq/build/*
 src/ns_guest/zynq/ns_guest.bin
 src/ns_guest/zynq/ns_guest.elf
 *.txt
+*.toc
 disassembly_freertos.s
 **/*.o

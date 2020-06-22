@@ -151,7 +151,7 @@ command interpreter running. */
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-// void vAssertCalled( const char * pcFile, unsigned long ulLine );
+void vApplicationAssert( const char * pcFile, unsigned long ulLine );
 #define configASSERT( x ) if( ( x ) == 0 ) vApplicationAssert( __FILE__, __LINE__ );
 
 /* If configTASK_RETURN_ADDRESS is not defined then a task that attempts to

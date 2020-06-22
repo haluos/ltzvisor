@@ -21,19 +21,19 @@
 \renewcommand{\betweenauthors}{, }
 
 % TODO: Navedite broj rada.
-\thesisnumber{1995}
-
-% TODO: Navedite naslov rada.
-\title{Proširenje LTZVisor monitora virtualnih strojeva \\za višejezgrene procesore}
-
-% TODO: Navedite vaše ime i prezime.
-\author{Magdalena Halusek}
-
-\maketitle
-
-% Ispis stranice s napomenom o umetanju izvornika rada. Uklonite naredbu \izvornik ako želite izbaciti tu stranicu.
-% \izvornik
-\includepdf[pages=-,pagecommand={}]{0688_001.pdf}
+% \thesisnumber{1995}
+%
+% % TODO: Navedite naslov rada.
+% \title{Proširenje LTZVisor monitora virtualnih strojeva \\za višejezgrene procesore}
+%
+% % TODO: Navedite vaše ime i prezime.
+% \author{Magdalena Halusek}
+%
+% \maketitle
+%
+% % Ispis stranice s napomenom o umetanju izvornika rada. Uklonite naredbu \izvornik ako želite izbaciti tu stranicu.
+% % \izvornik
+% \includepdf[pages=-,pagecommand={}]{0688_001.pdf}
 
 % Dodavanje zahvale ili prazne stranice. Ako ne želite dodati zahvalu, naredbu ostavite radi prazne stranice.
 \zahvala{}
@@ -1206,19 +1206,19 @@ karakteristike:
   \item {pouzdanost}
   \item{mali memorijski otisak u odnosu na GPOS}
   \item{odziv u stvarnom vremenu}
-  \item{raspoređivanje zadataka je prilagođeno za rad u stvarnom vremenu.}
+  \item{raspoređivanje zadataka prilagođeno za rad u stvarnom vremenu.}
 \end{itemize}
 RTOS ima prednost u tome što nema posebnih hardverskih zahtjeva (kao što to GPOS ima za npr. MMU jedinicom) te ga je zbog toga
 moguće prilagoditi na velik broj platforma, uključujući i mikrokontrolere. Sama jezgra operacijskog sustava je pogonjena jednim
 brojilom koje je glavni okidač zamjene konteksta između zadataka. Prednost ovakvog operacijskog sustava u odnosu na
 \textit{bare-metal} aplikacije je što postoji mogućnost istiskivanja zadataka. Ova karakteristika operacijskom sustavu
-pruža da zadaci koji su prioritetniji obave potrebni posao prije od onih koji su nižeg prioriteta što nije moguće kod
+pruža mogućnost da prioritetniji zadaci obave potrebni posao prije od onih koji su nižeg prioriteta, što nije moguće kod
 \textit{bare-metal} aplikacija.
 
 \section{FreeRTOS}
 FreeRTOS je operacijski sustav za rad u stvarnom vremenu otvorenog koda. Ovaj operacijski sustav je optimiran prema kriteriju
-malih zahtjeva (memorijske zahtjeve i procesorsku moć) te je prvenstveno namijenjen ugradbenim računalima \cite{osur}. Zbog
-malih zahtjeva, pogodan je za implementaciju na mikrokontrolerima. Otvorenost koda FreeRTOS-a je omogućila da se FreeRTOS
+malih zahtjeva (memorijski zahtjevi i procesorska moć) te je prvenstveno namijenjen ugradbenim računalima \cite{osur}. Zbog
+malih zahtjeva, pogodan je za implementaciju na mikrokontrolerima. Otvorenost koda FreeRTOS-a, omogućila je da se FreeRTOS
 prilagodi za velik broj platformi, pa se tako može pronaći i FreeRTOS prilagođen za Xilinxov ZedBoard. Verzija FreeRTOS-a
 korištenog u ovom projektu je v10.1.3 koja se može dobiti generiranjem BSP-a \engl{Board Support Package} u Xilinx SDK
 2019.1. FreeRTOS koristi jedinstven način imenovanja varijabli i funkcija kojeg je zbog urednosti koda poželjno koristiti i
@@ -1289,9 +1289,9 @@ prekida, u obradi prekida postoji dio koda gdje se način rada procesora mijenja
 Navedeni dio koda je potrebno promijeniti tako da se način rada promijeni u FIQ. Kao što je već spomenuto,
 \textit{vTaskSwitchContext} funkcija je većinom izvedena kao kritična sekcija te je potrebno implementirati promjene u
 jezgri FreeRTOS-a koje će omogućiti takvu funkciju obzirom na FIQ prekide. Kritična sekcija se obično implementira
-maskiranjem odgovarajućeg prekida, za FIQ to znači da je potrebno maskirati FIQ prekida u CPSR registru. Za Cortex-A procesore
+maskiranjem odgovarajućeg prekida, za FIQ to znači da je potrebno maskirati FIQ prekide u CPSR registru. Za Cortex-A procesore
 postoji posebna oznaka koja govori o tome je li FIQ prekid moguće maskirati. Cortex-A9 sadrži navedeni podatak u NMFI
-\engl{Nonmaskable FIQ Interrupt} bit u SCTLR registru. Navedeni bit je predviđen samo za čitanje i ne može ga se
+\engl{Nonmaskable FIQ Interrupt} bitu u SCTLR registru. Navedeni bit je predviđen samo za čitanje i ne može ga se
 softverski konfigurirati te indicira na to da se FIQ ne može softverski maskirati. Poznato je da se FIQ automatski maskira
 generiranjem FIQ prekida te se ta činjenica iskoristila za implementaciju kritične sekcije potrebne za
 \textit{vTaskSwitchContext} funkciju.
@@ -1345,7 +1345,7 @@ Dodatna promjena koja se je implementira tiče se brojila za otkucaje. Izvorno, 
 za otkucaje, a u ovom radu se koristi TTC0. Da bi se TTC0 mogao koristiti kao brojilo otkucaja, potrebno je izmijeniti
 \textit{FreeRTOS\_SetupTickInterrupt} i \textit{FreeRTOS\_ClearTickInterrupt} koje konfiguriraju TTC0 kao brojilo otkucaja,
 odnosno brišu aktivno stanje prekida nakon obrade TTC0 prekida. Kod implementacije \textit{FreeRTOS\_SetupTickInterrupt}
-važno je imati na umu da prioritet brojila otkucaja mora biti najmanji mogući (31).
+važno je imati na umu da prioritet brojila otkucaja mora biti najmanji mogući.
 Uz navedene promjene u \textit{Sigurnom} FreeRTOS-u, zamjena konteksta LTZVisora se morala modificirati na način da se
 FIQ ne obrađuje u nadglednom načinu rada, nego u \textit{Sigurnom} gostu te se kontekst \textit{Sigurnog} gosta dodatno
 proširio.
@@ -1428,7 +1428,7 @@ brojila \textit{Nesigurnom} gostu.
 \section{Prilagođenje LTZVisora za SMP}
 Kao što je već opisano u prethodnim poglavljima, SMP može predstavljati veliko poboljšanje cjelokupne procesorske efikasnosti.
 Iako je to za većinu slučajeva točno, postoji i određeni tip aplikacija kojima SMP nije dobar izbor. Primjer jedne takve
-aplikacije je aplikacija koja u svakom trenutku izvršava samo jedan proces što znači da je uvijek samo jedan procesor aktivan.
+aplikacije je aplikacija koja u svakom trenutku izvršava samo jedan proces s jednom niti što znači da je uvijek samo jedan procesor aktivan.
 Aplikacije koje imaju koristi od SMP konfiguracije su one koje implementiraju npr. određene vrste obrade signala koje
 zahtijevaju veliku procesorsku moć. Ovo poglavlje predstavlja SMP LTZVisor koji se može iskoristiti kod potrebe za navedenim
 tipom aplikacija te predstavlja sasvim novu inačicu LTZVisora čija je implementacija bila u planu od trenutka kada je LTZVisor
@@ -1503,7 +1503,7 @@ memorije. Uz to, ne koriste se ni polja za predviđanje grananja. Poznato je da 
 ispravno funkcioniranje te se podrazumijeva da će se \textit{Nesigurne} MMU tablice za prevođenje koristiti. Isto tako, Linux
 spada u sustave opće namjene te je nepredvidljivost do neke razine dozvoljena. Stoga, Linux koristi i L1 i L2 \textit{cache} te
 polja za predviđanje grananja. Ključna činjenica koja omogućava ovakvu konfiguraciju gost virtualnih strojeva je da
-\textit{Sigurni} softver ima pristup \textit{Nesigurnim} tablicama te je zbog toga moguće izvesti skok na virtualnu adresu
+LTZVisor ima pristup \textit{Nesigurnim} tablicama te je zbog toga moguće izvesti skok na virtualnu adresu
 \textit{Nesigurnog} gosta.
 
 \subsubsection{Komunikacijski model}
@@ -1562,6 +1562,8 @@ vrijednost različitu od 0 na navedenoj adresi. Opisani postupak implementiran j
       ldr r1, =0
       str r1, [r0]
       bl unlock_cpu0
+      dsb
+      isb
     wait:
       wfe
       ldr r0, =0xfffffff0
@@ -1576,7 +1578,7 @@ vrijednost različitu od 0 na navedenoj adresi. Opisani postupak implementiran j
 Funkcija \textit{unlock\_cpu0} postavlja potrebnu zastavicu koja će osloboditi CPU0, čime započinje izvođenje \textit{Sigurnog}
 gosta. Ako se CPU1 probudi iz WFE stanja i na odgovarajućoj adresi pročita vrijednost 0, procesor se ponovno stavlja u WFE
 stanje. Kad je vrijednost različita od 0, LTZVisor predaje kontrolu \textit{Nesigurnom} gostu skokom na adresu koja je upisana
-na 0xFFFFFFF0 lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja uz skok na odgovarajuću adresu i učita
+na 0xFFFFFFF0 lokaciji. To se izvodi instrukcijom \textit{movs pc, r1} koja, uz skok na odgovarajuću adresu, učita
 vrijednost iz SPSR u CPSR. Kako Linux zahtjeva da se procesori pokreću u \textit{supervisor} načinu rada, u SPSR-u se mora
 nalaziti ispravna vrijednost te se ta vrijednost postavlja prilikom postavljanja početnog konteksta \textit{Nesigurnog} gosta.
 Kao što je napomenuto, LTZVisor je zadužen za inicijalizaciju upravitelja prekidima te inicijalizira CPU sučelje za svaki
@@ -1775,7 +1777,7 @@ osvježiti. To se izvodi redefiniranjem \textit{\_\_NR\_syscalls} konstante koja
 operacijskog sustava, no ovim promjenama implementirani sustavski poziv još uvijek nije dostupan korisničkoj aplikaciji.
 Sustavski pozivi dostupni korisniku definiraju se u tablici sustavskih poziva koja se može pronaći u
 \textit{arch/arm/tools/syscall.tbl}. Dodavanjem linije prikazane slikom \ref{user_sc}, sustavski poziv postaje dostupan
-korisniku te ga je moguće pozvati s \textit{syscall(400);}, gdje je 400 broj sustavskog poziva koji je rezerviran za
+korisniku te ga je moguće pozvati sa \textit{syscall(400);}, gdje je 400 broj sustavskog poziva koji je rezerviran za
 korisnika.
 
 \begin{figure}[H]
@@ -1798,8 +1800,8 @@ pomoću:
 \end{equation}
 U (\ref{ttc_eq}), $T$ je vremenski period u kojem je brojilo bilo aktivno nakon zadnjeg postavljanja, $N$ broj otkucaja
 i $f$ frekvencija na kojoj radi brojilo. Frekvencija na kojoj radi TTC1 iznosi $27.75~MHz$. \textit{Sigurni} gost se je
-podesio tako da se svakih $100~ms$ okida prekid. Jednaka mjerenja su se provela na modificiranoj verziji implementiranog
-LTZVisora koja ne budi CPU1 s Linuxom građenim za jednu jezgru i na SMP LTZVisor verziji s SMP Linux \textit{Nesigurnim}
+podesio tako da se svakih $100~ms$ okida prekid. Jednaka mjerenja su se provela na modificiranoj verziji originalnog
+LTZVisora i na SMP LTZVisor verziji s SMP Linux \textit{Nesigurnim}
 gostom. Mjerenja koja su provedena su:
 \begin{enumerate}
   \item{Obrada SMC iznimke: obrada se odnosi na SMC iznimke generirane od strane \textit{Nesigurnog} gosta prilikom
@@ -1817,16 +1819,16 @@ gostom. Mjerenja koja su provedena su:
   označavanje kraja obrade prekida.}
   \item{Obnova konteksta \textit{Sigurnog} gosta: TTC1 se omogućava nakon spremanja konteksta \textit{Nesigurnog} gosta
   i zaustavlja nakon što se \textit{Sigurni} kontekst obnovi.}
-  \item{Vrijeme od početka izvođenja \textit{Sigurnog} zadatka do ulaska u raspoređivač LTZVisora: TTC1 se omogući
+  \item{Vrijeme od početka izvođenja \textit{Sigurnog} zadatka do ulaska u raspoređivač LTZVisora: TTC1 se omogućava
   nakon poziva LTZVisorovog raspoređivača i zaustavlja se na ulasku u SMC obradu.}
 \end{enumerate}
-Testiranja su provedena na procesorima koji rade na $667 MHz$. Za svako mjerenje određena je maksimalna vrijednost
+Testiranja su provedena na procesorima koji rade na $667~MHz$. Za svako mjerenje određena je maksimalna vrijednost
 koja se je dobila mjerenjem za oba slučaja. Svako mjerenje se je ponovilo 10 puta te je od 10 slučajeva izabrana
 maksimalna dobivena vrijednost. U svakom mjerenju se je prikupilo 400 uzoraka, osim za prvi slučaj u kojem se je u
 obzir uzelo 200 uzoraka iz razloga što se prilikom inicijalizacije \textit{Nesigurnog} gosta SMC pozove oko 200 puta.
 Rezultati su prikazani slikom \ref{max_perf}. Koordinatna
 os $x$ sadrži brojeve koji odgovaraju rednim brojevima prethodno nabrojenih tipova mjerenja, a $y$ os sadrži vremensko
-trajanje izvođenja određenog koda u $\mu s$.
+trajanje izvođenja određenog dijela koda u $\mu s$.
 
 \begin{figure}[H]
   \begin{tikzpicture}
@@ -1874,7 +1876,7 @@ Ponavljanjem mjerenja, bilo je moguće uočiti i da se maksimalne vrijednosti sv
 SMP LTZVisor rješenja. Npr. kod mjerenja potrebnog za priznanje FIQ prekida, zabilježene maksimalne vrijednosti od 10
 mjerenja su u rasponu od $7.532~\mu s$ do $8.757~\mu s$. Ovakav rezultat mjerenja ukazuje na određenu mjeru
 nepredvidljivosti, koja bi mogla biti uzrokovana \textit{cacheom}, TLB-ovima, predviđanjem grananja ili uranjenim
-dohvatom \engl{prefetch}. Svim ovim resursima je zajedničko da je, ako su resursi omogućeni, potrebna oprezna implementacija
+dohvatom \engl{prefetch} podataka i instrukcija. Svim ovim resursima je zajedničko da je, ako su resursi omogućeni, potrebna oprezna implementacija
 kod korištenja više procesora u sustavu.
 Kako su \textit{cache}, MMU i predviđanje grananja isključeni u \textit{Sigurnom} gostu, izvor
 problema bi mogao biti uranjeni dohvat. Uranjenim dohvatom se upravlja ACTLR registrom koji je zajednički
@@ -2105,7 +2107,8 @@ izvode jednako testiranje te se izvode paralelno. Rezultati za $2~kB$, $128~kB$ 
 \end{figure}
 
 Na prikazanim rezultatima, vidi se da SMP Linux u SMP LTZVisoru ima gotovo dvostruko bolje performanse od Linuxa na
-jednoj jezgri (može napraviti dvostruko više pristupa memoriji od Linuxa na jednoj jezgri u jednakoj jedinici vremena).
+jednoj jezgri (može napraviti dvostruko više pristupa memoriji od Linuxa na jednoj jezgri u jednakoj jedinici vremena)
+za testiranje za $2~kB$.
 Isto tako, vidi se da porastom testirane memorije performanse obje verzije Linuxa padaju. Takvo ponašanje ima smisla zato
 što Linux koristi L1 i L2 \textit{cache} memorije. U dokumentaciji \textit{bw\_mem} stoji kako navedeni alat alocira
 dvostruko više memorije od zadane. Dakle, ako se je za prvi slučaj zadalo $2~kB$, \textit{bw\_mem} alocira ukupno $4~kB$
@@ -2113,7 +2116,7 @@ za jedan proces, dok za dva procesa sveukupno zauzme $8~kB$. Navedenih $8~kB$ st
 (L1 od $32~kB$ i L2 od $512~kB$). Poznato je da je \textit{cache} brza memorija te su zbog toga navedeni rezultati
 očekivani (povećanjem testirane memorije, povećava se i količina memorije koja se ne nalazi u \textit{cacheu}). Isto tako,
 za prvi slučaj je logično i da će SMP Linux biti vrlo visokih performansi obzirom na to da svaki procesor implementira
-vlastitu L1 \textit{cache} memoriju od $32~kB$. Pad performansi SMP Linuxa u odnosu Linuxa na jednoj jezgri za memoriju
+vlastitu L1 \textit{cache} memoriju od $32~kB$. Pad performansi SMP Linuxa u odnosu na Linux na jednoj jezgri za memoriju
 veliku $4~MB$ je također razumljivo iz razloga što za razliku od L1 \textit{cache} memorije, L2 \textit{cache} memorija
 je dijeljena između procesora te je na takvu količinu memorije vjerojatnije da će biti potrebno više operacija rukovanja
 L2 \textit{cache} memorijom što smanjuje performanse sustava.\\
@@ -2121,42 +2124,47 @@ Idući rezultati se odnose na latenciju (trajanje) aritmetičkih operacija koji 
 testa. Test izvodi mjerenja nad raznim vrstama operacija: zbrajanje, množenje i dijeljenje različitih vrsta podataka
 (cijelih i realnih brojeva od 4 ili 8 bajta). Uz navedene operacije, test služi i za određivanje trajanja operacija
 s vektorima u kojima se vidi jedina razlika između Linuxa za jednu jezgru i SMP Linuxa. Prilikom izvođenja testa,
-VFP jedinica je omogućena. Tablica \ref{vect_ops} prikazuje rezultate mejerenja operacija nad vektorima.
+VFP jedinica je omogućena. Tablica \ref{vect_ops} prikazuje rezultate mjerenja operacija nad vektorima.
 
 \begin{table}[H]
   \centering
   \caption{Trajanje operacija nad vektorima}
   \label{vect_ops}
-  \begin{tabular}{|| p{6cm} | p{3cm} | p{3cm} ||}
+  \begin{tabular}{|| p{4cm} | p{3.5cm} | p{3.5cm} ||}
     \hline
-    \textbf{Operacija nad vektorima} & \textbf{Trajanje u~Linuxu} & \textbf{Trajanje u SMP Linuxu} \\
+    \textbf{Duljina podataka} & \textbf{Trajanje u~Linuxu} & \textbf{Trajanje u SMP Linuxu} \\
     \hline\hline
-    Podaci duljine 4 bajta & $41.74~ns$ & $20.94~ns$\\
+    4 bajta & $41.74~ns$ & $20.94~ns$\\
     \hline
-    Podaci duljine 8 bajta & $70.84~ns$ & $35.58~ns$\\
+    8 bajta & $70.84~ns$ & $35.58~ns$\\
     \hline
   \end{tabular}
 \end{table}
 
-Iz rezultata je vidljivo kako SMP Linux daje dvostruko bolje rezultate od Linuxa građenog za jednu jezgru.
+Iz rezultata je vidljivo kako SMP Linux daje dvostruko bolje rezultate od Linuxa građenog za jednu jezgru, što ima smisla
+jer korištenjem dva procesora sustava, povećava se i ukupna radna frekvencija.
 
 \chapter{Budući rad}
 Da bi SMP LTZVisor rješenje bilo kvalitetno, potrebno je ukloniti mane opisane implementacije koje su već sada uočene.
 Prva mana se odnosi na obradu FIQ prekida koji se može pojaviti na CPU1. Trenutno rješenje ne nudi nikakvu obradu FIQ-a
-ako se pojavi na sekundarnoj jezgri te bi bilo dobro poželjno da FIQ bude obrađen. Daljnjim istraživanjem SMP LTZVisor
+ako se pojavi na sekundarnoj jezgri te bi bilo poželjno da FIQ bude obrađen. Daljnjim istraživanjem SMP LTZVisor
 rješenja moći će se utvrditi koji mehanizam rješavanja pojave FIQ-a na CPU1 bi bio najbolji. Sljedeće što je potrebno
-za uvjerljivu demonstraciju virtualizacije pomoću LTZVisora je implementirati SMP LTZVisor s FreeRTOS-om kao
-\textit{Sigurni} gost i SMP Linuxom kao \textit{Nesigurni} gost. Nakon što bi se navedeno implementiralo, bilo bi
+za uvjerljivu demonstraciju virtualizacije pomoću LTZVisora je implementirati SMP LTZVisor s FreeRTOS
+\textit{Sigurnim} gostom i SMP Linuxom \textit{Nesigurnim} gostom. Nakon što bi se navedeno implementiralo, bilo bi
 potrebno i ponoviti mjerenja koja procjenjuju performanse SMP LTZVisora. Isto tako, prije ponavljanja mjerenja, trebalo
-bi obratiti pažnju na uklanjanje izvora nepredvidljivosti koji je prikazan u prethodnom poglavlju. Jedan ključan element
+bi obratiti pažnju na uklanjanje izvora nepredvidljivosti koji je prikazan u prethodnom poglavlju. \\
+Jedan ključan element
 u virtualizaciji je komunikacija između virtualnih strojeva. Ovim radom je prikazan jednostavan model kojeg bi trebalo
 proširiti. Za te potrebe, trebalo bi proširiti implementirani sustavski poziv koji generira SMC tako da bi se
 \textit{Sigurnom} gostu moglo predati i više od jednog podatka (npr. uz SMC, LTZVisoru predati i dodatne parametre koji
 bi označavali početnu adresu podataka i broj podataka koje \textit{Sigurni} gost treba pročitati). Uz to, bilo poželjno
-i da komunikacija bude dvosmjerna, tako da i \textit{Sigurni} gost može proslijediti poruku \textit{Nesigurnom} gostu.\\
+i da komunikacija bude dvosmjerna, tako da i \textit{Sigurni} gost može proslijediti poruku \textit{Nesigurnom} gostu.
+Uz to, trebalo bi implementirati odgovarajući sinkronizacijski mehanizam koji će usmjeravati poruke odgovarajućem CPU-u
+\textit{Nesigurnog} gosta.
 Predstavljeno rješenje SMP LTZVisora pripada jednom od modela predloženih od ARM-a za razvoj \textit{TrustZone} aplikacija.
 Drugi model je kompleksnije za implementirati, ali takav model bi imao poseban doprinos \textit{Nesigurnom} gostu koji
-bi takvim modelom imao mogućnost poboljšati efikasnost raspoređivanja zadataka.
+bi takvim modelom imao mogućnost poboljšati efikasnost raspoređivanja zadataka te implementacija takvog modela također
+spada u budući rad.
 
 \chapter{Zaključak}
 Ovim radom bilo je prikazano kako \textit{TrustZone} doprinosi izolaciji između operacijskih sustava te kako se
@@ -2172,9 +2180,11 @@ ovakve implementacije u odnosu na originalni LTZVisor. Dakle, bilo je prikazano 
 operacije s vektorima što ga čini dobrim rješenjem za aplikacije koje zahtijevaju izolaciju između dva operacijska
 sustava uz primjenu za obradu signala. Isto tako, bilo je prikazano kako SMP LTZVisor može pristupati memoriji efikasnije
 od originalnog LTZVisora. Iako je navedeno istina, vidjelo se i da to nije točno u svim slučajevima, što ukazuje na to
-da je rješenje potrebno detaljno poznavati prije nego se krene u implementaciju neke od primjena. SMP LTZVisor
-je još uvijek nepotpuno rješenje i ima prostora za raznim poboljšanjima, ali je dovoljno dobro da bude temelj za
-daljnja istraživanja, nadogradnju i optimizaciju.
+da je rješenje potrebno detaljno poznavati prije nego se krene u implementaciju neke od primjena. Još jedna ključna prednost
+SMP LTZVisora je da \textit{Nesigurni} gost ima mogućnost za obradu IRQ prekida za vrijeme izvođenja \textit{Sigurnog}
+gosta, što znatno olakšava opterećenje \textit{Nesigurnog} gosta.
+SMP LTZVisor je još uvijek nepotpuno rješenje i ima prostora za raznim poboljšanjima, ali je dovoljno dobro da bude temelj
+za daljnja istraživanja, nadogradnju i optimizaciju.
 
 % \begin{appendix}
 % \chapter{}
@@ -2183,21 +2193,46 @@ daljnja istraživanja, nadogradnju i optimizaciju.
 \bibliography{literatura}
 \bibliographystyle{unsrtnat}
 
+\title{Proširenje LTZVisor monitora virtualnih strojeva \\za višejezgrene procesore}
 \begin{sazetak}
-\textit{TrustZone} je sigurnosna ekstenzija koja već dugi niz godina pruža sigurnosnu podršku Cortex-A procesorima.
+\textit{TrustZone} je sigurnosna ekstenzija ARM-a koja već dugi niz godina pruža sigurnosnu podršku Cortex-A procesorima.
 Navedena ekstenzija pruža koncept \textit{Sigurnog} \engl{Secure} i \textit{Nesigunog} \engl{Non-Secure} svijeta.
 Svaki svijet se može izvršavati na jednom procesoru metodom vremenske podijele, što omogućava implementaciju
-dvaju operacijskih sustava.
+dvaju operacijskih sustava. LTZvisor (\textit{Leightweight TrustZone hypervisor}) je monitor virtualnih strojeva koji
+iskorištava \textit{TrustZone} ekstenziju. Namjena LTZVisora je da implementira gotovo rješenje za
+upravljanje s resursima potrebnim operacijskom sustavu koji se izvršava u \textit{Sigurnom} svijetu i resursima
+potrebnima operacijskom sustavu \textit{Nesigurnog} svijeta. Početna verzija LTZVisora bila je namijenjena jednom
+procesoru te se je ubrzo razvila i AMP \engl{Asymmetric Multiprocessing} verzija LTZVisora koja omogućava da se
+\textit{Nesigurni} gost i \textit{Sigurni} gost izvode paralelno (bez potrebe za metodom vremenske podijele), svaki na
+svojoj jezgri.
+Ovaj rad po prvi puta predstavlja SMP \engl{Symmetric Multiprocessing} LTZVisor verziju koja, prema preporukama ARM-a,
+implementira rješenje u kojem se \textit{Sigurni} gost izvršava na jednoj jezgri, a \textit{Nesigurni} gost u SMP
+konfiguraciji. U radu je opisan jednostavan model komunikacije za potrebe demonstracije funkcionalnog rješenja
+SMP LTZVisora, gdje se jasno pokazuje kako \textit{Nesigurni} gost radi u SMP konfiguraciji. Na kraju, dana su
+razna mjerenja za evaluaciju implementiranog rješenja.
 
-\kljucnerijeci{Ključne riječi, odvojene zarezima.}
+\kljucnerijeci{\textit{TrustZone}, \textit{Siguran}, \textit{Nesiguran}, LTZVisor, AMP, SMP}
 \end{sazetak}
 
 % TODO: Navedite naslov na engleskom jeziku.
+\newpage
 \engtitle{Extending LTZVisor Hypervisor to Multicore Processors}
 \begin{abstract}
-Abstract.
+For a long time, ARM company provides security support by implementing TrustZone security extensions in Cortex-A processors.
+The security extension enables the concept of the Secure and Non-Secure world. Each of the worlds can be executed on one
+processor in time-sliced fashion. This fact can be used to implement two operating systems, each for one world. LTZVisor
+(Leightweight TrustZone hypervisor) is a simple hypervisor which exploits TrustZone security extensions. Implementation
+of the LTZVisor is a complete solution which enables managing of resources needed by Secure and Non-Secure virtual machines.
+LTZVisor was originally implemented for one core, but soon after implementing original LTZVisor, AMP (Asymmetric
+Multiprocessing) version of LTZVisor was introduced. AMP LTZVisor enabled the possibility of parallel execution of
+Secure and Non-Secure virtual machines, each machine for one core. This thesis, for the first time, introduces SMP
+(Symmetric Multiprocessing) version of LTZVisor, which follows ARM's recommendations for implementation od SMP TrustZone
+applications. SMP LTZVisor enables possibility to execute SMP software in Non-Secure world, while Secure world still
+executes on one core. The thesis introduces a simple communication model with purpose of demonstrating functional
+SMP LTZVisor solution where it can clearly be seen that Non-Secure executes in SMP fashin. To evaluate implemented
+solution, SMP LTZVisor was put under a range of tests to show advantages and drawbacks of using SMP LTZVisor.
 
-\keywords{Keywords.}
+\keywords{\textit{TrustZone}, \textit{Secure}, \textit{Non-Secure}, LTZVisor, AMP, SMP}
 \end{abstract}
 
 \end{document}
