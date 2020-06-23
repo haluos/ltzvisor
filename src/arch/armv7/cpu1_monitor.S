@@ -318,10 +318,18 @@ cpu1_communicate:
 	bl flush_icache_and_dcache
   bl cachel2_invalidate
   bl cachel2_clean
-	mov r0, #10
+  pop {r0-r12,lr}
+	@ push {r3}
+  @ ldr r3, =message_address
+  @ str r1, [r3]
+  @ ldr r3, =messages
+  @ str r2, [r3]
+  @ pop {r3}
+	push {r0-r2,lr}
+  mov r0, #10
   mov r1, #1
   bl interrupt_IPI_generate
-  pop {r0-r12,lr}
+  pop {r0-r2,lr}
   @ cpu1_call_c_function_arg print_message
   @ cpu1_exception_return_arg
   movs pc, lr

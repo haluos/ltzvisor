@@ -2394,7 +2394,7 @@ TCB_t *pxTCB;
 	TCB_t* pxTCB;
 
 		/* Task names will be truncated to configMAX_TASK_NAME_LEN - 1 bytes. */
-		configASSERT( strlen( pcNameToQuery ) < configMAX_TASK_NAME_LEN );
+		configASSERT( strlen((char *) pcNameToQuery ) < configMAX_TASK_NAME_LEN );
 
 		vTaskSuspendAll();
 		{

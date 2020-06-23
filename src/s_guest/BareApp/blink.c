@@ -44,16 +44,19 @@
  * (#) $id: blink.c 27-09-2017 s_pinto$
 */
 
-#include<hw_zynq.h>
-#include<printk.h>
+#include <hw_zynq.h>
+#include <printk.h>
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
 #include "task.h"
+#include <FreeRTOS_s_isr.h>
+#include <communicate.h>
 
 void led_blink( void * pvParameters );
 void vHwSetup(void);
 void secure_yield( void * pvParameters );
 void setup_ttc_context (void);
+void vSetupApp (void);
 
 uint32_t toggle;
 extern uint8_t toggle_mode;
@@ -73,20 +76,20 @@ int main() {
 	measures = 0;
 	max_count = 0;
 
+	vSetupApp();
+
 	/** Initialize hardware */
 	// hw_init();
 	// ttc_init(TTC1,TTCx_2,INTERVAL);
 	// vHwSetup();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
-	// extern uint32_t _heap;
 
 	/** Generate tick every 1s */
 	// tick_set(100000);
 
 	/* Calling Blinking Task (LED blink at 1s) */
 	// led_blink((void*)0);
-	// printk("led blink addr: 0x%x\n", &_heap);
 	xTaskCreate( led_blink, "task", 700, NULL, 2, NULL );
 	// xTaskCreate( secure_yield, "task", 1024, NULL, 1, NULL );
 	vTaskStartScheduler();
@@ -106,7 +109,7 @@ int main() {
 void led_blink( void * parameters ){
 	/** 4GPIO (LED) in FPGA fabric */
 	static uint32_t *ptr = (uint32_t *) 0x41200000;
-	unsigned int i = 0;
+	// unsigned int i = 0;
 
 	for( ;; ){
 		if(toggle_mode)
@@ -161,7 +164,7 @@ void setup_ttc_context (void)
 
 void print_ttc_value (void)
 {
-	float res;
+	// float res;
 	if(measures < 500)
 	{
 		end_counter_value = ttc_read_counter(TTC1, TTCx_2);
@@ -174,4 +177,11 @@ void print_ttc_value (void)
 		// average_value =(unsigned int) counts/measures;
 		printk("Complete value of %d counts: %d\nMax value: %d\n", measures, counts, max_count);
 	}
+}
+
+void vSetupApp (void)
+{
+	FreeRTOS_InitFIQTable();
+	FreeRTOS_RegisterHandler(CPU0_MESSAGE_INT, sgi_communicate_handler);
+	FreeRTOS_RegisterHandler(CPU1_MESSAGE_INT, cpu1_sgi_communicate_handler);
 }

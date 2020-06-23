@@ -35,6 +35,7 @@
 #include "xscugic.h"
 #include "gic.h"
 #include "zynq_ttc.h"
+#include <FreeRTOS_s_isr.h>
 
 #define XSCUTIMER_CLOCK_HZ ( XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 2UL )
 extern uint32_t printk(const char *fmt, ...);
@@ -49,138 +50,52 @@ extern uint32_t printk(const char *fmt, ...);
  * the application writer to override the default implementation by providing
  * their own implementation in the application itself.
  */
-void vApplicationAssert( const char *pcFileName, uint32_t ulLine ) __attribute__((weak));
+void vApplicationAssert( char *pcFileName, uint32_t ulLine ) __attribute__((weak));
 void vApplicationTickHook( void ) __attribute__((weak));
 void vApplicationIdleHook( void ) __attribute__((weak));
 void vApplicationMallocFailedHook( void ) __attribute((weak));
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName ) __attribute__((weak));
-
-/* Timer used to generate the tick interrupt. */
-static XScuTimer xTimer;
-XScuGic xInterruptController; 	/* Interrupt controller instance */
 /*-----------------------------------------------------------*/
 
 void FreeRTOS_SetupTickInterrupt( void )
 {
-BaseType_t xStatus;
-extern void FreeRTOS_Tick_Handler( void );
-XScuTimer_Config *pxTimerConfig;
-XScuGic_Config *pxGICConfig;
-const uint8_t ucRisingEdge = 3;
-// printk("Init tick\n");
-
-	/* This function is called with the IRQ interrupt disabled, and the IRQ
-	interrupt should be left disabled.  It is enabled automatically when the
-	scheduler is started. */
-
-	/* Ensure XScuGic_CfgInitialize() has been called.  In this demo it has
-	already been called from prvSetupHardware() in main(). */
-	// pxGICConfig = XScuGic_LookupConfig( XPAR_SCUGIC_SINGLE_DEVICE_ID );
-	// xStatus = XScuGic_CfgInitialize( &xInterruptController, pxGICConfig, pxGICConfig->CpuBaseAddress );
-	// configASSERT( xStatus == XST_SUCCESS );
-	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
-
-	/* The priority must be the lowest possible. */
-	// interrupt_priority_set(XPAR_XTTCPS_1_INTR, 6);
-	// XScuGic_SetPriorityTriggerType( &xInterruptController, XPAR_SCUTIMER_INTR, portLOWEST_USABLE_INTERRUPT_PRIORITY << portPRIORITY_SHIFT, ucRisingEdge );
-
-	/* Install the FreeRTOS tick handler. */
-	// xStatus = XScuGic_Connect( &xInterruptController, TTC0_TTCx_2_INTERRUPT, (Xil_ExceptionHandler) FreeRTOS_Tick_Handler, ( void * ) &xTimer );
-	// configASSERT( xStatus == XST_SUCCESS );
-	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
-
-	/* Initialise the timer. */
-	// pxTimerConfig = XScuTimer_LookupConfig( XPAR_SCUTIMER_DEVICE_ID );
-	// xStatus = XScuTimer_CfgInitialize( &xTimer, pxTimerConfig, pxTimerConfig->BaseAddr );
-	// configASSERT( xStatus == XST_SUCCESS );
-	// ( void ) xStatus; /* Remove compiler warning if configASSERT() is not defined. */
-	// ttc_init(TTC0,TTCx_2,INTERVAL);
-
-	/* Enable Auto reload mode. */
-	// XScuTimer_EnableAutoReload( &xTimer );
-
-	/* Ensure there is no prescale. */
-	// XScuTimer_SetPrescaler( &xTimer, 0 );
-
-	/* Load the timer counter register.
-	 * The Xilinx implementation of generating run time task stats uses the same timer used for generating
-	 * FreeRTOS ticks. In case user decides to generate run time stats the timer time out interval is changed
-	 * as "configured tick rate * 10". The multiplying factor of 10 is hard coded for Xilinx FreeRTOS ports.
-	 */
-// #if (configGENERATE_RUN_TIME_STATS == 1)
-// 	XScuTimer_LoadTimer( &xTimer, XSCUTIMER_CLOCK_HZ / (configTICK_RATE_HZ * 10) );
-// #else
-// 	XScuTimer_LoadTimer( &xTimer, XSCUTIMER_CLOCK_HZ / configTICK_RATE_HZ );
-// #endif
-
-	/* Start the timer counter and then wait for it to timeout a number of
-	times. */
-	// XScuTimer_Start( &xTimer );
-
-	/* Enable the interrupt for the xTimer in the interrupt controller. */
-	// XScuGic_Enable( &xInterruptController, TTC0_TTCx_2_INTERRUPT );
-
-	/* Enable the interrupt in the xTimer itself. */
+	extern void FreeRTOS_Tick_Handler( void );
 	ttc_init(TTC0,TTCx_2,INTERVAL);
 
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
-	// interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 0x7F & (portLOWEST_USABLE_INTERRUPT_PRIORITY << portPRIORITY_SHIFT));
 	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 31);
+	FreeRTOS_RegisterHandler(TTC0_TTCx_2_INTERRUPT, (FreeRTOS_SHandler) FreeRTOS_Tick_Handler);
 
 	FreeRTOS_ClearTickInterrupt();
 	/* Set tick every 10 ms */
-	ttc_request(TTC0, TTCx_2, 10000);
+	ttc_request(TTC0, TTCx_2, 1000000/configTICK_RATE_HZ);
 	ttc_enable(TTC0, TTCx_2);
-	// XScuTimer_EnableInterrupt( &xTimer );
 }
 /*-----------------------------------------------------------*/
 
 void FreeRTOS_ClearTickInterrupt( void )
 {
-	// XScuTimer_ClearInterruptStatus( &xTimer );
 	ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
-	// interrupt_clear(TTC0_TTCx_2_INTERRUPT,0);
-	// ttc_interrupt_clear(TTC0_TTCx_2_INTERRUPT);
-	// interrupt_clear(TTC0_TTCx_2_INTERRUPT,0);
 }
 /*-----------------------------------------------------------*/
 
 void vApplicationIRQHandler( uint32_t ulICCIAR )
 // void vApplicationFPUSafeIRQHandler(uint32_t ulICCIAR)
 {
-extern const XScuGic_Config XScuGic_ConfigTable[];
-static const XScuGic_VectorTableEntry *pxVectorTable = XScuGic_ConfigTable[ XPAR_SCUGIC_SINGLE_DEVICE_ID ].HandlerTable;
-uint32_t ulInterruptID;
-const XScuGic_VectorTableEntry *pxVectorEntry;
-extern void FreeRTOS_Tick_Handler( void );
+	uint32_t ulInterruptID;
 
 	/* The ID of the interrupt is obtained by bitwise anding the ICCIAR value
 	with 0x3FF. */
 	ulInterruptID = ulICCIAR & 0x3FFUL;
-	if (ulInterruptID == TTC0_TTCx_2_INTERRUPT)
-	{
-		FreeRTOS_Tick_Handler();
-		return;
-	}
-	if (ulInterruptID == TTC1_TTCx_2_INTERRUPT)
-	{
-		ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
-		return;
-	}
-	if( ulInterruptID < XSCUGIC_MAX_NUM_INTR_INPUTS )
-	{
-		/* Call the function installed in the array of installed handler functions. */
-		pxVectorEntry = &( pxVectorTable[ ulInterruptID ] );
-		pxVectorEntry->Handler( pxVectorEntry->CallBackRef );
-	}
+	FreeRTOS_CallSHandler(ulInterruptID);
 }
 /*-----------------------------------------------------------*/
 
 /* This version of vApplicationAssert() is declared as a weak symbol to allow it
 to be overridden by a version implemented within the application that is using
 this BSP. */
-void vApplicationAssert( const char *pcFileName, uint32_t ulLine )
+void vApplicationAssert( char *pcFileName, uint32_t ulLine )
 {
 volatile uint32_t ul = 0;
 volatile const char *pcLocalFileName = pcFileName; /* To prevent pcFileName being optimized away. */
@@ -286,7 +201,7 @@ void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
 			asm volatile("smc #0");
 			ttc_disable(TTC1,TTCx_2);
 			// printk("Disable TTC1\n");
-			vTaskStepTick(xSleepTime+1);
+			vTaskStepTick(xSleepTime);
 		}
 		// printk("Reset TTC0\n");
 		ttc_request(TTC0, TTCx_2, 1 * 10000);

@@ -468,6 +468,12 @@ communicate:
   pop {r0-r12,lr}
   @ call_c_function_arg print_message
   @ exception_return_arg
+  @ push {r3}
+  @ ldr r3, =message_address
+  @ str r1, [r3]
+  @ ldr r3, =messages
+  @ str r2, [r3]
+  @ pop {r3}
   push {r0-r2,lr}
   mov r0, #9
   mov r1, #1
