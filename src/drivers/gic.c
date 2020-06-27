@@ -322,7 +322,7 @@ uint32_t interrupt_priority_set(uint32_t interrupt, uint32_t priority){
 	priority &= 0xF;
 	/* Get register of interrupt */
 	word = interrupt / 4;
-	bit_shift = (interrupt % 4) * 8 + 3;
+	bit_shift = (interrupt % 4) * 8 + 4;
 
 	/* Get priority register */
 	temp = old_priority = int_dist->ICDIPRx[word];

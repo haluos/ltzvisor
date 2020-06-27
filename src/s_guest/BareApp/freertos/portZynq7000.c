@@ -64,7 +64,7 @@ void FreeRTOS_SetupTickInterrupt( void )
 
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
-	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 31);
+	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 30);
 	FreeRTOS_RegisterHandler(TTC0_TTCx_2_INTERRUPT, (FreeRTOS_SHandler) FreeRTOS_Tick_Handler);
 
 	FreeRTOS_ClearTickInterrupt();
