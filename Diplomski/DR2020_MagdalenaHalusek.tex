@@ -37,7 +37,7 @@
 \newacronym{jtag}{JTAG}{Joint Test Action Group}
 \newacronym{qspi}{QSPI}{Quad Serial Peripheral Interface}
 \newacronym{wfe}{WFE}{Wait For Event}
-\newacronym{fsbl}{FSBL}{FirstStage Bootloader}
+\newacronym{fsbl}{FSBL}{First Stage Bootloader}
 \newacronym{ssbl}{SSBL}{Second Stage Bootloader}
 \newacronym{tlb}{TLB}{Translation Look-aside Buffers}
 \newacronym{rsapss}{RSA-PSS}{Rivest, Sharim andAdleman - Probabilistic Signature Scheme}
@@ -303,7 +303,7 @@ služi za signaliziranje prihvaćanja prekida. Prihvaćanje prekida se izvodi č
 Acknowledge Register}). Mogućnosti \gls{cpu} sučelja su sljedeće:
 \begin{itemize}
   \item{omogućavanje signaliziranja prekida procesoru}
-  \item{potvrde prekida}
+  \item{potvrda prekida}
   \item{označavanje kraja obrade prekida}
   \item{postavljanje maskiranja prioriteta prekida}
   \item{definiranje postupka istiskivanja za procesor}
@@ -315,11 +315,11 @@ ARM implementira koprocesorsku podršku koja proširuje funkcionalnosti ARM proc
 CP0~-~CP15 \cite{arch_man}. Posebne namjene koprocesora su:
 \begin{itemize}
   \item{CP15: ima funkcionalnost kontrole nad sustavom, služi za identifikaciju arhitekture i mogućnosti platforme. Drži
-  kontrolu, status i konfiguraciju sustava}
+  kontrolu, status i konfiguraciju sustava.}
   \item{CP14: sadrži sustav za ispitivanje, kontrolu nad Thumb okruženjem izvođenja koda i konfiguraciju izvršavanja Java
-  bajt kodova}
-  \item{CP10 i CP11: zajedno podržavaju \textit{floating-point} operacije i operacije s vektorima}
-  \item{CP8, CP9, CP12 i CP13: rezervirani}
+  bajt kodova.}
+  \item{CP10 i CP11: zajedno podržavaju \textit{floating-point} operacije i operacije s vektorima.}
+  \item{CP8, CP9, CP12 i CP13: rezervirani.}
   \item{CP0~-~CP7: sadrže informacije specifične za proizvođače.}
 \end{itemize}
 Svi registri su duljine 32 bita. Pristup koprocesorskim registrima se izvodi pomoću MCR i MRC instrukcija, gdje je MCR
@@ -510,7 +510,7 @@ upiše adresa koja je jednaka početnoj adresi \gls{cpu}1 sekcije. Tok programa 
 \chapter{\textit{TrustZone} sigurnosna ekstenzija Cortex-A platforma}
 Potreba za sigurnošću ugradbenih računala sve više raste zbog rastuće vrijednosti podataka pohranjenih na njima kao
 što su to bankovni računi ili sinkronizirane \textit{e-mail} adrese \cite{tz_wp}. Povećanjem vrijednosti podataka pohranjenih na
-uređaje povećava vjerojatnost napada na uređaj. Cilj \textit{TrustZone} ekstenzije je pružiti robusno sigurnosno okruženje
+uređaje povećava se vjerojatnost napada na uređaj. Cilj \textit{TrustZone} ekstenzije je pružiti robusno sigurnosno okruženje
 uređajima bogatih operacijskih mogućnosti, integrirajući zaštitne mjere u ARM-ov procesor, sabirnički sustav i periferijski
 sustav. Kako bi se odredile mjere zaštite, potrebno je odrediti napade od kojih se želi zaštititi, odnosno koji resursi
 moraju biti zaštićeni.
@@ -674,7 +674,7 @@ ARM preporučuje korištenje prekida kao komunikaciju između procesora u sljede
 Jedan fizički procesor i njegova dva virtualna procesora čine jednu grupu procesora. Svaka grupa može biti konfigurirana za
 korištenje u \gls{amp} ili \gls{smp} modelu. Kod \gls{smp} modela, korištenje L1 \textit{cache} memorije na oba procesora je koherentno što
 je omogućeno \gls{scu} jedinicom. Prilikom razvoja \gls{amp} aplikacije, mora se ručno voditi briga o koherenciji (prazniti \textit{cache}
-gdje je potrebno). Prijelaz između svjetova na jednom procesoru je neovisan o drugim procesorima. Za povećanje sigurnosti
+gdje je potrebno). Prijelaz između dva svijeta na jednom procesoru je neovisan o drugim procesorima. Za povećanje sigurnosti
 prilikom implementacije \textit{Sigurnog} softvera u višeprocesorskim sustavima, preporučuje se da \textit{Sigurni} softver ne iskorištava
 mogućnosti više procesora, iako \textit{Nesigurni} softver možda i iskorištava. Razlog tome je kompleksnost implementacije što povlači
 veću vjerojatnost pogreške, odnosno sustav postaje ranjiviji. Ako \textit{Sigurni} softver ne koristi višeprocesorske mogućnosti,
@@ -769,7 +769,7 @@ Memorijska virtualizacija omogućena hardverom je ostvarena \gls{mmu} jedinicom 
 zadužena za povezivanje gost virtualne s gost fizičkom adresom i gost fizičke s domaćin (monitor virtualnih strojeva) fizičkom
 adresom. Opisana \gls{mmu} je temelj virtualizacije koja omogućava izvođenje nemodificiranih OS-a i izolaciju između njih. ZedBoard
 implementira \gls{mmu} s jednom razinom adresnih prevođenja što onemogućava hardversku memorijsku virtualizaciju na način koji je
-opisan. Ključnu ulogu u memorijskoj virtualizaciji na ZedBoardu ima \textit{TrustZone} jedinica \gls{tzasc} koja omogućava dijeljenje
+opisan. Ključnu ulogu u memorijskoj virtualizaciji na ZedBoardu ima \gls{tzasc} \textit{TrustZone} jedinica koja omogućava dijeljenje
 memorije u različite segmente. Navedena jedinica omogućava konfiguriranje sigurnosnog stanja memorijskih segmenata platforme
 što omogućava izolaciju između \textit{Sigurnog} i \textit{Nesigurnog} svijeta. Konfiguracija memorijskih segmenata je moguća s određenom
 granulacijom, za ZedBoard je to 64~MB, pomoću SLCR (engl. \textit{System Level Control Register}) registra koji je dostupan
@@ -862,7 +862,7 @@ podešavanju sigurnosti uređaja (npr. \gls{ttc}, \gls{uart}, globalno brojilo),
 segmenata, sigurnosti \gls{dma}, \textit{Etherneta}, \gls{ocm}...) i upravljačke programe uređaja koji se koriste (\gls{ttc} i \gls{uart}). Isto tako,
 sadrži i inicijalizaciju \gls{gic}-a. Slijedeći direktorij, \textit{core}, sadrži jezgru LTZVisora koja je zadužena za postavljanje
 početnog konteksta \textit{Nesigurnog} gosta i predavanje kontrole \textit{Sigurnom} gostu. \textit{drivers} direktorij sadrži upravljački
-program \gls{gic}-a, a \textit{lib} funkcije za rukovanje znakovnim nizovima i pristup registrima. Slika \textit{Nesigurnog} gosta se gradi
+program \gls{gic}-a, a \textit{lib}, funkcije za rukovanje znakovnim nizovima i pristup registrima. Slika \textit{Nesigurnog} gosta se gradi
 odvojeno od \textit{Sigurnog} gosta i LTZVisora, koji se izgrađuju zajedno, te direktorij \textit{ns\_guest} sadrži kod za uključivanje
 slike \textit{Nesigurnog} gosta u sliku cjelokupnog sustava i atribute potrebne za pokretanje \textit{Nesigurnog} gosta. Zadnji,
 \textit{s\_guest}, direktorij sadrži kod \textit{Sigurnog} gosta i tablicu prekidnih vektora \textit{Sigurnog} gosta.
@@ -962,7 +962,7 @@ Sadržaj datotečnog podsustava se najčešće odnosi na:
 
 \newpage
 \subsection{Jezgra}
-Izgradnje jezgre se sastoji od dva sustava:
+Izgradnja jezgre se sastoji od izgradnje dva sustava:
 \begin{itemize}
   \item{sustav koji je neovisan o arhitekturi za koju se jezgra gradi (raspoređivač procesa, sučelje sustavskih poziva,
   upravljački programi koji su neovisni o arhitekturi i mrežni podsustav)}
@@ -994,7 +994,7 @@ jezgra nije primila valjane ulazne argumente, izvršavanje koda jezgre se prekid
 \textit{PetaLinux} je skup alata koji olakšavaju izgradnju slike Linuxa. Sadržava \gls{dtc} alat za prevođenje \textit{Device Tree}
 strukture, za izgradnju datotečnog podsustava koristi \textit{BusyBox} te jezgru Xilinxovog Linuxa preuzima s \textit{GitHuba}.
 \textit{PetaLinux} ima više verzija koje su dostupne za instalaciju, a u ovom radu se je koristio \textit{PetaLinux} 2019.1 koji
-koristi verziju Linuxa 4.19. Pomoću \textit{PetaLinuxa} sučelja moguće je konfigurirati jezgru preko izbornika koji se poziva
+koristi verziju Linuxa 4.19. Pomoću \textit{PetaLinux} sučelja moguće je konfigurirati jezgru preko izbornika koji se poziva
 naredbom \textit{petalinux-config -c kernel}. Iz sučelja je moguće dodati ili ukloniti razne upravljačke programe uređaja,
 module ili mogućnosti jezgre. Kako \textit{PetaLinux} koristi Xilinxov Linux, izbornik sadrži mogućnosti dodavanja raznih
 upravljačkih programa napisanih posebno za Xilinxove platforme, kao što je to ZedBoard. Za konfiguriranje datotečnog podsustava,
@@ -1030,7 +1030,7 @@ količinom koda veća vjerojatnost pronalaženja prolaza do probijanja sigurnost
 preporučuju implementaciju \gls{gpos}-a kao \textit{Nesigurnog} gosta. Prilagođenje kompleksnog sustava kao što je to Linux za \textit{Nesigurni}
 svijet \textit{TrustZone} platforme je posao koji zahtjeva vrlo dobro poznavanje arhitekture jezgre operacijskog sustava, kao
 i detaljno poznavanje platforme za koju se Linux prilagođava. Pristup prilagođenju može biti sljedeći: ako se Linux priprema
-za \textit{Nesigurni} svijet, ključno je omogućiti konfiguriranje jezgre koje zahtjeva pristup sigurnoj memoriji, odnosno registrima
+za \textit{Nesigurni} svijet, ključno je omogućiti konfiguriranje jezgre koje zahtjeva pristup \textit{Sigurnoj} memoriji, odnosno registrima
 kojima može pristupiti samo \textit{Sigurni} svijet. Ovakav pristup, odmah u početku, uklanja potrebu za detaljnim poznavanjem
 dijela jezgre operacijskog sustava koji je neovisan o arhitekturi platforme što znatno smanjuje vrijeme prilagodbe jezgre
 \textit{Nesigurnom} svijetu. Uz takav pristup, jasno je i da se \textit{Device Tree} mora promijeniti. Prilagođenje Linuxa se sastoji
@@ -1042,7 +1042,7 @@ podsustava, \textit{Device Tree} strukture i jezgre). Uz to, Linux zahtjeva i pr
 početak izvršavanja. Jasno je da je potrebno sve slike sustava Linux i program pokretač povezati u jednu izvršnu datoteku
 koju će LTZVisor kasnije učitati u \gls{ram}. Jedan od intuitivnih načina na koji se to može postići je pomoću skripte za memorijsko
 povezivanje u kojoj su naznačene adrese za svaku komponentu operacijskog sustava Linux. U ovom radu se je iskoristila mogućnost
-koju nudi \textit{PetaLinux}, a tiče se vrste datotečnog podsustava. Kao vrsta datotečnog podsustava odabrao se
+koju nudi \textit{PetaLinux}, a tiče se vrste datotečnog podsustava. Kao datotečni podsustav odabrao se
 \textit{initramfs} zbog mogućnosti da je takav datotečni podsustav odmah uključen u sliku jezgre Linuxa što doprinosi smanjenju
 otiska cjelokupne slike Linuxa. Kada bi se koristio drugi datotečni podsustav, u skriptu za memorijsko povezivanje bilo bi
 potrebno dodati poseban adresni prostor koji sadrži datotečni podsustav koji najvjerojatnije ne bi bio u potpunosti popunjen.
@@ -1323,7 +1323,7 @@ korištenjem zahtjeva za odgađanjem \engl{delay}.
 
 \subsection{Programska podrška za Zynq-7000}
 Programska podrška FreeRTOS-a se sastoji od malog broja datoteka koje u potpunosti implementiraju funkcionalnost \gls{rtos}-a.
-U glavnom direktoriju izvornog koda FreeRTOS-a, dobivenog Xilinx \gls{sdk} alatom, se nalazi četiri datoteke koje su specifične
+U glavnom direktoriju izvornog koda FreeRTOS-a, dobivenog Xilinx \gls{sdk} alatom, se nalaze četiri datoteke koje su specifične
 baš za ZedBoard. To su \textit{port\_asm\_vectors.S}, \textit{port.c}, \textit{portASM.S} i \textit{portZynq7000.c}. Ostale
 platforme za koje je FreeRTOS prilagođen, također imaju vlastite \textit{port.c} i \textit{portASM.S} datoteke. Ostale
 datoteke se mogu prenositi na druge platforme bez potrebe za ikakvim izmjenama.\\
@@ -1370,6 +1370,7 @@ softverski konfigurirati te indicira na to da se \gls{fiq} ne može softverski m
 generiranjem \gls{fiq} prekida te se ta činjenica iskoristila za implementaciju kritične sekcije potrebne za
 \textit{vTaskSwitchContext} funkciju.
 \newpage
+\noindent
 Navedena funkcija se koristi u dva slučaja:
 \begin{enumerate}
   \item {Kod obrade \gls{fiq} prekida}
@@ -1473,6 +1474,7 @@ Na slici se mogu vidjeti tri osnovne komponente:
   \item{LTZVisor koji se izvršava u najprivilegiranijem načinu rada procesora: nadglednom načinu rada.}
 \end{itemize}
 \newpage
+\noindent
 Zbog \gls{amp} modela, LTZVisor je podijeljen na dva dijela:
 \begin{itemize}
   \item {jezgru LTZVisora}
@@ -1481,7 +1483,7 @@ Zbog \gls{amp} modela, LTZVisor je podijeljen na dva dijela:
 Jezgra LTZVisora je zadužena za sve ključne zadatke kao što su to konfiguriranje memorije, dodjeljivanje prekida i uređaja
 svakom gost virtualnom stroju uz pružanje podrške za komunikaciju između procesora, odnosno gost virtualnih strojeva.
 Sloj usluga je minimalna implementacija nadglednog načina rada procesora koji je zadužen za obradu i prosljeđivanje iznimaka,
-kao i kontrolu nad komunikacijom između procesora. Iako se oba gosta izvode u privilegiranom načinu rada (\textit{supervisor})
+kao i kontrolu nad komunikacijom između procesora. Iako se oba gosta izvode u privilegiranom načinu rada (\textit{supervisor}),
 \textit{Sigurni} svijet ostaje u potpunosti izoliran od privilegiranog softvera \textit{Nesigurnog} svijeta. Dakle,
 \textit{Nesigurni} softver ne može pristupiti niti mijenjati resurse koji su dodijeljeni \textit{Sigurnom} gostu. Svaki pristup
 \textit{Nesigurnog} gosta \textit{Sigurnom} generira iznimku sloju usluga koji je zadužen za prosljeđivanje iznimke jezgri
@@ -1495,7 +1497,7 @@ particije te su na početku statički dodijeljeni \textit{Sigurnom} ili \textit{
 na razini uređaja. \gls{amp} LTZVisor prati prekidni model originalnog LTZVisora, gdje se \gls{fiq} dodjeljuje \textit{Sigurnom} gostu,
 a \gls{irq} \textit{Nesigurnom} gostu. Inicijalizacija \gls{gic} distributera se izvodi \gls{cpu}1 jezgrom. Sloj usluga je zadužen za
 inicijalizaciju odgovarajućeg \gls{cpu} sučelja. Obrada prekida je rješena tako da ako se \gls{fiq} pojavi na \gls{cpu}0, sloj usluga je zadužen
-za prosljeđivanje prekida \gls{cpu}1. Ako \gls{irq} dođe prilikom izvođenja \gls{rtos}-a u \textit{Sigurnom} svijetu, prekid se neće proslijediti
+za prosljeđivanje prekida \gls{cpu}1 procesoru. Ako \gls{irq} dođe prilikom izvođenja \gls{rtos}-a u \textit{Sigurnom} svijetu, prekid se neće proslijediti
 \gls{cpu}0. Praćenje vremena gost virtualnih strojeva omogućeno je dodjeljivanjem \gls{ttc}0 brojila \textit{Sigurnom} gostu i globalnog
 brojila \textit{Nesigurnom} gostu.
 
@@ -1703,7 +1705,8 @@ Iz tog razloga rukovanje \textit{cacheom} se obavlja u LTZVisoru koji ima moguć
 \end{figure}
 
 Ovime su napravljene sve potrebne izmjene u nadglednom načinu rada za uspješnu uspostavu komunikacije između virtualnih
-strojeva. U nastavku su dane i promjene napravljene u \textit{Sigurnom} gostu. Promjene u \textit{Sigurnom} gostu
+strojeva. U nastavku su dane i promjene napravljene u \textit{Sigurnom} gostu.\\
+Promjene u \textit{Sigurnom} gostu
 obuhvaćaju dodatne funkcije koje služe za obradu \gls{sgi} prekida generiranih dolaskom \textit{Nesigurne} poruke. Za
 demonstraciju ispravnog funkcioniranja komunikacije, odabrala se aplikacija koja preko \textit{Nesigurnog} gosta upravlja
 LED diodama platforme čija stanja se mijenjaju u \textit{Sigurnom} softveru. ZedBoard sveukupno sadrži 8 LED dioda te
@@ -1715,7 +1718,7 @@ gosta, ponašanje LED dioda ovisno o poslanoj vrijednosti je sljedeće:
   \item{poslana vrijednost: 0xf - sve LED diode će biti upaljene}
   \item{poslana vrijednost: između 0x0 i 0x9 - LED dioda čiji redni broj na platformi odgovara poslanoj vrijednosti će biti
   upaljena}
-  \item{sve ostalo će izazvati početno ponašanje LED dioda \engl{blinky}.}
+  \item{sve ostalo će izazvati početno ponašanje LED dioda (\textit{blinky}).}
 \end{itemize}
 Ako poruka dolazi s \gls{cpu}1 \textit{Nesigurnog} gosta, ponašanje će biti isto kao i kad poruka dolazi s \gls{cpu}0 za sve slučajeve
 osim za vrijednosti u itervalu od 0x1 do 0x8. Za navedenu iznimku ponašanje je obrnuto: odgovarajuća LED dioda će biti
@@ -1757,8 +1760,8 @@ je zamijenjen s onim koji odgovara modelu LTZVisora. Prije opisa postupka buđen
 0xFFFFFFF0 lokaciju mora izvesti u \textit{Sigurnom} stanju procesora (lokacija je nedostupna \textit{Nesigurnom}
 svijetu). Postupak kojim je izvedeno pokretanje sekundarne jezgre u \textit{Nesigurnom} gostu LTZVisora je:
 \begin{enumerate}
-  \item {Linux generira zahtjev LTZVisoru za upis odgovarajuće adrese na 0xFFFFFFF0 lokaciju}
-  \item{LTZVisor upisuje početnu adresu za \gls{cpu}1 na odgovarajuću lokaciju te se vraća kontrola \textit{Nesigurnom} gostu}
+  \item {Linux generira zahtjev LTZVisoru za upis odgovarajuće adrese na 0xFFFFFFF0 lokaciju,}
+  \item{LTZVisor upisuje početnu adresu za \gls{cpu}1 na odgovarajuću lokaciju te se vraća kontrola \textit{Nesigurnom} gostu,}
   \item{Linux generira \textit{sev} instrukciju.}
 \end{enumerate}
 U ovom slučaju nema potrebe za rukovanjem \textit{cache} memorijom jer se upis na 0xFFFFFFF0 lokaciju izvodi
@@ -1798,8 +1801,8 @@ frekvencija svakog procesora pojedinačno te ona iznosi približno 667~MHz.
 \subsubsection{Komunikacijski model}
 Za potrebe komunikacije između virtualnih strojeva, za Linux je razvijena korisnička aplikacija koja se poziva na zahtjev
 korisnika putem Linuxove ljuske. Aplikacija prima dva ulazna argumenta, prvi označava fizičku adresu na koju se želi
-pohraniti željeni podatak, a drugi argument predstavlja vrijednost koja se želi pohraniti. Kod razvoja aplikacija za Linux
-ovakvog tipa, treba imati na umu da Linux radi s virtualnim adresama te je potrebno osigurati da se podatak upiše na ispravnu
+pohraniti željeni podatak, a drugi argument predstavlja vrijednost koja se želi pohraniti. Kod razvoja ovakvog tipa aplikacija
+za Linux, treba imati na umu da Linux radi s virtualnim adresama te je potrebno osigurati da se podatak upiše na ispravnu
 fizičku lokaciju. Kako korisnik odabire željenu fizičku lokaciju, aplikacija se mora pobrinuti da izabranu fizičku lokaciju
 poveže s virtualnom adresom. Navedeno je izvedeno pomoću \textit{mmap} funkcije koja zauzima određeno memorijsko područje u
 kojem je sadržana željena fizička adresa. Memorijsko područje koje se zauzima \textit{mmap} funkcijom mora biti barem
@@ -1888,7 +1891,7 @@ gostom. Mjerenja koja su provedena su:
   \item{Potvrda \gls{fiq}-a: \gls{ttc}1 se omogućava na ulasku u tablicu prekidnih vektora nadglednog načina rada (konkretno za
   \gls{fiq} prekid) i zaustavlja se nakon što se pročita vrijednost iz registra za potvrdu prekida u \gls{fiq} prekidnoj rutini.}
   \item{Spremanje konteksta \textit{Nesigurnog} gosta: \gls{ttc}1 se omogućava prije dohvaćanja adrese globalne varijable u kojoj
-  je pohranjen \textit{Nesigurni} gost i zaustavlja se nakon što je kontekst spremljen u varijablu.}
+  je pohranjen kontekst \textit{Nesigurnog} gosta i zaustavlja se nakon što je kontekst spremljen u varijablu.}
   \item{\gls{fiq} obrada: \gls{ttc}1 se omogućava prije skoka u \textit{Sigurni} gost i zaustavlja se nakon upisa u registar za
   označavanje kraja obrade prekida.}
   \item{Obnova konteksta \textit{Sigurnog} gosta: \gls{ttc}1 se omogućava nakon spremanja konteksta \textit{Nesigurnog} gosta
@@ -2309,7 +2312,7 @@ executes on one core. The thesis introduces a simple communication model with pu
 \gls{smp} LTZVisor solution where it can clearly be seen that Non-Secure executes in \gls{smp} fashion. To evaluate implemented
 solution, \gls{smp} LTZVisor was put under a range of tests to show advantages and drawbacks of using \gls{smp} LTZVisor.
 
-\keywords{\textit{TrustZone}, \textit{Secure} world, \textit{Non-Secure} world, LTZVisor, \gls{amp}, \gls{smp}}
+\keywords{TrustZone, Secure world, Non-Secure world, LTZVisor, \gls{amp}, \gls{smp}}
 \end{abstract}
 
 \end{document}

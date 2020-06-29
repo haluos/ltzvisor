@@ -53,7 +53,7 @@ extern uint32_t printk(const char *fmt, ...);
 void vApplicationAssert( char *pcFileName, uint32_t ulLine ) __attribute__((weak));
 void vApplicationTickHook( void ) __attribute__((weak));
 void vApplicationIdleHook( void ) __attribute__((weak));
-void vApplicationMallocFailedHook( void ) __attribute((weak));
+void vApplicationMallocFailedHook( void ) __attribute__((weak));
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName ) __attribute__((weak));
 /*-----------------------------------------------------------*/
 
@@ -64,7 +64,7 @@ void FreeRTOS_SetupTickInterrupt( void )
 
 	interrupt_enable(TTC0_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC0_TTCx_2_INTERRUPT,0,1);
-	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 30);
+	interrupt_priority_set(TTC0_TTCx_2_INTERRUPT, 31);
 	FreeRTOS_RegisterHandler(TTC0_TTCx_2_INTERRUPT, (FreeRTOS_SHandler) FreeRTOS_Tick_Handler);
 
 	FreeRTOS_ClearTickInterrupt();

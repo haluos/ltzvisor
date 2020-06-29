@@ -268,6 +268,17 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	*pxTopOfStack = ( StackType_t ) pvParameters; /* R0 */
 	pxTopOfStack--;
 
+	// *pxTopOfStack = ( StackType_t ) 0x12121212;	/* R12_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x11111111;	/* R11_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x10101010;	/* R10_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x09090909;	/* R9_fiq */
+	// pxTopOfStack--;
+	// *pxTopOfStack = ( StackType_t ) 0x08080808;	/* R8_fiq */
+	// pxTopOfStack--;
+
 	/* The task will start with a critical nesting count of 0 as interrupts are
 	enabled. */
 	*pxTopOfStack = portNO_CRITICAL_NESTING;
