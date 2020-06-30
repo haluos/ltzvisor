@@ -193,7 +193,7 @@ void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
 		}
 		else
 		{
-			ttc_request(TTC1, TTCx_2, xSleepTime * 10000);
+			ttc_request(TTC1, TTCx_2, (xSleepTime - 1) * (1000000 / configTICK_RATE_HZ));
 			ttc_enable(TTC1, TTCx_2);
 			// printk("Yield\n");
 			asm volatile(".arch_extension sec\n");
@@ -201,10 +201,11 @@ void vSecureSleep (uint32_t xSleepTime)		/* xSleepTime is in ticks */
 			asm volatile("smc #0");
 			ttc_disable(TTC1,TTCx_2);
 			// printk("Disable TTC1\n");
-			vTaskStepTick(xSleepTime);
+			vTaskStepTick(xSleepTime - 1);
 		}
-		// printk("Reset TTC0\n");
-		ttc_request(TTC0, TTCx_2, 1 * 10000);
+		printk("Reset TTC0\n");
+		// ttc_request(TTC0, TTCx_2, 1000000 / configTICK_RATE_HZ);
+		ttc_reset(TTC0,TTCx_2);
 		ttc_enable(TTC0,TTCx_2);
 	}
 	// printk("Sleep for %d\n", xSleepTime);

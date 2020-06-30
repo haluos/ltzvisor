@@ -252,7 +252,7 @@ uint32_t interrupt_interface_init(void){
 	cpu_inter->ICCICR = 0x00000000;
 
 	/** Allow interrupts with higher priority (i.e. lower number) than 0xF */
-	cpu_inter->ICCPMR = 0x000000F0;
+	cpu_inter->ICCPMR = 0x000000FF;
 
 	/** All priority bits are compared for pre-emption */
 	cpu_inter->ICCBPR = 0x00000002;
@@ -322,7 +322,7 @@ uint32_t interrupt_priority_set(uint32_t interrupt, uint32_t priority){
 	priority &= 0xF;
 	/* Get register of interrupt */
 	word = interrupt / 4;
-	bit_shift = (interrupt % 4) * 8 + 4;
+	bit_shift = (interrupt % 4) * 8 + 3;
 
 	/* Get priority register */
 	temp = old_priority = int_dist->ICDIPRx[word];

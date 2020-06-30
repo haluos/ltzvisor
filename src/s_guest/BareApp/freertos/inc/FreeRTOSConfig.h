@@ -71,7 +71,7 @@
 #define configCPU_CLOCK_HZ						650000000L //100000000UL
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION	1
 #define configUSE_TICKLESS_IDLE					0
-#define configTICK_RATE_HZ						( ( TickType_t ) 20 )
+#define configTICK_RATE_HZ						( ( TickType_t ) 100 )
 #define configPERIPHERAL_CLOCK_HZ  				( 33333000UL )
 #define configUSE_PREEMPTION					1
 #define configUSE_IDLE_HOOK						1
@@ -151,7 +151,7 @@ command interpreter running. */
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-void vApplicationAssert( char * pcFile, unsigned long ulLine );
+void vApplicationAssert( char *pcFileName, uint32_t ulLine );
 #define configASSERT( x ) if( ( x ) == 0 ) vApplicationAssert( __FILE__, __LINE__ );
 
 /* If configTASK_RETURN_ADDRESS is not defined then a task that attempts to
@@ -183,7 +183,7 @@ Zynq MPU. */
 #define configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET ( -0xf00 )
 #define configUNIQUE_INTERRUPT_PRIORITIES				32
 
-//void vApplicationSleep(TickType_t xExpectedIdleTime);
-// #define portSUPPRESS_TICKS_AND_SLEEP( xIdleTime ) vApplicationSleep( xIdleTime )
+void vSecureSleep (uint32_t xSleepTime);
+#define portSUPPRESS_TICKS_AND_SLEEP( xIdleTime ) vSecureSleep (xIdleTime)
 
 #endif /* FREERTOS_CONFIG_H */

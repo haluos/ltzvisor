@@ -56,8 +56,6 @@ fiq_handler sfiq_handlers[NO_OF_INTERRUPTS_IMPLEMENTED] = {NULL};
 extern uint8_t ttc_flag;
 uint8_t monitor_flag;
 
-extern void cpu1_sgi_communicate_handler (void);
-
 /**
  * Generic FIQ handler
  *

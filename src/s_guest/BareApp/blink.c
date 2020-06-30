@@ -81,7 +81,7 @@ int main() {
 	/** Initialize hardware */
 	// hw_init();
 	// ttc_init(TTC1,TTCx_2,INTERVAL);
-	// vHwSetup();
+	vHwSetup();
 
 	printk(" * Secure bare metal VM: running ... \n\t");
 
@@ -132,6 +132,11 @@ void led_blink( void * parameters ){
 	}
 }
 
+void TTC1_Handler (void)
+{
+	ttc_interrupt_clear(TTC1_TTCx_2_INTERRUPT);
+}
+
 void vHwSetup (void)
 {
 	ttc_init(TTC1,TTCx_2,INTERVAL);
@@ -140,6 +145,7 @@ void vHwSetup (void)
 	interrupt_enable(TTC1_TTCx_2_INTERRUPT,TRUE);
 	interrupt_target_set(TTC1_TTCx_2_INTERRUPT,0,1);
 	interrupt_priority_set(TTC1_TTCx_2_INTERRUPT,31);
+	FreeRTOS_RegisterHandler(TTC1_TTCx_2_INTERRUPT, TTC1_Handler);
 }
 
 void secure_yield( void * pvParameters )
